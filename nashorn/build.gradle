@@ -1,0 +1,5 @@
+dependencies {
+    implementation project(":scripts")
+
+    testImplementation project(':scripts').sourceSets.test.output
+}

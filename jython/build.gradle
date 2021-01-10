@@ -1,0 +1,7 @@
+dependencies {
+    implementation project(":scripts")
+
+    implementation group: 'org.python', name: 'jython-standalone', version: '2.7.2'
+
+    testImplementation project(':scripts').sourceSets.test.output
+}
