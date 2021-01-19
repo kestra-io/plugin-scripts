@@ -1,12 +1,8 @@
 package org.kestra.task.scripts.groovy;
 
-import com.google.common.collect.ImmutableMap;
-import io.micronaut.test.annotation.MicronautTest;
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 
 import java.util.Arrays;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 
 @MicronautTest
 class EvalTest extends org.kestra.task.scripts.EvalTest {

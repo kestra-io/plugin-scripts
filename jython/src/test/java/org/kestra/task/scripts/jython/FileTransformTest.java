@@ -1,6 +1,6 @@
 package org.kestra.task.scripts.jython;
 
-import io.micronaut.test.annotation.MicronautTest;
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import org.kestra.task.scripts.FileTransform;
 
 import java.net.URI;

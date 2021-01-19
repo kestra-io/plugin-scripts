@@ -1,8 +1,8 @@
 package org.kestra.task.scripts.nashorn;
 
-import io.micronaut.test.annotation.MicronautTest;
 
-import java.io.FileOutputStream;
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+
 import java.util.Arrays;
 
 @MicronautTest
