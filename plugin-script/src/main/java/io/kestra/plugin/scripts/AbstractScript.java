@@ -12,7 +12,6 @@ import io.kestra.core.runners.RunContext;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 public abstract class AbstractScript extends Task {
     @Schema(
         title = "A full script"

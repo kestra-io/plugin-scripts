@@ -1,5 +1,10 @@
 package io.kestra.plugin.scripts;
 
+import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.executions.metrics.Counter;
+import io.kestra.core.models.tasks.RunnableTask;
+import io.kestra.core.runners.RunContext;
+import io.kestra.core.serializers.FileSerde;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
@@ -7,15 +12,9 @@ import io.reactivex.functions.Function;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import io.kestra.core.models.annotations.PluginProperty;
-import io.kestra.core.models.executions.metrics.Counter;
-import io.kestra.core.models.tasks.RunnableTask;
-import io.kestra.core.runners.RunContext;
-import io.kestra.core.serializers.FileSerde;
 
 import java.io.*;
 import java.net.URI;
-import java.util.Objects;
 import java.util.Optional;
 import javax.script.Bindings;
 import javax.validation.constraints.NotNull;
@@ -25,7 +24,6 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 @Schema(
     title = "Transform ion format file from kestra with a groovy script.",
     description = "This allow you to transform the data previouly loaded by kestra as you need.\n\n" +

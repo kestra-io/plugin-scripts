@@ -17,7 +17,6 @@ import javax.script.*;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 @Schema(
     description = "You can use a full script. \n" +
         "The script contains some predefined variables:\n" +

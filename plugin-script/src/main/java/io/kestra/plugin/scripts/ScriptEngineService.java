@@ -1,13 +1,10 @@
 package io.kestra.plugin.scripts;
 
+import io.kestra.core.runners.RunContext;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.apache.commons.lang3.tuple.Pair;
-import io.kestra.core.runners.RunContext;
 import org.slf4j.Logger;
 
-import java.util.HashMap;
-import java.util.Map;
 import javax.script.*;
 
 public abstract class ScriptEngineService {
