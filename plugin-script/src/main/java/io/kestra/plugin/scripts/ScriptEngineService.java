@@ -8,10 +8,10 @@ import org.slf4j.Logger;
 import javax.script.*;
 
 public abstract class ScriptEngineService {
-    public static CompiledScript scripts(RunContext runContext, String engineName, String script) throws ScriptException {
+    public static CompiledScript scripts(RunContext runContext, String engineName, String script, ClassLoader classLoader) throws ScriptException {
         Logger logger = runContext.logger();
 
-        ScriptEngineManager manager = new ScriptEngineManager();
+        ScriptEngineManager manager = new ScriptEngineManager(classLoader);
         ScriptEngine engine = manager.getEngineByName(engineName);
 
         Bindings bindings = engine.createBindings();

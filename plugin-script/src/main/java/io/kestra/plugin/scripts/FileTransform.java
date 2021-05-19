@@ -49,7 +49,8 @@ public abstract class FileTransform extends AbstractScript implements RunnableTa
         ScriptEngineService.CompiledScript scripts = ScriptEngineService.scripts(
             runContext,
             engineName,
-            generateScript(runContext)
+            generateScript(runContext),
+            this.getClass().getClassLoader()
         );
 
         try (

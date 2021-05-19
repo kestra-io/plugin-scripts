@@ -37,7 +37,12 @@ public abstract class Eval extends AbstractScript implements RunnableTask<Eval.O
     protected List<String> outputs;
 
     protected Eval.Output run(RunContext runContext, String engineName) throws Exception {
-        ScriptEngineService.CompiledScript scripts = ScriptEngineService.scripts(runContext, engineName, generateScript(runContext));
+        ScriptEngineService.CompiledScript scripts = ScriptEngineService.scripts(
+            runContext,
+            engineName,
+            generateScript(runContext),
+            this.getClass().getClassLoader()
+        );
 
         Object result = scripts.getEngine().eval(
             generateScript(runContext),
