@@ -44,15 +44,17 @@ public abstract class Eval extends AbstractScript implements RunnableTask<Eval.O
             this.getClass().getClassLoader()
         );
 
+        Bindings bindings = scripts.getBindings().get();
+
         Object result = scripts.getEngine().eval(
             generateScript(runContext),
-            scripts.getBindings()
+            bindings
         );
 
         Output.OutputBuilder builder = Output.builder();
 
         if (outputs != null && outputs.size() > 0) {
-            builder.outputs(gatherOutputs(scripts.getEngine(), scripts.getBindings()));
+            builder.outputs(gatherOutputs(scripts.getEngine(), bindings));
         }
 
         return builder

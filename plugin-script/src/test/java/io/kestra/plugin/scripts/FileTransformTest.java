@@ -52,7 +52,6 @@ public abstract class FileTransformTest {
             "name", "richard"
         ));
 
-
         URI source = storageInterface.put(
             new URI("/" + IdUtils.create()),
             new FileInputStream(tempFile)

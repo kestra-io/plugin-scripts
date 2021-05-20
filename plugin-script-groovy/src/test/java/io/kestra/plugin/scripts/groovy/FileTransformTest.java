@@ -13,7 +13,9 @@ class FileTransformTest extends io.kestra.plugin.scripts.FileTransformTest {
             .id("unit-test")
             .type(Eval.class.getName())
             .from(source.toString())
+            .concurrent(10)
             .script("logger.info('row: {}', row)\n" +
+                "sleep(1000)\n" +
                 "if (row.get('name') == 'richard') {\n" +
                 "  row = null\n" +
                 "} else {\n" +

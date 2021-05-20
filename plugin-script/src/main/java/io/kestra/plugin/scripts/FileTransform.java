@@ -9,6 +9,7 @@ import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
 import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -17,6 +18,7 @@ import java.io.*;
 import java.net.URI;
 import java.util.Optional;
 import javax.script.Bindings;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 @SuperBuilder
@@ -40,6 +42,15 @@ public abstract class FileTransform extends AbstractScript implements RunnableTa
     @PluginProperty(dynamic = true)
     private String from;
 
+    @Min(2)
+    @NotNull
+    @Schema(
+        title = "Number of concurrent parrallels transform",
+        description = "Take care that the order is **not respected** if you use parallelism"
+    )
+    @PluginProperty(dynamic = false)
+    private Integer concurrent;
+
     protected FileTransform.Output run(RunContext runContext, String engineName) throws Exception {
         // temp out file
         URI from = new URI(runContext.render(this.from));
@@ -58,14 +69,28 @@ public abstract class FileTransform extends AbstractScript implements RunnableTa
             OutputStream output = new FileOutputStream(tempFile);
         ) {
             Flowable<Object> flowable = Flowable
-                .create(FileSerde.reader(inputStream), BackpressureStrategy.BUFFER)
-                .map(this.convert(scripts))
+                .create(FileSerde.reader(inputStream), BackpressureStrategy.BUFFER);
+
+            Flowable<Optional<Object>> sequential;
+
+            if (this.concurrent != null) {
+                sequential = flowable
+                    .parallel(this.concurrent)
+                    .runOn(Schedulers.io())
+                    .map(this.convert(scripts))
+                    .sequential();
+            } else {
+                sequential = flowable
+                    .map(this.convert(scripts));
+            }
+
+            Single<Long> count = sequential
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .doOnNext(row -> FileSerde.write(output, row));
+                .doOnNext(row -> FileSerde.write(output, row))
+                .count();
 
             // metrics & finalize
-            Single<Long> count = flowable.count();
             Long lineCount = count.blockingGet();
             runContext.metric(Counter.of("records", lineCount));
 
@@ -80,12 +105,12 @@ public abstract class FileTransform extends AbstractScript implements RunnableTa
 
     protected Function<Object, Optional<Object>> convert(ScriptEngineService.CompiledScript script) {
         return row -> {
-            Bindings bindings = script.getBindings();
+            Bindings bindings = script.getBindings().get();
             bindings.put("row", row);
 
             script.getScript().eval(bindings);
 
-            return Optional.ofNullable(script.getBindings().get("row"));
+            return Optional.ofNullable(bindings.get("row"));
         };
     }
 
