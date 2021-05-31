@@ -43,7 +43,6 @@ public abstract class FileTransform extends AbstractScript implements RunnableTa
     private String from;
 
     @Min(2)
-    @NotNull
     @Schema(
         title = "Number of concurrent parrallels transform",
         description = "Take care that the order is **not respected** if you use parallelism"
