@@ -53,7 +53,7 @@ public abstract class FileTransform extends AbstractScript implements RunnableTa
     protected FileTransform.Output run(RunContext runContext, String engineName) throws Exception {
         // temp out file
         URI from = new URI(runContext.render(this.from));
-        File tempFile = File.createTempFile(this.getClass().getSimpleName().toLowerCase() + "_", ".trs");
+        File tempFile = runContext.tempFile().toFile();
 
         // prepare script
         ScriptEngineService.CompiledScript scripts = ScriptEngineService.scripts(
