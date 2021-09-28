@@ -18,7 +18,7 @@ import io.kestra.core.runners.RunContext;
     examples = {
         @Example(
             code = {
-                "from: \"{{ outputs.avro-to-gcs }}\"",
+                "from: \"{{ outputs['avro-to-gcs'] }}\"",
                 "script: |",
                 "  logger.info('row: {}', row)",
                 "",

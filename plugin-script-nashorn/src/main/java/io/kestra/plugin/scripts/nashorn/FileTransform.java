@@ -19,23 +19,15 @@ import io.kestra.core.runners.RunContext;
     examples = {
         @Example(
             code = {
-                "outputs:",
-                "  - out",
-                "  - map",
+                "from: \"{{ outputs['avro-to-gcs'] }}\"",
                 "script: |",
-                "  var Counter = Java.type('io.kestra.core.models.executions.metrics.Counter');",
-                "  var File = Java.type('java.io.File');",
-                "  var FileOutputStream = Java.type('java.io.FileOutputStream');",
+                "  logger.info('row: {}', row)",
                 "",
-                "  logger.info('executionId: {}', runContext.render('{{ execution.id }}'));",
-                "  runContext.metric(Counter.of('total', 666, 'name', 'bla'));",
-                "  ",
-                "  map = {'test': 'here'}",
-                "  var tempFile = runContext.tempFile()",
-                "  var output = new FileOutputStream(tempFile)",
-                "  output.write('555\\n666\\n'.getBytes())",
-                "",
-                "  out = runContext.putTempFile(tempFile)"
+                "  if (row['name'] === 'richard') {",
+                "    row = null",
+                "  } else {",
+                "    row['email'] = row['name'] + '@kestra.io')",
+                "  }"
             }
         )
     }
