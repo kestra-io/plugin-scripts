@@ -1,5 +1,6 @@
 package io.kestra.plugin.scripts;
 
+import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -16,10 +17,10 @@ public abstract class AbstractScript extends Task {
     @Schema(
         title = "A full script"
     )
-    @PluginProperty(dynamic = false)
+    @PluginProperty(dynamic = true)
     protected String script;
 
-    protected String generateScript(RunContext runContext) {
-        return this.script;
+    protected String generateScript(RunContext runContext) throws IllegalVariableEvaluationException {
+        return runContext.render(this.script);
     }
 }
