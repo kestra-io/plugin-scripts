@@ -14,5 +14,5 @@
 * This plugin documentation can be found [here](https://kestra.io/plugins/plugin-scripts/)
 
 ## License
-Apache 2.0 © [Nigh Tech](https://nigh.tech)
+Apache 2.0 © [Kestra Technologies](https://kestra.io)
 
