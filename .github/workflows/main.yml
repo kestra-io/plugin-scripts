@@ -41,6 +41,10 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
 
+      # Gradle check
+      - name: Build with Gradle
+        run: ./gradlew check
+
       # Publish
       - name: Publish package to Sonatype
         if: github.ref == 'refs/heads/master'
@@ -72,6 +76,15 @@ jobs:
           echo "signing.secretKeyRingFile=${HOME}/.gradle/secring.gpg" >> ~/.gradle/gradle.properties
           echo ${SONATYPE_GPG_FILE} | base64 -d > ~/.gradle/secring.gpg
           ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository
+
+      # GitHub Release
+      - name: Create GitHub release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          files: |
+            build/libs/*.jar
 
       # Slack
       - name: Slack notification
