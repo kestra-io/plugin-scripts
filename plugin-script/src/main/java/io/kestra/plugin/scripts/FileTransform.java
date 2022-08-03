@@ -7,16 +7,21 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.FileSerde;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.reactivestreams.Publisher;
 
 import java.io.*;
 import java.net.URI;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import javax.script.Bindings;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -28,10 +33,11 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @Schema(
     title = "Transform ion format file from kestra with a groovy script.",
-    description = "This allow you to transform the data previouly loaded by kestra as you need.\n\n" +
+    description = "This allow you to transform the data previously loaded by kestra as you need.\n\n" +
         "Take a ion format file from kestra and iterate row per row.\n" +
         "Each row will populate a `row` global variable, you need to alter this variable that will be saved on output file.\n" +
-        "if you set the `row` to `null`, the row will be skipped\n"
+        "if you set the `row` to `null`, the row will be skipped\n" +
+        "You can create a variables `rows` to return many rows for a single `row`.\n"
 )
 public abstract class FileTransform extends AbstractScript implements RunnableTask<FileTransform.Output> {
     @NotNull
@@ -44,7 +50,7 @@ public abstract class FileTransform extends AbstractScript implements RunnableTa
 
     @Min(2)
     @Schema(
-        title = "Number of concurrent parrallels transform",
+        title = "Number of concurrent parallels transform",
         description = "Take care that the order is **not respected** if you use parallelism"
     )
     @PluginProperty(dynamic = false)
@@ -70,22 +76,20 @@ public abstract class FileTransform extends AbstractScript implements RunnableTa
             Flowable<Object> flowable = Flowable
                 .create(FileSerde.reader(inputStream), BackpressureStrategy.BUFFER);
 
-            Flowable<Optional<Object>> sequential;
+            Flowable<Object> sequential;
 
             if (this.concurrent != null) {
                 sequential = flowable
                     .parallel(this.concurrent)
                     .runOn(Schedulers.io())
-                    .map(this.convert(scripts))
+                    .flatMap(this.convert(scripts))
                     .sequential();
             } else {
                 sequential = flowable
-                    .map(this.convert(scripts));
+                    .flatMap(this.convert(scripts));
             }
 
             Single<Long> count = sequential
-                .filter(Optional::isPresent)
-                .map(Optional::get)
                 .doOnNext(row -> FileSerde.write(output, row))
                 .count();
 
@@ -102,14 +106,24 @@ public abstract class FileTransform extends AbstractScript implements RunnableTa
             .build();
     }
 
-    protected Function<Object, Optional<Object>> convert(ScriptEngineService.CompiledScript script) {
+    @SuppressWarnings("unchecked")
+    protected Function<Object, Publisher<Object>> convert(ScriptEngineService.CompiledScript script) {
         return row -> {
             Bindings bindings = script.getBindings().get();
             bindings.put("row", row);
 
             script.getScript().eval(bindings);
 
-            return Optional.ofNullable(bindings.get("row"));
+
+            if (bindings.get("rows") != null) {
+                return Flowable.fromIterable((Collection<Object>) bindings.get("rows"));
+            }
+
+            if (bindings.get("row") != null) {
+                return Flowable.just(bindings.get("row"));
+            }
+
+            return Flowable.empty();
         };
     }
 
