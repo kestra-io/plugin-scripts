@@ -24,10 +24,10 @@ import static org.hamcrest.Matchers.is;
 @MicronautTest
 public abstract class FileTransformTest {
     @Inject
-    private RunContextFactory runContextFactory;
+    protected RunContextFactory runContextFactory;
 
     @Inject
-    private StorageInterface storageInterface;
+    protected StorageInterface storageInterface;
 
     abstract protected FileTransform task(URI source);
 

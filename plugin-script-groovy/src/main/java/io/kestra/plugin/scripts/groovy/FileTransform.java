@@ -17,6 +17,7 @@ import io.kestra.core.runners.RunContext;
 @Plugin(
     examples = {
         @Example(
+            title = "Convert every row by row",
             code = {
                 "from: \"{{ outputs['avro-to-gcs'] }}\"",
                 "script: |",
@@ -27,6 +28,15 @@ import io.kestra.core.runners.RunContext;
                 "  } else {",
                 "    row.put('email', row.get('name') + '@kestra.io')",
                 "  }"
+            }
+        ),
+        @Example(
+            title = "Create multiple rows from one row",
+            code = {
+                "from: \"{{ outputs['avro-to-gcs'] }}\"",
+                "script: |",
+                "  logger.info('row: {}', row)",
+                "  rows = [[\"action\", \"insert\"], row]"
             }
         )
     }
