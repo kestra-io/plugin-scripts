@@ -133,6 +133,12 @@ subprojects { Project subproject ->
         license 'Apache'
     }
 
+    if (subproject.name != "plugin-script") {
+        shadowJar {
+            dependsOn(":plugin-script:shadowJar")
+        }
+    }
+
     jar {
         manifest {
             attributes(
