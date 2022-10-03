@@ -1,7 +1,7 @@
 dependencies {
     implementation project(':plugin-script')
 
-    implementation group: 'org.python', name: 'jython-standalone', version: '2.7.2'
+    implementation group: 'org.python', name: 'jython-standalone', version: '2.7.3'
 
     testImplementation project(':plugin-script').sourceSets.test.output
 }
