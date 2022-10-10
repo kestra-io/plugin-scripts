@@ -8,11 +8,11 @@ import java.net.URI;
 @MicronautTest
 class FileTransformTest extends io.kestra.plugin.scripts.FileTransformTest {
     @Override
-    protected FileTransform task(URI source) {
+    protected FileTransform task(String source) {
         return io.kestra.plugin.scripts.jython.FileTransform.builder()
             .id("unit-test")
             .type(Eval.class.getName())
-            .from(source.toString())
+            .from(source)
             .script("logger.info('row: {}', row)\n" +
                 "if row['name'] == 'richard': \n" +
                 "  row = None\n" +

@@ -18,8 +18,23 @@ import io.kestra.core.runners.RunContext;
 @Plugin(
     examples = {
         @Example(
+            title = "Transform with file from internal storage",
             code = {
                 "from: \"{{ outputs['avro-to-gcs'] }}\"",
+                "script: |",
+                "  logger.info('row: {}', row)",
+                "",
+                "  if (row['name'] === 'richard') {",
+                "    row = null",
+                "  } else {",
+                "    row['email'] = row['name'] + '@kestra.io')",
+                "  }"
+            }
+        ),
+        @Example(
+            title = "Transform with file from json string",
+            code = {
+                "from: \"[{\"name\":\"jane\"}, {\"name\":\"richard\"}]\"",
                 "script: |",
                 "  logger.info('row: {}', row)",
                 "",
