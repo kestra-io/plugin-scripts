@@ -22,11 +22,11 @@ import static org.hamcrest.Matchers.*;
 @MicronautTest
 class FileTransformTest extends io.kestra.plugin.scripts.FileTransformTest {
     @Override
-    protected FileTransform task(URI source) {
+    protected FileTransform task(String source) {
         return io.kestra.plugin.scripts.groovy.FileTransform.builder()
             .id("unit-test")
             .type(FileTransform.class.getName())
-            .from(source.toString())
+            .from(source)
             .concurrent(10)
             .script("logger.info('row: {}', row)\n" +
                 "sleep(1000)\n" +
