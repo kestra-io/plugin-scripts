@@ -1,7 +1,7 @@
 dependencies {
     implementation project(':plugin-script')
 
-    api group: 'org.codehaus.groovy', name: 'groovy-jsr223', version: '3.0.16'
+    api group: 'org.codehaus.groovy', name: 'groovy-jsr223', version: '3.0.17'
 
     testImplementation project(':plugin-script').sourceSets.test.output
 }
