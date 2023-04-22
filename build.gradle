@@ -124,16 +124,6 @@ subprojects { Project subproject ->
     apply plugin: 'ru.vyarus.github-info'
     apply plugin: 'ru.vyarus.java-lib'
 
-    def group;
-
-    if (subproject.name == "plugin-script") {
-        subproject.description = 'Abstract script plugin for Kestra';
-        group = project.group + ".scripts"
-    } else {
-        subproject.description = subproject.name.substring(12, 13).toUpperCase() + subproject.name.substring(13)  + ' script plugin for Kestra'
-        group = project.group + ".scripts." + subproject.name.replace('plugin-script-', '')
-    }
-
     github {
         user 'kestra-io'
         repository 'plugin-scripts'
@@ -143,17 +133,6 @@ subprojects { Project subproject ->
     if (subproject.name != "plugin-script") {
         shadowJar {
             dependsOn(":plugin-script:shadowJar")
-        }
-    }
-
-    jar {
-        manifest {
-            attributes(
-                    "X-Kestra-Title": subproject.name,
-                    "X-Kestra-Group": group,
-                    "X-Kestra-Description": subproject.description,
-                    "X-Kestra-Version": project.version
-            )
         }
     }
 
