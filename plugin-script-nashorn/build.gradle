@@ -1,3 +1,15 @@
+jar {
+    manifest {
+        attributes(
+                "X-Kestra-Name": project.name,
+                "X-Kestra-Title": "Nashorn",
+                "X-Kestra-Group": project.group + ".scripts.nashorn",
+                "X-Kestra-Description": 'Nashorn plugin for Kestra',
+                "X-Kestra-Version": project.version
+        )
+    }
+}
+
 dependencies {
     implementation project(':plugin-script')
 

@@ -1,0 +1,11 @@
+jar {
+    manifest {
+        attributes(
+                "X-Kestra-Name": project.name,
+                "X-Kestra-Title": "Abstract Script",
+                "X-Kestra-Group": project.group + ".scripts",
+                "X-Kestra-Description": 'Abstract Script plugin for Kestra',
+                "X-Kestra-Version": project.version
+        )
+    }
+}
