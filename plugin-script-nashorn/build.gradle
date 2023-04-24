@@ -13,5 +13,7 @@ jar {
 dependencies {
     implementation project(':plugin-script')
 
+    implementation group: 'org.openjdk.nashorn', name: 'nashorn-core', version: '15.4'
+
     testImplementation project(':plugin-script').sourceSets.test.output
 }

@@ -33,7 +33,7 @@ public abstract class Eval extends AbstractScript implements RunnableTask<Eval.O
     @Schema(
         title = "A List of outputs variables that will be usable in outputs."
     )
-    @PluginProperty(dynamic = false)
+    @PluginProperty
     protected List<String> outputs;
 
     protected Eval.Output run(RunContext runContext, String engineName) throws Exception {
