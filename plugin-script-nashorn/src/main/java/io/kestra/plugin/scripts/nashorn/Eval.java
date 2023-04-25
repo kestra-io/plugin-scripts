@@ -31,7 +31,7 @@ import io.kestra.core.runners.RunContext;
                 "  runContext.metric(Counter.of('total', 666, 'name', 'bla'));",
                 "  ",
                 "  map = {'test': 'here'}",
-                "  var tempFile = runContext.tempFile()",
+                "  var tempFile = runContext.tempFile().toFile()",
                 "  var output = new FileOutputStream(tempFile)",
                 "  output.write('555\\n666\\n'.getBytes())",
                 "  ",
