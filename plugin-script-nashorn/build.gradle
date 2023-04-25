@@ -4,7 +4,7 @@ jar {
                 "X-Kestra-Name": project.name,
                 "X-Kestra-Title": "Nashorn",
                 "X-Kestra-Group": project.group + ".scripts.nashorn",
-                "X-Kestra-Description": 'Nashorn plugin for Kestra',
+                "X-Kestra-Description": 'Run Nashorn JavaScript scripts in Kestra data orchestration.',
                 "X-Kestra-Version": project.version
         )
     }
