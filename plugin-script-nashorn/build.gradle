@@ -1,10 +1,12 @@
+project.description = 'Run Nashorn JavaScript scripts in Kestra data orchestration.'
+
 jar {
     manifest {
         attributes(
                 "X-Kestra-Name": project.name,
                 "X-Kestra-Title": "Nashorn",
                 "X-Kestra-Group": project.group + ".scripts.nashorn",
-                "X-Kestra-Description": 'Run Nashorn JavaScript scripts in Kestra data orchestration.',
+                "X-Kestra-Description": project.description,
                 "X-Kestra-Version": project.version
         )
     }
