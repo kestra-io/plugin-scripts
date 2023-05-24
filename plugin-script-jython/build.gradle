@@ -1,10 +1,12 @@
+project.description = 'Execute Jython Python scripts as part of Kestra data workflows.'
+
 jar {
     manifest {
         attributes(
                 "X-Kestra-Name": project.name,
                 "X-Kestra-Title": "Jython",
                 "X-Kestra-Group": project.group + ".scripts.jython",
-                "X-Kestra-Description": 'Execute Jython Python scripts as part of Kestra data workflows.',
+                "X-Kestra-Description": project.description,
                 "X-Kestra-Version": project.version
         )
     }
