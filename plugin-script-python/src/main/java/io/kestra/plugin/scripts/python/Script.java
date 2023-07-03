@@ -25,7 +25,7 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a python script."
+    title = "Execute a Python script."
 )
 public class Script extends AbstractExecScript {
     @Schema(
