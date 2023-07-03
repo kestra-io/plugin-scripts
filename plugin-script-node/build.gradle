@@ -1,0 +1,19 @@
+project.description = 'Execute Node scripts as part of Kestra data workflows.'
+
+jar {
+    manifest {
+        attributes(
+                "X-Kestra-Name": project.name,
+                "X-Kestra-Title": "Node",
+                "X-Kestra-Group": project.group + ".scripts.bash",
+                "X-Kestra-Description": project.description,
+                "X-Kestra-Version": project.version
+        )
+    }
+}
+
+dependencies {
+    implementation project(':plugin-script')
+
+    testImplementation project(':plugin-script').sourceSets.test.output
+}

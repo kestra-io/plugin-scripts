@@ -1,0 +1,259 @@
+package io.kestra.plugin.scripts.shell;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.CharStreams;
+import io.kestra.core.models.executions.LogEntry;
+import io.kestra.core.queues.QueueFactoryInterface;
+import io.kestra.core.queues.QueueInterface;
+import io.kestra.core.runners.RunContext;
+import io.kestra.core.runners.RunContextFactory;
+import io.kestra.core.storages.StorageInterface;
+import io.kestra.core.utils.TestsUtils;
+import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
+import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
+import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+import io.kestra.plugin.scripts.exec.scripts.runners.BashException;
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+@MicronautTest
+class ScriptTest {
+    @Inject
+    RunContextFactory runContextFactory;
+
+    @Inject
+    StorageInterface storageInterface;
+
+    @Inject
+    @Named(QueueFactoryInterface.WORKERTASKLOG_NAMED)
+    private QueueInterface<LogEntry> logQueue;
+
+    static Stream<Arguments> source() {
+        return Stream.of(
+            Arguments.of(RunnerType.DOCKER, DockerOptions.builder().image("ubuntu").build()),
+            Arguments.of(RunnerType.PROCESS, null)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("source")
+    void task(RunnerType runner, DockerOptions dockerOptions) throws Exception {
+        Command bash = Command.builder()
+            .id("unit-test")
+            .type(Script.class.getName())
+            .docker(dockerOptions)
+            .runner(runner)
+            .commands(List.of("echo 0", "echo 1", ">&2 echo 2", ">&2 echo 3"))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
+        ScriptOutput run = bash.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+        assertThat(run.getStdOutLineCount(), is(2));
+        assertThat(run.getStdErrLineCount(), is(2));
+    }
+
+
+    @ParameterizedTest
+    @MethodSource("source")
+    void script(RunnerType runner, DockerOptions dockerOptions) throws Exception {
+        Script bash = Script.builder()
+            .id("unit-test")
+            .type(Script.class.getName())
+            .docker(dockerOptions)
+            .runner(runner)
+            .script("""
+                echo 0
+                echo 1
+                >&2 echo 2
+                >&2 echo 3
+            """)
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
+        ScriptOutput run = bash.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+        assertThat(run.getStdOutLineCount(), is(2));
+        assertThat(run.getStdErrLineCount(), is(2));
+    }
+
+    @ParameterizedTest
+    @MethodSource("source")
+    void failed(RunnerType runner, DockerOptions dockerOptions) throws Exception {
+        Command bash = Command.builder()
+            .id("unit-test")
+            .type(Script.class.getName())
+            .docker(dockerOptions)
+            .runner(runner)
+            .commands(List.of("echo 1 1>&2", "exit 66", "echo 2"))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
+        BashException bashException = assertThrows(BashException.class, () -> {
+            bash.run(runContext);
+        });
+
+        assertThat(bashException.getExitCode(), is(66));
+        assertThat(bashException.getStdOutSize(), is(0));
+        assertThat(bashException.getStdErrSize(), is(1));
+    }
+
+    @ParameterizedTest
+    @MethodSource("source")
+    void stopOnFirstFailed(RunnerType runner, DockerOptions dockerOptions) {
+        Command bash = Command.builder()
+            .id("unit-test")
+            .type(Script.class.getName())
+            .docker(dockerOptions)
+            .runner(runner)
+            .beforeCommands(List.of("set -e"))
+            .commands(List.of("unknown", "echo 1"))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
+        BashException bashException = assertThrows(BashException.class, () -> {
+            bash.run(runContext);
+        });
+
+        assertThat(bashException.getExitCode(), is(127));
+        assertThat(bashException.getStdOutSize(), is(0));
+        assertThat(bashException.getStdErrSize(), is(1));
+    }
+
+    @ParameterizedTest
+    @MethodSource("source")
+    void dontStopOnFirstFailed(RunnerType runner, DockerOptions dockerOptions) throws Exception {
+        Command bash = Command.builder()
+            .id("unit-test")
+            .type(Command.class.getName())
+            .docker(dockerOptions)
+            .runner(runner)
+            .commands(List.of("unknown", "echo 1"))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
+        ScriptOutput run = bash.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+        assertThat(run.getStdOutLineCount(), is(1));
+        assertThat(run.getStdErrLineCount(), is(1));
+    }
+
+    @ParameterizedTest
+    @MethodSource("source")
+    void files(RunnerType runner, DockerOptions dockerOptions) throws Exception {
+        URI put = storageInterface.put(
+            new URI("/file/storage/get.yml"),
+            IOUtils.toInputStream("I'm here", StandardCharsets.UTF_8)
+        );
+
+        Command bash = Command.builder()
+            .id("unit-test")
+            .type(Command.class.getName())
+            .docker(dockerOptions)
+            .runner(runner)
+            .commands(List.of(
+                "mkdir -p {{ outputDir}}/sub/dir/",
+                "echo '::{\"outputs\": {\"extract\":\"'$(cat " + put.toString() + ")'\"}}::'",
+                "echo 1 >> {{ outputDir}}/file.xml",
+                "echo 2 >> {{ outputDir}}/sub/dir/file.csv",
+                "echo 3 >> {{ outputDir}}/file.xml"
+            ))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
+        ScriptOutput run = bash.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+        assertThat(run.getStdErrLineCount(), is(0));
+
+        assertThat(run.getStdOutLineCount(), is(1));
+        assertThat(run.getVars().get("extract"), is("I'm here"));
+        assertThat(run.getOutputFiles().size(), is(2));
+
+        InputStream get = storageInterface.get(run.getOutputFiles().get("file.xml"));
+
+        assertThat(
+            CharStreams.toString(new InputStreamReader(get)),
+            is("1\n3\n")
+        );
+
+        get = storageInterface.get(run.getOutputFiles().get("sub/dir/file.csv"));
+
+        assertThat(
+            CharStreams.toString(new InputStreamReader(get)),
+            is("2\n")
+        );
+    }
+
+    @Test
+    void pull() throws Exception {
+        List<LogEntry> logs = new ArrayList<>();
+        logQueue.receive(logs::add);
+
+        Command bash = Command.builder()
+            .id("unit-test")
+            .type(Command.class.getName())
+            .docker(DockerOptions.builder()
+                .pullPolicy(DockerOptions.PullPolicy.IF_NOT_PRESENT)
+                .image("alpine:3.15.6")
+                .build()
+            )
+            .runner(RunnerType.DOCKER)
+            .commands(List.of("pwd"))
+            .build();
+
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
+        ScriptOutput run = bash.run(runContext);
+        assertThat(run.getExitCode(), is(0));
+
+        run = bash.run(runContext);
+        assertThat(run.getExitCode(), is(0));
+
+        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("Image pulled"));
+
+        assertThat(logs.stream().filter(m -> m.getMessage().contains("pulled")).count(), is(1L));
+    }
+
+    @Test
+    void invalidImage() {
+        Command bash = Command.builder()
+            .id("unit-test")
+            .type(Command.class.getName())
+            .docker(DockerOptions.builder()
+                .pullPolicy(DockerOptions.PullPolicy.IF_NOT_PRESENT)
+                .image("alpine:999.15.6")
+                .build()
+            )
+            .runner(RunnerType.DOCKER)
+            .commands(List.of("pwd"))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
+        Exception exception = assertThrows(Exception.class, () -> bash.run(runContext));
+
+        assertThat(exception.getMessage(), containsString("manifest for alpine:999.15.6 not found"));
+    }
+}
