@@ -1,5 +1,5 @@
 @PluginSubGroup(
-    description = "This sub-group of plugins contains tasks for running shell scripts.",
+    description = "This subgroup of plugins contains tasks for running shell scripts.",
     categories = { PluginSubGroup.PluginCategory.SCRIPT }
 )
 package io.kestra.plugin.scripts.shell;

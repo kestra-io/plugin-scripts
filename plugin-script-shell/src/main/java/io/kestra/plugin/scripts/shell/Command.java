@@ -23,7 +23,7 @@ import javax.validation.constraints.NotNull;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute shell commands."
+    title = "Execute one or more Shell commands."
 )
 public class Command extends AbstractExecScript {
     @Schema(

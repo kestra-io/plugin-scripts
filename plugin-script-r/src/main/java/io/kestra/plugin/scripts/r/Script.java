@@ -24,7 +24,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a R script."
+    title = "Execute an R script."
 )
 public class Script extends AbstractExecScript {
     @Schema(

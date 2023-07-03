@@ -24,7 +24,7 @@ import javax.validation.constraints.NotNull;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a python commands."
+    title = "Execute one or more Python scripts from a Command Line Interface."
 )
 public class Command extends AbstractExecScript {
     @Schema(

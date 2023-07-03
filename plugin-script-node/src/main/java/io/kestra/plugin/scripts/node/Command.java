@@ -21,7 +21,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a node commands."
+    title = "Execute one or more Node commands from the Command Line Interface."
 )
 public class Command extends AbstractExecScript {
     @Schema(

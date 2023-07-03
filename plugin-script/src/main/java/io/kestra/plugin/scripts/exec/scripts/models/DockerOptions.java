@@ -26,7 +26,7 @@ public class DockerOptions {
 
     @Schema(
         title = "Docker config file",
-        description = "Full file that can be used to configure private registries, ..."
+        description = "Docker configuration file that can set access credentials to private container registries. Usually located in `~/.docker/config.json`"
     )
     @PluginProperty(dynamic = true)
     private String config;
@@ -40,7 +40,7 @@ public class DockerOptions {
     protected String image;
 
     @Schema(
-        title = "Docker user to use"
+        title = "User within the container"
     )
     @PluginProperty(dynamic = true)
     protected String user;
@@ -52,13 +52,13 @@ public class DockerOptions {
     protected List<String> entryPoint;
 
     @Schema(
-        title = "Docker extra host to use"
+        title = "Extra hostname mappings to the container network interface configuration"
     )
     @PluginProperty(dynamic = true)
     protected List<String> extraHosts;
 
     @Schema(
-        title = "Docker network mode to use"
+        title = "Docker network mode to use e.g. `host`, `none`, etc."
     )
     @PluginProperty(dynamic = true)
     protected String networkMode;
@@ -66,27 +66,27 @@ public class DockerOptions {
     @Schema(
         title = "List of volumes to mount",
         description = "Must be a valid mount expression as string, example : `/home/user:/app`\n\n" +
-            "Volumes mount are disabled by default for security reasons, you must enabled on server configuration with `kestra.tasks.scripts.docker.volume-enabled` to `true`"
+            "Volumes mount are disabled by default for security reasons; you must enable them on server configuration by setting `kestra.tasks.scripts.docker.volume-enabled` to `true`"
     )
     @PluginProperty(dynamic = true)
     protected List<String> volumes;
 
     @Schema(
         title = "The pull policy for an image",
-        description = "Can be used to prevent pulling of image locally build and to avoid pull again the same image"
+        description = "Pull policy can be used to prevent pulling of an already existing image `IF_NOT_PRESENT`, or can be set to `ALWAYS` to pull the latest version of the image even if an image with the same tag already exists."
     )
     @PluginProperty(dynamic = false)
     @Builder.Default
     protected PullPolicy pullPolicy = PullPolicy.IF_NOT_PRESENT;
 
     @Schema(
-        title = "A list of request for devices to be sent to device drivers"
+        title = "A list of device requests to be sent to device drivers"
     )
     @PluginProperty(dynamic = false)
     protected List<DeviceRequest> deviceRequests;
 
     @Schema(
-        title = "Limits cpu usage.",
+        title = "Limits the CPU usage to a given maximum threshold value.",
         description = "By default, each container’s access to the host machine’s CPU cycles is unlimited. " +
             "You can set various constraints to limit a given container’s access to the host machine’s CPU cycles."
     )
@@ -94,7 +94,7 @@ public class DockerOptions {
     protected Cpu cpu;
 
     @Schema(
-        title = "Limits memory usage.",
+        title = "Limits memory usage to a given maximum threshold value.",
         description = "Docker can enforce hard memory limits, which allow the container to use no more than a " +
             "given amount of user or system memory, or soft limits, which allow the container to use as much " +
             "memory as it needs unless certain conditions are met, such as when the kernel detects low memory " +
@@ -133,7 +133,7 @@ public class DockerOptions {
         private List<List<String>> capabilities;
 
         @Schema(
-            title = "Driver-specific options, specified as a key/value pairs.",
+            title = "Driver-specific options, specified as key/value pairs.",
             description = "These options are passed directly to the driver."
         )
         private Map<String, String> options;
@@ -145,7 +145,7 @@ public class DockerOptions {
     @Introspected
     public static class Cpu {
         @Schema(
-            title = "Specify how much of the available CPU resources a container can use.",
+            title = "The maximum amount of CPU resources a container can use.",
             description = "For instance, if the host machine has two CPUs and you set `cpus:\"1.5\"`, the container is guaranteed at most one and a half of the CPUs"
         )
         private Long cpus;
@@ -157,7 +157,7 @@ public class DockerOptions {
     @Introspected
     public static class Memory {
         @Schema(
-            title = "The maximum amount of memory the container can use.",
+            title = "The maximum amount of memory resources the container can use.",
             description = "That is, you must set the value to at least 6 megabytes."
         )
         @PluginProperty(dynamic = true)
@@ -202,7 +202,7 @@ public class DockerOptions {
             title = "By default, if an out-of-memory (OOM) error occurs, the kernel kills processes in a container.",
             description = "To change this behavior, use the `oomKillDisable` option. Only disable the OOM killer " +
                 "on containers where you have also set the `memory` option. If the `memory` flag is not set, the host " +
-                "can run out of memory and the kernel may need to kill the host system’s processes to free memory."
+                "can run out of memory, and the kernel may need to kill the host system’s processes to free the memory."
         )
         @PluginProperty(dynamic = false)
         private Boolean oomKillDisable;

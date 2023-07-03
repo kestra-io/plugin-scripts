@@ -34,19 +34,19 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
     protected RunnerType runner = RunnerType.DOCKER;
 
     @Schema(
-        title = "Docker options when using runner `DOCKER`"
+        title = "Docker options when using the `DOCKER` runner"
     )
     @PluginProperty
     protected DockerOptions docker;
 
     @Schema(
-        title = "The commands to run before"
+        title = "A list of commands that will run before `commands`, allowing to set up the environment e.g. `pip install -r requirements.txt`"
     )
     @PluginProperty(dynamic = true)
     protected List<String> beforeCommands;
 
     @Schema(
-        title = "Additional environments variable to add for current process."
+        title = "Additional environment variables for the current process."
     )
     @PluginProperty(
         additionalProperties = String.class,
@@ -56,7 +56,7 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
 
     @Builder.Default
     @Schema(
-        title = "Use `WARNING` state if any stdErr is sent"
+        title = "Set the task state to `WARNING`if any `stdErr` is emitted"
     )
     @PluginProperty
     @NotNull
@@ -64,7 +64,7 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
 
     @Builder.Default
     @Schema(
-        title = "Interpreter to used"
+        title = "Which interpreter to use"
     )
     @PluginProperty
     @NotNull
