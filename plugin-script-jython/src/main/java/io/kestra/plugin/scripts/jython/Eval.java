@@ -39,7 +39,7 @@ import io.kestra.core.runners.RunContext;
         )
     }
 )
-public class Eval extends io.kestra.plugin.scripts.Eval {
+public class Eval extends io.kestra.plugin.scripts.jvm.Eval {
     @Override
     public Eval.Output run(RunContext runContext) throws Exception {
         return this.run(runContext, "python");

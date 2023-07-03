@@ -1,7 +1,8 @@
-package io.kestra.plugin.scripts;
+package io.kestra.plugin.scripts.jvm;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.serializers.JacksonMapper;
+import io.kestra.plugin.scripts.jvm.FileTransform;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import org.junit.jupiter.api.Test;
 import io.kestra.core.models.executions.AbstractMetricEntry;

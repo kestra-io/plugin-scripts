@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts;
+package io.kestra.plugin.scripts.jvm;
 
 import io.kestra.core.runners.RunContext;
 import lombok.AllArgsConstructor;

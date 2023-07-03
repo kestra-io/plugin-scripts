@@ -5,9 +5,9 @@ import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import java.util.Arrays;
 
 @MicronautTest
-class EvalTest extends io.kestra.plugin.scripts.EvalTest {
+class EvalTest extends io.kestra.plugin.scripts.jvm.EvalTest {
     @Override
-    protected io.kestra.plugin.scripts.Eval task() {
+    protected io.kestra.plugin.scripts.jvm.Eval task() {
         return Eval.builder()
             .id("unit-test")
             .type(Eval.class.getName())

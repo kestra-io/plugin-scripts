@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts;
+package io.kestra.plugin.scripts.jvm;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,7 +13,7 @@ import io.kestra.core.runners.RunContext;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-public abstract class AbstractScript extends Task {
+public abstract class AbstractJvmScript extends Task {
     @Schema(
         title = "A full script"
     )

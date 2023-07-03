@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts;
+package io.kestra.plugin.scripts.jvm;
 
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.executions.metrics.Counter;
@@ -37,7 +37,7 @@ import javax.validation.constraints.NotNull;
         "if you set the `row` to `null`, the row will be skipped\n" +
         "You can create a variables `rows` to return many rows for a single `row`.\n"
 )
-public abstract class FileTransform extends AbstractScript implements RunnableTask<FileTransform.Output> {
+public abstract class FileTransform extends AbstractJvmScript implements RunnableTask<FileTransform.Output> {
     @NotNull
     @Schema(
         title = "Source file of row to transform",
