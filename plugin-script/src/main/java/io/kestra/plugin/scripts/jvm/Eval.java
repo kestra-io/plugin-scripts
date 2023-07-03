@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts;
+package io.kestra.plugin.scripts.jvm;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
@@ -29,7 +29,7 @@ import javax.script.*;
         "\n" +
         "The stdOut & stdErr is not captured, so you must use `logger`\n"
 )
-public abstract class Eval extends AbstractScript implements RunnableTask<Eval.Output> {
+public abstract class Eval extends AbstractJvmScript implements RunnableTask<Eval.Output> {
     @Schema(
         title = "A List of outputs variables that will be usable in outputs."
     )
