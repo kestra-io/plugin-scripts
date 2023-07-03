@@ -1,26 +1,24 @@
 package io.kestra.plugin.scripts.groovy;
 
 import com.google.common.collect.ImmutableMap;
-import io.kestra.core.models.executions.AbstractMetricEntry;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.FileSerde;
 import io.kestra.core.utils.IdUtils;
 import io.kestra.core.utils.TestsUtils;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
-import io.kestra.plugin.scripts.FileTransform;
+import io.kestra.plugin.scripts.jvm.FileTransform;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 @MicronautTest
-class FileTransformTest extends io.kestra.plugin.scripts.FileTransformTest {
+class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
     @Override
     protected FileTransform task(String source) {
         return io.kestra.plugin.scripts.groovy.FileTransform.builder()

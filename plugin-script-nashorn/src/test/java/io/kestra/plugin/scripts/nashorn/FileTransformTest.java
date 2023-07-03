@@ -3,10 +3,8 @@ package io.kestra.plugin.scripts.nashorn;
 
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 
-import java.net.URI;
-
 @MicronautTest
-class FileTransformTest extends io.kestra.plugin.scripts.FileTransformTest {
+class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
     @Override
     protected FileTransform task(String source) {
         return FileTransform.builder()

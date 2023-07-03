@@ -55,7 +55,7 @@ import io.kestra.core.runners.RunContext;
         ),
     }
 )
-public class FileTransform extends io.kestra.plugin.scripts.FileTransform {
+public class FileTransform extends io.kestra.plugin.scripts.jvm.FileTransform {
     @Override
     public Output run(RunContext runContext) throws Exception {
         return this.run(runContext, "groovy");
