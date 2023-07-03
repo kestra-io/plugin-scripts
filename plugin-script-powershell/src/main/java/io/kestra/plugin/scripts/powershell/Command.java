@@ -20,7 +20,7 @@ import javax.validation.constraints.NotNull;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a PowerShell commands."
+    title = "Execute one or more PowerShell commands."
 )
 public class Command extends AbstractExecScript {
     @Schema(
@@ -33,7 +33,7 @@ public class Command extends AbstractExecScript {
 
     @Builder.Default
     @Schema(
-        title = "Interpreter to used"
+        title = "Which interpreter to use"
     )
     @PluginProperty
     @NotNull

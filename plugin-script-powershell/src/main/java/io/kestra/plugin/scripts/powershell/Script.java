@@ -41,7 +41,7 @@ public class Script extends AbstractExecScript {
 
     @Builder.Default
     @Schema(
-        title = "Interpreter to used"
+        title = "Which interpreter to use"
     )
     @PluginProperty
     @NotNull

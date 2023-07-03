@@ -17,7 +17,7 @@ import javax.validation.constraints.NotNull;
 @Getter
 public class ScriptOutput implements Output {
     @Schema(
-        title = "The value extract from output of the commands"
+        title = "The value extracted from the output of the executed `commands`"
     )
     private final Map<String, Object> vars;
 
@@ -32,7 +32,7 @@ public class ScriptOutput implements Output {
     private final int stdErrLineCount;
 
     @Schema(
-        title = "The exit code of the whole execution"
+        title = "The exit code of the entire Flow Execution"
     )
     @NotNull
     private final int exitCode;
@@ -47,7 +47,7 @@ public class ScriptOutput implements Output {
     private final Map<String, URI> files;
 
     @Schema(
-        title = "The output files uri in Kestra internal storage"
+        title = "The output files URI in Kestra internal storage"
     )
     @PluginProperty(additionalProperties = URI.class)
     private final Map<String, URI> outputFiles;

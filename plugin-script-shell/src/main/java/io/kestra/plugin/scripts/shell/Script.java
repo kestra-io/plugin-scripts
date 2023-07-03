@@ -21,7 +21,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a shell script."
+    title = "Execute a Shell script."
 )
 public class Script extends AbstractExecScript {
     @Schema(

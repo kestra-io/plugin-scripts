@@ -23,7 +23,7 @@ import javax.validation.constraints.NotNull;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute R commands."
+    title = "Execute R from the Command Line Interface."
 )
 public class Command extends AbstractExecScript {
     @Schema(
