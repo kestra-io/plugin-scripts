@@ -75,7 +75,7 @@ public class DockerOptions {
         title = "The pull policy for an image",
         description = "Pull policy can be used to prevent pulling of an already existing image `IF_NOT_PRESENT`, or can be set to `ALWAYS` to pull the latest version of the image even if an image with the same tag already exists."
     )
-    @PluginProperty(dynamic = false)
+    @PluginProperty
     @Builder.Default
     protected PullPolicy pullPolicy = PullPolicy.IF_NOT_PRESENT;
 

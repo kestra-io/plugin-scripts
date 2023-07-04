@@ -47,7 +47,7 @@ public class LogService {
         return (inputStream, isStdErr) -> {
             LogThread thread = new LogThread(inputStream, isStdErr, runContext);
 
-            thread.setName("bash-log-" + (isStdErr ? "-err" : "-out"));
+            thread.setName("shell-log-" + (isStdErr ? "-err" : "-out"));
             thread.start();
 
             return thread;
