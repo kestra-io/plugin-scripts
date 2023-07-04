@@ -25,7 +25,7 @@ import java.util.List;
 )
 public class Script extends AbstractExecScript {
     @Schema(
-        title = "The script file to run"
+        title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
     )
     @PluginProperty(dynamic = true)
     protected String script;
