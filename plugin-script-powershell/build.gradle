@@ -5,7 +5,7 @@ jar {
         attributes(
                 "X-Kestra-Name": project.name,
                 "X-Kestra-Title": "PowerShell",
-                "X-Kestra-Group": project.group + ".scripts.bash",
+                "X-Kestra-Group": project.group + ".scripts.powershell",
                 "X-Kestra-Description": project.description,
                 "X-Kestra-Version": project.version
         )
