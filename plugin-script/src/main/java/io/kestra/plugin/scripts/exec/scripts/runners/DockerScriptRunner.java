@@ -11,27 +11,27 @@ import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.NameParser;
 import com.github.dockerjava.zerodep.ZerodepDockerHttpClient;
+import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.ConnectionClosedException;
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.tasks.retrys.Exponential;
 import io.kestra.core.runners.RunContext;
+import io.kestra.core.utils.Await;
 import io.kestra.core.utils.RetryUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.core.convert.format.ReadableBytesTypeConverter;
 import lombok.SneakyThrows;
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.ConnectionClosedException;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static io.kestra.core.utils.Rethrow.throwFunction;
@@ -100,18 +100,11 @@ public class DockerScriptRunner {
         RunContext runContext = commands.getRunContext();
         Logger logger = commands.getRunContext().logger();
         String image = runContext.render(dockerOptions.getImage(), commands.getAdditionalVars());
+        AbstractLogConsumer defaultLogConsumer = commands.getLogConsumer();
 
-        try (
-            DockerClient dockerClient = dockerClient(dockerOptions, runContext, commands.getWorkingDirectory());
-            PipedInputStream stdOutInputStream = new PipedInputStream();
-            PipedOutputStream stdOutOutputStream = new PipedOutputStream(stdOutInputStream);
-            PipedInputStream stdErrInputStream = new PipedInputStream();
-            PipedOutputStream stdErrOutputStream = new PipedOutputStream(stdErrInputStream);
-        ) {
-
+        try (DockerClient dockerClient = dockerClient(dockerOptions, runContext, commands.getWorkingDirectory())) {
             // create container
             CreateContainerCmd container = configure(commands, dockerClient, dockerOptions);
-
 
             // pull image
             if (dockerOptions.getPullPolicy() != DockerOptions.PullPolicy.NEVER) {
@@ -127,11 +120,9 @@ public class DockerScriptRunner {
                 String.join(" ", commands.getCommands())
             );
 
-            try {
-                // logs
-                AbstractLogThread stdOut = commands.getLogSupplier().call(stdOutInputStream, false);
-                AbstractLogThread stdErr = commands.getLogSupplier().call(stdErrInputStream, true);
+            AtomicBoolean ended = new AtomicBoolean(false);
 
+            try {
                 dockerClient.logContainerCmd(exec.getId())
                     .withFollowStream(true)
                     .withStdErr(true)
@@ -140,37 +131,31 @@ public class DockerScriptRunner {
                         @SneakyThrows
                         @Override
                         public void onNext(Frame item) {
-                            if (item.getStreamType() == StreamType.STDOUT) {
-                                stdOutOutputStream.write(item.getPayload());
-                            } else {
-                                stdErrOutputStream.write(item.getPayload());
-                            }
+                            defaultLogConsumer.accept(
+                                new String(item.getPayload()).trim(),
+                                item.getStreamType() == StreamType.STDERR
+                            );
+                        }
+
+                        @Override
+                        public void onComplete() {
+                            ended.set(true);
+                            super.onComplete();
                         }
                     });
 
                 WaitContainerResultCallback result = dockerClient.waitContainerCmd(exec.getId()).start();
 
                 Integer exitCode = result.awaitStatusCode();
-
-                stdOutOutputStream.flush();
-                stdOutOutputStream.close();
-                stdErrOutputStream.flush();
-                stdErrOutputStream.close();
-
-                stdOut.join();
-                stdErr.join();
+                Await.until(ended::get);
 
                 if (exitCode != 0) {
-                    throw new ScriptException(exitCode, stdOut.getLogsCount(), stdErr.getLogsCount());
+                    throw new ScriptException(exitCode, defaultLogConsumer.getStdOutCount(), defaultLogConsumer.getStdErrCount());
                 } else {
                     logger.debug("Command succeed with code " + exitCode);
                 }
 
-                return new RunnerResult(exitCode, stdOut, stdErr);
-            } catch (InterruptedException e) {
-                logger.warn("Killing process {} for InterruptedException", exec.getId());
-
-                throw e;
+                return new RunnerResult(exitCode, defaultLogConsumer);
             } finally {
                 try {
                     var inspect = dockerClient.inspectContainerCmd(exec.getId()).exec();
