@@ -77,7 +77,7 @@ public class DockerOptions {
     )
     @PluginProperty
     @Builder.Default
-    protected PullPolicy pullPolicy = PullPolicy.IF_NOT_PRESENT;
+    protected PullPolicy pullPolicy = PullPolicy.ALWAYS;
 
     @Schema(
         title = "A list of device requests to be sent to device drivers"
@@ -123,19 +123,26 @@ public class DockerOptions {
         title = "A request for devices to be sent to device drivers"
     )
     public static class DeviceRequest {
+        @PluginProperty(dynamic = true)
         private String driver;
+
+        @PluginProperty
         private Integer count;
+
+        @PluginProperty(dynamic = true)
         private List<String> deviceIds;
 
         @Schema(
             title = "A list of capabilities; an OR list of AND lists of capabilities."
         )
+        @PluginProperty
         private List<List<String>> capabilities;
 
         @Schema(
             title = "Driver-specific options, specified as key/value pairs.",
             description = "These options are passed directly to the driver."
         )
+        @PluginProperty
         private Map<String, String> options;
     }
 
@@ -148,6 +155,7 @@ public class DockerOptions {
             title = "The maximum amount of CPU resources a container can use.",
             description = "For instance, if the host machine has two CPUs and you set `cpus:\"1.5\"`, the container is guaranteed at most one and a half of the CPUs"
         )
+        @PluginProperty
         private Long cpus;
     }
 

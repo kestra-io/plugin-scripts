@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts.r;
+package io.kestra.plugin.scripts.python;
 
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.runners.RunContext;
@@ -14,6 +14,7 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
@@ -23,9 +24,9 @@ import javax.validation.constraints.NotNull;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute R from the Command Line Interface."
+    title = "Execute one or more Python scripts from a Command Line Interface."
 )
-public class Command extends AbstractExecScript {
+public class Commands extends AbstractExecScript {
     @Schema(
         title = "The commands to run"
     )
@@ -37,7 +38,7 @@ public class Command extends AbstractExecScript {
     @Override
     protected DockerOptions defaultDockerOptions() {
         return DockerOptions.builder()
-            .image("r-base")
+            .image("python")
             .build();
     }
 
@@ -50,6 +51,7 @@ public class Command extends AbstractExecScript {
         );
 
         return this.commands(runContext)
+            .addEnv(Map.of("PYTHONUNBUFFERED", "true"))
             .withCommands(commandsArgs)
             .run();
     }

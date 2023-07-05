@@ -22,10 +22,12 @@ import static io.kestra.core.utils.Rethrow.throwConsumer;
 import static io.kestra.core.utils.Rethrow.throwFunction;
 
 abstract public class ScriptService {
+    private static final Pattern INTERNAL_STORAGE_PATTERN = Pattern.compile("(kestra:\\/\\/[-a-zA-Z0-9%._\\+~#=/]*)");
+
     public static List<String> uploadInputFiles(RunContext runContext, List<String> commands) throws IOException {
         return commands
             .stream()
-            .map(throwFunction(s -> Pattern.compile("(kestra:\\/\\/[-a-zA-Z0-9%._\\+~#=/]*)")
+            .map(throwFunction(s -> INTERNAL_STORAGE_PATTERN
                 .matcher(s)
                 .replaceAll(throwFunction(matchResult -> saveOnLocalStorage(runContext, matchResult.group())))
             ))
@@ -76,7 +78,7 @@ abstract public class ScriptService {
                     ListUtils.emptyOnNull(beforeCommands).stream(),
                     commands.stream()
                 )
-                .collect(Collectors.joining("\n"))
+                .collect(Collectors.joining(System.lineSeparator()))
         );
 
         return commandsArgs;

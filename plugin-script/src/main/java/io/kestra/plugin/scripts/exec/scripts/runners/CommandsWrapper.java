@@ -25,32 +25,32 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 
 @AllArgsConstructor
 @Getter
-public class Commands {
-    RunContext runContext;
+public class CommandsWrapper {
+    private RunContext runContext;
 
-    Path workingDirectory;
+    private Path workingDirectory;
 
-    Path outputDirectory;
+    private Path outputDirectory;
 
-    Map<String, Object> additionalVars;
+    private Map<String, Object> additionalVars;
 
-    List<String> commands;
+    private List<String> commands;
 
-    Map<String, String> env;
-
-    @With
-    LogSupplierInterface logSupplier;
+    private Map<String, String> env;
 
     @With
-    RunnerType runnerType;
+    private LogSupplierInterface logSupplier;
 
     @With
-    DockerOptions dockerOptions;
+    private RunnerType runnerType;
 
     @With
-    Boolean warningOnStdErr;
+    private DockerOptions dockerOptions;
 
-    public Commands(RunContext runContext, DockerOptions defaultDockerOptions) {
+    @With
+    private Boolean warningOnStdErr;
+
+    public CommandsWrapper(RunContext runContext, DockerOptions defaultDockerOptions) {
         this.runContext = runContext;
 
         this.workingDirectory = runContext.tempDir();
@@ -68,8 +68,8 @@ public class Commands {
         this.dockerOptions = defaultDockerOptions;
     }
 
-    public Commands withCommands(List<String> commands) throws IOException, IllegalVariableEvaluationException {
-        return new Commands(
+    public CommandsWrapper withCommands(List<String> commands) throws IOException, IllegalVariableEvaluationException {
+        return new CommandsWrapper(
             runContext,
             workingDirectory,
             outputDirectory,
@@ -83,8 +83,8 @@ public class Commands {
         );
     }
 
-    public Commands withEnv(Map<String, String> envs) throws IllegalVariableEvaluationException {
-        return new Commands(
+    public CommandsWrapper withEnv(Map<String, String> envs) throws IllegalVariableEvaluationException {
+        return new CommandsWrapper(
             runContext,
             workingDirectory,
             outputDirectory,
@@ -106,13 +106,13 @@ public class Commands {
         );
     }
 
-    public Commands addAdditionalVars(Map<String, Object> additionalVars) {
+    public CommandsWrapper addAdditionalVars(Map<String, Object> additionalVars) {
         this.additionalVars.putAll(additionalVars);
 
         return this;
     }
 
-    public Commands addEnv(Map<String, String> envs) {
+    public CommandsWrapper addEnv(Map<String, String> envs) {
         this.env.putAll(envs);
 
         return this;
