@@ -39,7 +39,7 @@ public class CommandsWrapper {
     private Map<String, String> env;
 
     @With
-    private LogSupplierInterface logSupplier;
+    private AbstractLogConsumer logConsumer;
 
     @With
     private RunnerType runnerType;
@@ -63,7 +63,7 @@ public class CommandsWrapper {
             "outputDir", outputDirectory.toString()
         ));
 
-        this.logSupplier = LogService.defaultLogSupplier(runContext);
+        this.logConsumer = LogService.defaultLogSupplier(runContext);
 
         this.dockerOptions = defaultDockerOptions;
     }
@@ -76,7 +76,7 @@ public class CommandsWrapper {
             additionalVars,
             ScriptService.uploadInputFiles(runContext, runContext.render(commands, this.additionalVars)),
             env,
-            logSupplier,
+            logConsumer,
             runnerType,
             dockerOptions,
             warningOnStdErr
@@ -99,7 +99,7 @@ public class CommandsWrapper {
                     )
                 ))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
-            logSupplier,
+            logConsumer,
             runnerType,
             dockerOptions,
             warningOnStdErr
@@ -129,16 +129,12 @@ public class CommandsWrapper {
 
         Map<String, URI> outputFiles = ScriptService.uploadOutputFiles(runContext, outputDirectory);
 
-        Map<String, Object> outputsVars = new HashMap<>();
-        outputsVars.putAll(runnerResult.getStdOut().getOutputs());
-        outputsVars.putAll(runnerResult.getStdErr().getOutputs());
-
         return ScriptOutput.builder()
             .exitCode(runnerResult.getExitCode())
-            .stdOutLineCount(runnerResult.getStdOut().getLogsCount())
-            .stdErrLineCount(runnerResult.getStdErr().getLogsCount())
+            .stdOutLineCount(runnerResult.getLogConsumer().getStdOutCount())
+            .stdErrLineCount(runnerResult.getLogConsumer().getStdErrCount())
             .warningOnStdErr(this.warningOnStdErr)
-            .vars(outputsVars)
+            .vars(runnerResult.getLogConsumer().getOutputs())
              .outputFiles(outputFiles)
             .build();
     }

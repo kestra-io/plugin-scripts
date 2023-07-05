@@ -2,6 +2,10 @@ package io.kestra.plugin.scripts.exec.scripts.runners;
 
 import org.slf4j.Logger;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -9,6 +13,7 @@ public class ProcessBuilderScriptRunner {
     public RunnerResult run(CommandsWrapper commands) throws Exception {
         Logger logger = commands.getRunContext().logger();
         Path workingDirectory = commands.getWorkingDirectory();
+        AbstractLogConsumer defaultLogConsumer = commands.getLogConsumer();
 
         ProcessBuilder processBuilder = new ProcessBuilder();
 
@@ -27,28 +32,33 @@ public class ProcessBuilderScriptRunner {
         long pid = process.pid();
         logger.debug("Starting command with pid {} [{}]", pid, String.join(" ", commands.getCommands()));
 
-        try {
-            // logs
-            AbstractLogThread stdOut = commands.getLogSupplier().call(process.getInputStream(), false);
-            AbstractLogThread stdErr = commands.getLogSupplier().call(process.getErrorStream(), true);
+        LogThread stdOut = new LogThread(process.getInputStream(), defaultLogConsumer, false);
+        LogThread stdErr = new LogThread(process.getErrorStream(), defaultLogConsumer, true);
 
+        stdOut.start();
+        stdErr.start();
+
+        try {
             int exitCode = process.waitFor();
 
             stdOut.join();
             stdErr.join();
 
             if (exitCode != 0) {
-                throw new ScriptException(exitCode, stdOut.getLogsCount(), stdErr.getLogsCount());
+                throw new ScriptException(exitCode, defaultLogConsumer.getStdOutCount(), defaultLogConsumer.getStdErrCount());
             } else {
                 logger.debug("Command succeed with code " + exitCode);
             }
 
-            return new RunnerResult(exitCode, stdOut, stdErr);
+            return new RunnerResult(exitCode, defaultLogConsumer);
         } catch (InterruptedException e) {
             logger.warn("Killing process {} for InterruptedException", pid);
             killDescendantsOf(process.toHandle(), logger);
             process.destroy();
             throw e;
+        } finally {
+            stdOut.join();
+            stdErr.join();
         }
     }
 
@@ -58,5 +68,38 @@ public class ProcessBuilderScriptRunner {
                 logger.warn("Descendant process {} of {} couldn't be killed", processHandle.pid(), process.pid());
             }
         });
+    }
+
+    public static class LogThread extends Thread {
+        private final InputStream inputStream;
+
+        private final AbstractLogConsumer logConsumerInterface;
+
+        private final boolean isStdErr;
+
+        protected LogThread(InputStream inputStream, AbstractLogConsumer logConsumerInterface, boolean isStdErr) {
+            this.inputStream = inputStream;
+            this.logConsumerInterface = logConsumerInterface;
+            this.isStdErr = isStdErr;
+        }
+
+        @Override
+        public void run() {
+            try {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+                try (BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
+                    String line;
+                    while ((line = bufferedReader.readLine()) != null) {
+                        this.logConsumerInterface.accept(line, this.isStdErr);
+                    }
+                }
+            } catch (Exception e) {
+                try {
+                    throw new RuntimeException(e);
+                } catch (Exception ignored) {
+
+                }
+            }
+        }
     }
 }

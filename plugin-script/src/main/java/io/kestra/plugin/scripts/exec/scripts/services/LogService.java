@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutputFormat;
-import io.kestra.plugin.scripts.exec.scripts.runners.LogSupplierInterface;
-import io.kestra.plugin.scripts.exec.scripts.runners.LogThread;
+import io.kestra.plugin.scripts.exec.scripts.runners.AbstractLogConsumer;
+import io.kestra.plugin.scripts.exec.scripts.runners.DefaultLogConsumer;
 import org.slf4j.Logger;
 
 import java.util.HashMap;
@@ -43,14 +43,7 @@ public class LogService {
         return outputs;
     }
 
-    public static LogSupplierInterface defaultLogSupplier(RunContext runContext) {
-        return (inputStream, isStdErr) -> {
-            LogThread thread = new LogThread(inputStream, isStdErr, runContext);
-
-            thread.setName("shell-log-" + (isStdErr ? "-err" : "-out"));
-            thread.start();
-
-            return thread;
-        };
+    public static AbstractLogConsumer defaultLogSupplier(RunContext runContext) {
+        return new DefaultLogConsumer(runContext);
     }
 }

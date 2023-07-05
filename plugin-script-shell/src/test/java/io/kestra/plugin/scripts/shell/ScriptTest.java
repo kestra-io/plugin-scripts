@@ -17,6 +17,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -60,5 +62,33 @@ class ScriptTest {
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getStdOutLineCount(), is(2));
         assertThat(run.getStdErrLineCount(), is(2));
+    }
+
+    @ParameterizedTest
+    @MethodSource("source")
+    void massLog(RunnerType runner, DockerOptions dockerOptions) throws Exception {
+        List<LogEntry> logs = new ArrayList<>();
+        logQueue.receive(logs::add);
+
+        Script bash = Script.builder()
+            .id("unit-test")
+            .type(Script.class.getName())
+            .docker(dockerOptions)
+            .interpreter(List.of("/bin/bash", "-c"))
+            .runner(runner)
+            .script("""
+                for i in {1..2000}
+                do
+                   echo "$i"
+                done
+            """)
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
+        ScriptOutput run = bash.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+        assertThat(run.getStdOutLineCount(), is(2000));
+        assertThat(run.getStdErrLineCount(), is(0));
     }
 }

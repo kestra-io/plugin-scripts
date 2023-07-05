@@ -7,6 +7,5 @@ import lombok.Getter;
 @Getter
 public class RunnerResult {
     private int exitCode;
-    private AbstractLogThread stdOut;
-    private AbstractLogThread stdErr;
+    private AbstractLogConsumer logConsumer;
 }
