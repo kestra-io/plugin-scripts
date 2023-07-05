@@ -38,15 +38,6 @@ public class ScriptOutput implements Output {
     private final int exitCode;
 
     @Schema(
-        title = "Deprecated output files",
-        description = "use `outputFiles`",
-        deprecated = true
-    )
-    @Deprecated
-    @PluginProperty(additionalProperties = URI.class)
-    private final Map<String, URI> files;
-
-    @Schema(
         title = "The output files URI in Kestra internal storage"
     )
     @PluginProperty(additionalProperties = URI.class)

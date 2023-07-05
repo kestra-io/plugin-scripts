@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts.node;
+package io.kestra.plugin.scripts.r;
 
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.runners.RunContext;
@@ -14,6 +14,8 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 
 @SuperBuilder
 @ToString
@@ -21,19 +23,21 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute one or more Node commands from the Command Line Interface."
+    title = "Execute R from the Command Line Interface."
 )
-public class Command extends AbstractExecScript {
+public class Commands extends AbstractExecScript {
     @Schema(
         title = "The commands to run"
     )
     @PluginProperty(dynamic = true)
+    @NotNull
+    @NotEmpty
     protected List<String> commands;
 
     @Override
     protected DockerOptions defaultDockerOptions() {
         return DockerOptions.builder()
-            .image("node")
+            .image("r-base")
             .build();
     }
 

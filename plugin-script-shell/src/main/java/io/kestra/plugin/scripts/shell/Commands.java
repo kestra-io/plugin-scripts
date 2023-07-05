@@ -25,7 +25,7 @@ import javax.validation.constraints.NotNull;
 @Schema(
     title = "Execute one or more Shell commands."
 )
-public class Command extends AbstractExecScript {
+public class Commands extends AbstractExecScript {
     @Schema(
         title = "The commands to run"
     )

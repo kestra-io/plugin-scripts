@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts.python;
+package io.kestra.plugin.scripts.node;
 
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.runners.RunContext;
@@ -14,9 +14,6 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
-import java.util.Map;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 
 @SuperBuilder
 @ToString
@@ -24,21 +21,19 @@ import javax.validation.constraints.NotNull;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute one or more Python scripts from a Command Line Interface."
+    title = "Execute one or more Node commands from the Command Line Interface."
 )
-public class Command extends AbstractExecScript {
+public class Commands extends AbstractExecScript {
     @Schema(
         title = "The commands to run"
     )
     @PluginProperty(dynamic = true)
-    @NotNull
-    @NotEmpty
     protected List<String> commands;
 
     @Override
     protected DockerOptions defaultDockerOptions() {
         return DockerOptions.builder()
-            .image("python")
+            .image("node")
             .build();
     }
 
@@ -51,7 +46,6 @@ public class Command extends AbstractExecScript {
         );
 
         return this.commands(runContext)
-            .addEnv(Map.of("PYTHONUNBUFFERED", "true"))
             .withCommands(commandsArgs)
             .run();
     }

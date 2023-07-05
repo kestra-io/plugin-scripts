@@ -92,7 +92,7 @@ public class DockerScriptRunner {
             .build();
     }
 
-    public RunnerResult run(Commands commands, DockerOptions dockerOptions) throws Exception {
+    public RunnerResult run(CommandsWrapper commands, DockerOptions dockerOptions) throws Exception {
         if (dockerOptions == null) {
             throw new IllegalArgumentException("Missing required docker properties");
         }
@@ -161,7 +161,7 @@ public class DockerScriptRunner {
                 stdErr.join();
 
                 if (exitCode != 0) {
-                    throw new BashException(exitCode, stdOut.getLogsCount(), stdErr.getLogsCount());
+                    throw new ScriptException(exitCode, stdOut.getLogsCount(), stdErr.getLogsCount());
                 } else {
                     logger.debug("Command succeed with code " + exitCode);
                 }
@@ -191,7 +191,7 @@ public class DockerScriptRunner {
         }
     }
 
-    private CreateContainerCmd configure(Commands commands, DockerClient dockerClient, DockerOptions dockerOptions) throws IllegalVariableEvaluationException {
+    private CreateContainerCmd configure(CommandsWrapper commands, DockerClient dockerClient, DockerOptions dockerOptions) throws IllegalVariableEvaluationException {
         if (dockerOptions.getImage() == null) {
             throw new IllegalArgumentException("Missing docker image");
         }
@@ -262,7 +262,7 @@ public class DockerScriptRunner {
                 .map(throwFunction(deviceRequest -> new DeviceRequest()
                     .withDriver(runContext.render(deviceRequest.getDriver()))
                     .withCount(deviceRequest.getCount())
-                    .withDeviceIds(deviceRequest.getDeviceIds())
+                    .withDeviceIds(runContext.render(deviceRequest.getDeviceIds()))
                     .withCapabilities(deviceRequest.getCapabilities())
                     .withOptions(deviceRequest.getOptions())
                 ))
