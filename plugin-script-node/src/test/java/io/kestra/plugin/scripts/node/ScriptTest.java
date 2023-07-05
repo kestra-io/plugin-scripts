@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts.powershell;
+package io.kestra.plugin.scripts.node;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.LogEntry;
@@ -36,7 +36,7 @@ class ScriptTest {
         Script bash = Script.builder()
             .id("unit-test")
             .type(Script.class.getName())
-            .script("'Hello, World!' | Write-Output")
+            .script("console.log('hello there!')")
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -46,7 +46,7 @@ class ScriptTest {
         assertThat(run.getStdOutLineCount(), is(1));
         assertThat(run.getStdErrLineCount(), is(0));
 
-        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("Hello World"));
-        assertThat(logs.stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("World!")).count(), is(1L));
+        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("hello there!"));
+        assertThat(logs.stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("hello there!")).count(), is(1L));
     }
 }

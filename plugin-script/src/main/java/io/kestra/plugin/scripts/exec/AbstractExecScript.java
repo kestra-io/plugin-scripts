@@ -8,7 +8,7 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.plugin.scripts.exec.scripts.runners.Commands;
+import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -73,8 +73,8 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
 
     protected abstract DockerOptions defaultDockerOptions();
 
-    protected Commands commands(RunContext runContext) throws IllegalVariableEvaluationException {
-        Commands commands = new Commands(runContext, this.defaultDockerOptions())
+    protected CommandsWrapper commands(RunContext runContext) throws IllegalVariableEvaluationException {
+        CommandsWrapper commands = new CommandsWrapper(runContext, this.defaultDockerOptions())
             .withEnv(this.env)
             .withWarningOnStdErr(this.warningOnStdErr)
             .withRunnerType(this.runner);

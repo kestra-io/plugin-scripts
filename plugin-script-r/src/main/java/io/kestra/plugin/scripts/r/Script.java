@@ -5,7 +5,7 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.plugin.scripts.exec.scripts.runners.Commands;
+import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.kestra.plugin.scripts.exec.scripts.services.ScriptService;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
@@ -42,7 +42,7 @@ public class Script extends AbstractExecScript {
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
-        Commands commands = this.commands(runContext);
+        CommandsWrapper commands = this.commands(runContext);
 
         Path path = runContext.tempFile(
             runContext.render(this.script, commands.getAdditionalVars()).getBytes(StandardCharsets.UTF_8),

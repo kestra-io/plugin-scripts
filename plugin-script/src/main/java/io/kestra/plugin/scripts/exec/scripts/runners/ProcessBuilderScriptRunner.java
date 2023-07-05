@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import java.util.Map;
 
 public class ProcessBuilderScriptRunner {
-    public RunnerResult run(Commands commands) throws Exception {
+    public RunnerResult run(CommandsWrapper commands) throws Exception {
         Logger logger = commands.getRunContext().logger();
         Path workingDirectory = commands.getWorkingDirectory();
 
@@ -38,7 +38,7 @@ public class ProcessBuilderScriptRunner {
             stdErr.join();
 
             if (exitCode != 0) {
-                throw new BashException(exitCode, stdOut.getLogsCount(), stdErr.getLogsCount());
+                throw new ScriptException(exitCode, stdOut.getLogsCount(), stdErr.getLogsCount());
             } else {
                 logger.debug("Command succeed with code " + exitCode);
             }

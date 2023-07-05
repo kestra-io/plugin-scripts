@@ -9,7 +9,7 @@ import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.plugin.scripts.exec.scripts.runners.BashException;
+import io.kestra.plugin.scripts.exec.scripts.runners.ScriptException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -26,7 +26,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @MicronautTest
-class CommandTest {
+class ScriptTest {
     @Inject
     RunContextFactory runContextFactory;
 
@@ -71,7 +71,7 @@ class CommandTest {
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
-        BashException pythonException = assertThrows(BashException.class, () -> {
+        ScriptException pythonException = assertThrows(ScriptException.class, () -> {
             python.run(runContext);
         });
 
@@ -144,15 +144,15 @@ class CommandTest {
         assertThat(getMetrics(runContext, "count").getTags().get("tag1"), is("i"));
         assertThat(getMetrics(runContext, "count").getTags().get("tag2"), is("win"));
 
-        assertThat(CommandTest.<Duration>getMetrics(runContext, "timer1").getValue().getNano(), greaterThan(0));
-        assertThat(CommandTest.<Duration>getMetrics(runContext, "timer1").getTags().size(), is(2));
-        assertThat(CommandTest.<Duration>getMetrics(runContext, "timer1").getTags().get("tag1"), is("i"));
-        assertThat(CommandTest.<Duration>getMetrics(runContext, "timer1").getTags().get("tag2"), is("lost"));
+        assertThat(ScriptTest.<Duration>getMetrics(runContext, "timer1").getValue().getNano(), greaterThan(0));
+        assertThat(ScriptTest.<Duration>getMetrics(runContext, "timer1").getTags().size(), is(2));
+        assertThat(ScriptTest.<Duration>getMetrics(runContext, "timer1").getTags().get("tag1"), is("i"));
+        assertThat(ScriptTest.<Duration>getMetrics(runContext, "timer1").getTags().get("tag2"), is("lost"));
 
-        assertThat(CommandTest.<Duration>getMetrics(runContext, "timer2").getValue().getNano(), greaterThan(100000000));
-        assertThat(CommandTest.<Duration>getMetrics(runContext, "timer2").getTags().size(), is(2));
-        assertThat(CommandTest.<Duration>getMetrics(runContext, "timer2").getTags().get("tag1"), is("i"));
-        assertThat(CommandTest.<Duration>getMetrics(runContext, "timer2").getTags().get("tag2"), is("destroy"));
+        assertThat(ScriptTest.<Duration>getMetrics(runContext, "timer2").getValue().getNano(), greaterThan(100000000));
+        assertThat(ScriptTest.<Duration>getMetrics(runContext, "timer2").getTags().size(), is(2));
+        assertThat(ScriptTest.<Duration>getMetrics(runContext, "timer2").getTags().get("tag1"), is("i"));
+        assertThat(ScriptTest.<Duration>getMetrics(runContext, "timer2").getTags().get("tag2"), is("destroy"));
     }
 
     @SuppressWarnings("unchecked")
