@@ -1,5 +1,7 @@
 package io.kestra.plugin.scripts.powershell;
 
+import io.kestra.core.models.annotations.Example;
+import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
@@ -22,7 +24,31 @@ import javax.validation.constraints.NotNull;
 @Schema(
     title = "Execute one or more PowerShell commands."
 )
-public class Command extends AbstractExecScript {
+@Plugin(examples = {
+    @Example(
+        full = true,
+        title = "Create a PowerShell script and execute it",
+        code = """
+            id: "local-files"
+            namespace: "io.kestra.tests"
+
+            tasks:
+              - id: workingDir
+                type: io.kestra.core.tasks.flows.WorkingDirectory
+                tasks:
+                - id: inputFiles
+                  type: io.kestra.core.tasks.storages.LocalFiles
+                  inputs:
+                    main.ps1: |
+                      Get-ChildItem | Format-List
+                - id: bash
+                  type: io.kestra.plugin.scripts.powershell.Commands
+                  commands:
+                    - pwsh main.ps1
+            """
+    )
+})
+public class Commands extends AbstractExecScript {
     @Schema(
         title = "The commands to run"
     )

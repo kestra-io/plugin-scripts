@@ -1,5 +1,7 @@
 package io.kestra.plugin.scripts.node;
 
+import io.kestra.core.models.annotations.Example;
+import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
@@ -27,6 +29,18 @@ import java.util.Map;
 @Schema(
     title = "Execute a Node script."
 )
+@Plugin(examples = {
+    @Example(
+        title = "Install package, create a node script and execute it",
+        code = {
+            "beforeCommands:",
+            "  - npm install colors",
+            "script: |",
+            "  const colors = require(\"colors\");",
+            "  console.log(colors.red(\"Hello\"));",
+        }
+    )
+})
 public class Script extends AbstractExecScript {
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."

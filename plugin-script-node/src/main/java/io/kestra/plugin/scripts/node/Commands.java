@@ -1,5 +1,7 @@
 package io.kestra.plugin.scripts.node;
 
+import io.kestra.core.models.annotations.Example;
+import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
@@ -23,6 +25,33 @@ import java.util.List;
 @Schema(
     title = "Execute one or more Node commands from the Command Line Interface."
 )
+@Plugin(examples = {
+    @Example(
+        full = true,
+        title = "Install package, create a node script and execute it",
+        code = """
+            id: "local-files"
+            namespace: "io.kestra.tests"
+
+            tasks:
+              - id: workingDir
+                type: io.kestra.core.tasks.flows.WorkingDirectory
+                tasks:
+                - id: inputFiles
+                  type: io.kestra.core.tasks.storages.LocalFiles
+                  inputs:
+                    main.js: |
+                      const colors = require("colors");
+                      console.log(colors.red("Hello"));
+                - id: bash
+                  type: io.kestra.plugin.scripts.node.Commands
+                  beforeCommands:
+                    - npm install colors
+                  commands:
+                    - node main.js
+            """
+    )
+})
 public class Commands extends AbstractExecScript {
     @Schema(
         title = "The commands to run"

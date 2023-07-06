@@ -1,5 +1,7 @@
 package io.kestra.plugin.scripts.powershell;
 
+import io.kestra.core.models.annotations.Example;
+import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
@@ -24,6 +26,16 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @Schema(
     title = "Execute a PowerShell script."
+)
+@Plugin(
+    examples = {
+        @Example(
+            code = {
+                "script: |",
+                "  'Hello, World!' | Write-Output"
+            }
+        ),
+    }
 )
 public class Script extends AbstractExecScript {
     @Schema(

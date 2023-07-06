@@ -1,5 +1,7 @@
 package io.kestra.plugin.scripts.python;
 
+import io.kestra.core.models.annotations.Example;
+import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
@@ -26,6 +28,35 @@ import javax.validation.constraints.NotNull;
 @Schema(
     title = "Execute one or more Python scripts from a Command Line Interface."
 )
+@Plugin(examples = {
+    @Example(
+        full = true,
+        title = "Create a python script and execute it on virtual env",
+        code = """
+            id: "local-files"
+            namespace: "io.kestra.tests"
+
+            tasks:
+              - id: workingDir
+                type: io.kestra.core.tasks.flows.WorkingDirectory
+                tasks:
+                - id: inputFiles
+                  type: io.kestra.core.tasks.storages.LocalFiles
+                  inputs:
+                    main.py: |
+                      response = requests.get('https://google.com')
+                      print(response.status_code)
+                - id: bash
+                  type: io.kestra.plugin.scripts.python.Commands
+                  beforeCommands:
+                    - python -m venv venv
+                    - . venv/bin/activate
+                    - pip install requests > /dev/null
+                  commands:
+                    - python main.py
+            """
+    )
+})
 public class Commands extends AbstractExecScript {
     @Schema(
         title = "The commands to run"

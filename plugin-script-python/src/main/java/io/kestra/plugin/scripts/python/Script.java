@@ -1,5 +1,7 @@
 package io.kestra.plugin.scripts.python;
 
+import io.kestra.core.models.annotations.Example;
+import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
@@ -25,6 +27,33 @@ import java.util.List;
 @NoArgsConstructor
 @Schema(
     title = "Execute a Python script."
+)
+@Plugin(
+    examples = {
+        @Example(
+            title = "Execute a python script",
+            code = {
+                "script: |",
+                "  from kestra import Kestra",
+                "  import requests",
+                "",
+                "  response = requests.get('https://google.com')",
+                "  print(response.status_code)",
+                "",
+                "  Kestra.outputs({'status': response.status_code, 'text': response.text})",
+                "beforeCommands:",
+                "  - pip install requests kestra"
+            }
+        ),
+        @Example(
+            title = "Execute a python script with an input file from Kestra's local storage created by a previous task.",
+            code = {
+                "script:",
+                "  with open('{{ outputs.previousTaskId.uri }}', 'r') as f:",
+                "    print(f.read())"
+            }
+        )
+    }
 )
 public class Script extends AbstractExecScript {
     @Schema(
