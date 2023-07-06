@@ -1,5 +1,7 @@
 package io.kestra.plugin.scripts.shell;
 
+import io.kestra.core.models.annotations.Example;
+import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
@@ -22,6 +24,19 @@ import java.util.List;
 @NoArgsConstructor
 @Schema(
     title = "Execute a Shell script."
+)
+@Plugin(
+    examples = {
+        @Example(
+            title = "Run a shell inline script.",
+            code = {
+                "script:|",
+                "  echo \"The current execution is : {{ execution.id }}\"",
+                "  echo \"1\" >> {{ outputDir }}/first.txt",
+                "  cat {{ outputs.previousTaskId.uri }}"
+            }
+        )
+    }
 )
 public class Script extends AbstractExecScript {
     @Schema(
