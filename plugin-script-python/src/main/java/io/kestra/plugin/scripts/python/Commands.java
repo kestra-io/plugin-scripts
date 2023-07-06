@@ -44,14 +44,18 @@ import javax.validation.constraints.NotNull;
                   type: io.kestra.core.tasks.storages.LocalFiles
                   inputs:
                     main.py: |
+                      import requests
+                      from kestra import Kestra
+
                       response = requests.get('https://google.com')
                       print(response.status_code)
+                      Kestra.outputs({'status': response.status_code, 'text': response.text})
                 - id: bash
                   type: io.kestra.plugin.scripts.python.Commands
                   beforeCommands:
                     - python -m venv venv
                     - . venv/bin/activate
-                    - pip install requests > /dev/null
+                    - pip install requests kestra > /dev/null
                   commands:
                     - python main.py
             """
