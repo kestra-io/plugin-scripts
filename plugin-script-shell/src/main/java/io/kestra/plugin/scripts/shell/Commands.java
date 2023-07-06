@@ -9,10 +9,7 @@ import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.services.ScriptService;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
@@ -79,19 +76,21 @@ import javax.validation.constraints.NotNull;
 )
 public class Commands extends AbstractExecScript {
     @Schema(
+        title = "Docker options when using the `DOCKER` runner"
+    )
+    @PluginProperty
+    @Builder.Default
+    protected DockerOptions docker = DockerOptions.builder()
+        .image("ubuntu")
+        .build();
+
+    @Schema(
         title = "The commands to run"
     )
     @PluginProperty(dynamic = true)
     @NotNull
     @NotEmpty
     protected List<String> commands;
-
-    @Override
-    protected DockerOptions defaultDockerOptions() {
-        return DockerOptions.builder()
-            .image("ubuntu")
-            .build();
-    }
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {

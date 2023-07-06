@@ -22,16 +22,6 @@ public class ScriptOutput implements Output {
     private final Map<String, Object> vars;
 
     @Schema(
-        title = "The standard output line count"
-    )
-    private final int stdOutLineCount;
-
-    @Schema(
-        title = "The standard error line count"
-    )
-    private final int stdErrLineCount;
-
-    @Schema(
         title = "The exit code of the entire Flow Execution"
     )
     @NotNull
@@ -42,6 +32,12 @@ public class ScriptOutput implements Output {
     )
     @PluginProperty(additionalProperties = URI.class)
     private final Map<String, URI> outputFiles;
+
+    @JsonIgnore
+    private final int stdOutLineCount;
+
+    @JsonIgnore
+    private final int stdErrLineCount;
 
     @JsonIgnore
     private Boolean warningOnStdErr;

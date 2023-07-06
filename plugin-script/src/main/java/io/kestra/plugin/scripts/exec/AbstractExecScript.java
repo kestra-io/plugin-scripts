@@ -34,12 +34,6 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
     protected RunnerType runner = RunnerType.DOCKER;
 
     @Schema(
-        title = "Docker options when using the `DOCKER` runner"
-    )
-    @PluginProperty
-    protected DockerOptions docker;
-
-    @Schema(
         title = "A list of commands that will run before `commands`, allowing to set up the environment e.g. `pip install -r requirements.txt`"
     )
     @PluginProperty(dynamic = true)
@@ -71,17 +65,14 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
     @NotEmpty
     protected List<String> interpreter = List.of("/bin/sh", "-c");
 
-    protected abstract DockerOptions defaultDockerOptions();
+    abstract public DockerOptions getDocker();
 
     protected CommandsWrapper commands(RunContext runContext) throws IllegalVariableEvaluationException {
-        CommandsWrapper commands = new CommandsWrapper(runContext, this.defaultDockerOptions())
+        CommandsWrapper commands = new CommandsWrapper(runContext)
             .withEnv(this.env)
             .withWarningOnStdErr(this.warningOnStdErr)
-            .withRunnerType(this.runner);
-
-        if (this.docker != null) {
-            commands = commands.withDockerOptions(this.docker);
-        }
+            .withRunnerType(this.runner)
+            .withDockerOptions(this.getDocker());
 
         return commands;
     }

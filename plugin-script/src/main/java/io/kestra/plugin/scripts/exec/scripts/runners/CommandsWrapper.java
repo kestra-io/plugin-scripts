@@ -50,7 +50,7 @@ public class CommandsWrapper {
     @With
     private Boolean warningOnStdErr;
 
-    public CommandsWrapper(RunContext runContext, DockerOptions defaultDockerOptions) {
+    public CommandsWrapper(RunContext runContext) {
         this.runContext = runContext;
 
         this.workingDirectory = runContext.tempDir();
@@ -64,8 +64,6 @@ public class CommandsWrapper {
         ));
 
         this.logConsumer = LogService.defaultLogSupplier(runContext);
-
-        this.dockerOptions = defaultDockerOptions;
     }
 
     public CommandsWrapper withCommands(List<String> commands) throws IOException, IllegalVariableEvaluationException {

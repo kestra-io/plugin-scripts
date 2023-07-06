@@ -50,6 +50,16 @@ import javax.validation.constraints.NotNull;
 })
 public class Commands extends AbstractExecScript {
     @Schema(
+        title = "Docker options when using the `DOCKER` runner"
+    )
+    @PluginProperty
+    @Builder.Default
+    protected DockerOptions docker = DockerOptions.builder()
+        .image("mcr.microsoft.com/powershell")
+        .entryPoint(List.of())
+        .build();
+
+    @Schema(
         title = "The commands to run"
     )
     @PluginProperty(dynamic = true)
@@ -65,14 +75,6 @@ public class Commands extends AbstractExecScript {
     @NotNull
     @NotEmpty
     protected List<String> interpreter = List.of("/bin/sh", "-c");
-
-    @Override
-    protected DockerOptions defaultDockerOptions() {
-        return DockerOptions.builder()
-            .image("mcr.microsoft.com/powershell")
-            .entryPoint(List.of())
-            .build();
-    }
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {

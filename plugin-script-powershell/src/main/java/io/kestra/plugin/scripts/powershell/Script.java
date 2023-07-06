@@ -39,17 +39,19 @@ import javax.validation.constraints.NotNull;
 )
 public class Script extends AbstractExecScript {
     @Schema(
+        title = "Docker options when using the `DOCKER` runner"
+    )
+    @PluginProperty
+    @Builder.Default
+    protected DockerOptions docker = DockerOptions.builder()
+        .image("mcr.microsoft.com/powershell")
+        .build();
+
+    @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
     )
     @PluginProperty(dynamic = true)
     protected String script;
-
-    @Override
-    protected DockerOptions defaultDockerOptions() {
-        return DockerOptions.builder()
-            .image("mcr.microsoft.com/powershell")
-            .build();
-    }
 
     @Builder.Default
     @Schema(
