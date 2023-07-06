@@ -1,5 +1,7 @@
 package io.kestra.plugin.scripts.r;
 
+import io.kestra.core.models.annotations.Example;
+import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
@@ -25,6 +27,22 @@ import java.util.List;
 @NoArgsConstructor
 @Schema(
     title = "Execute an R script."
+)
+@Plugin(
+    examples = {
+        @Example(
+            title = "Install a package and execute a R script",
+            code = {
+                "script: |",
+                "  library(lubridate)",
+                "  ymd(\"20100604\");",
+                "  mdy(\"06-04-2011\");",
+                "  dmy(\"04/06/2012\")",
+                "beforeCommands:",
+                "  - Rscript -e 'install.packages(\"lubridate\")"
+            }
+        ),
+    }
 )
 public class Script extends AbstractExecScript {
     @Schema(

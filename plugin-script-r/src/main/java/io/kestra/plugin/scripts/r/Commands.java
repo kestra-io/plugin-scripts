@@ -1,5 +1,7 @@
 package io.kestra.plugin.scripts.r;
 
+import io.kestra.core.models.annotations.Example;
+import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
@@ -25,6 +27,35 @@ import javax.validation.constraints.NotNull;
 @Schema(
     title = "Execute R from the Command Line Interface."
 )
+@Plugin(examples = {
+    @Example(
+        full = true,
+        title = "Create a R script, install a package and execute it",
+        code = """
+            id: "local-files"
+            namespace: "io.kestra.tests"
+
+            tasks:
+              - id: workingDir
+                type: io.kestra.core.tasks.flows.WorkingDirectory
+                tasks:
+                - id: inputFiles
+                  type: io.kestra.core.tasks.storages.LocalFiles
+                  inputs:
+                    main.R: |
+                      library(lubridate)
+                      ymd("20100604");
+                      mdy("06-04-2011");
+                      dmy("04/06/2012")
+                - id: bash
+                  type: io.kestra.plugin.scripts.powershell.Commands
+                  beforeCommands:
+                    - Rscript -e 'install.packages("lubridate")'
+                  commands:
+                    - Rscript main.R
+            """
+    )
+})
 public class Commands extends AbstractExecScript {
     @Schema(
         title = "The commands to run"

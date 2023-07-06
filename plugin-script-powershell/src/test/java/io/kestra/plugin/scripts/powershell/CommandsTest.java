@@ -49,7 +49,7 @@ class CommandsTest {
             )
         );
 
-        Command bash = Command.builder()
+        Commands bash = Commands.builder()
             .id("unit-test")
             .type(Script.class.getName())
             .commands(List.of("pwsh " + put.toString()))
