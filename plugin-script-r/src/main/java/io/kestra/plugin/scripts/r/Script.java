@@ -36,7 +36,7 @@ import java.util.List;
                 "  mdy(\"06-04-2011\");",
                 "  dmy(\"04/06/2012\")",
                 "beforeCommands:",
-                "  - Rscript -e 'install.packages(\"lubridate\")"
+                "  - Rscript -e 'install.packages(\"lubridate\")'"
             }
         ),
     }
