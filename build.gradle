@@ -120,7 +120,6 @@ nexusPublishing {
 
 subprojects { Project subproject ->
     apply plugin: "com.adarshr.test-logger"
-    apply plugin: "com.github.johnrengelman.shadow"
     apply plugin: "maven-publish"
     apply plugin: "signing"
     apply plugin: 'ru.vyarus.github-info'
@@ -133,8 +132,12 @@ subprojects { Project subproject ->
     }
 
     if (subproject.name != "plugin-script") {
+        apply plugin: "com.github.johnrengelman.shadow"
+
         shadowJar {
-            dependsOn(":plugin-script:shadowJar")
+            dependsOn(":plugin-script:jar")
+            archiveClassifier.set(null)
+            mergeServiceFiles()
         }
     }
 
@@ -145,11 +148,6 @@ subprojects { Project subproject ->
                 name "Ludovic Dehon"
             }
         }
-    }
-
-    shadowJar {
-        archiveClassifier.set(null)
-        mergeServiceFiles()
     }
 }
 
