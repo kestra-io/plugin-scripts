@@ -49,6 +49,15 @@ import java.util.List;
                 "  with open('{{ outputs.previousTaskId.uri }}', 'r') as f:",
                 "    print(f.read())"
             }
+        ),
+        @Example(
+            title = "Execute a python script that output a file",
+            code = {
+                "script: |",
+                "   f = open(\"{{outputDir}}/myfile.txt\", \"a\")",
+                "   f.write(\"I can output files from my script!\")",
+                "   f.close()"
+            }
         )
     }
 )
