@@ -11,7 +11,7 @@ public class DefaultLogConsumer extends AbstractLogConsumer {
     }
 
     @Override
-    public void accept(String line, Boolean isStdErr) throws Exception {
+    public void accept(String line, Boolean isStdErr) {
         outputs.putAll(LogService.parse(line, runContext.logger(), runContext));
 
         if (isStdErr) {
