@@ -29,15 +29,20 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static io.kestra.core.utils.Rethrow.throwConsumer;
 import static io.kestra.core.utils.Rethrow.throwFunction;
 
 public class DockerScriptRunner {
     private static final ReadableBytesTypeConverter READABLE_BYTES_TYPE_CONVERTER = new ReadableBytesTypeConverter();
+    public static final Pattern NEWLINE_PATTERN = Pattern.compile("[\\r\\n]+$");
 
     private final RetryUtils retryUtils;
 
@@ -128,17 +133,36 @@ public class DockerScriptRunner {
                     .withStdErr(true)
                     .withStdOut(true)
                     .exec(new ResultCallback.Adapter<Frame>() {
+                        private final Map<StreamType, StringBuilder> logBuffers = new HashMap<>();
+
                         @SneakyThrows
                         @Override
-                        public void onNext(Frame item) {
-                            defaultLogConsumer.accept(
-                                new String(item.getPayload()).trim(),
-                                item.getStreamType() == StreamType.STDERR
-                            );
+                        public void onNext(Frame frame) {
+                            String frameStr = new String(frame.getPayload());
+
+                            Matcher newLineMatcher = NEWLINE_PATTERN.matcher(frameStr);
+                            logBuffers.computeIfAbsent(frame.getStreamType(), streamType -> new StringBuilder())
+                                .append(newLineMatcher.replaceAll(""));
+
+                            if (newLineMatcher.reset().find()) {
+                                StringBuilder logBuffer = logBuffers.get(frame.getStreamType());
+                                defaultLogConsumer.accept(logBuffer.toString(), frame.getStreamType() == StreamType.STDERR);
+                                logBuffer.setLength(0);
+                            }
                         }
 
                         @Override
                         public void onComplete() {
+                            // Still flush last line even if there is no newline at the end
+                            try {
+                                logBuffers.entrySet().stream().filter(entry -> !entry.getValue().isEmpty()).forEach(throwConsumer(entry -> {
+                                    String log = entry.getValue().toString();
+                                    defaultLogConsumer.accept(log, entry.getKey() == StreamType.STDERR);
+                                }));
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+
                             ended.set(true);
                             super.onComplete();
                         }
