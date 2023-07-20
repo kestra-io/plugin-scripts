@@ -27,7 +27,7 @@ import java.util.List;
         @Example(
             title = "Run a shell inline script.",
             code = {
-                "script:|",
+                "script: |",
                 "  echo \"The current execution is : {{ execution.id }}\"",
                 "  echo \"1\" >> {{ outputDir }}/first.txt",
                 "  cat {{ outputs.previousTaskId.uri }}"
