@@ -82,7 +82,7 @@ public class Script extends AbstractExecScript {
         CommandsWrapper commands = this.commands(runContext);
 
         Path path = runContext.tempFile(
-            runContext.render(this.script, commands.getAdditionalVars()).getBytes(StandardCharsets.UTF_8),
+            ScriptService.replaceInternalStorage(runContext, runContext.render(this.script, commands.getAdditionalVars())).getBytes(StandardCharsets.UTF_8),
             ".py"
         );
 
