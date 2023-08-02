@@ -24,13 +24,16 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 abstract public class ScriptService {
     private static final Pattern INTERNAL_STORAGE_PATTERN = Pattern.compile("(kestra:\\/\\/[-a-zA-Z0-9%._\\+~#=/]*)");
 
+    public static String replaceInternalStorage(RunContext runContext, String command) throws IOException {
+        return INTERNAL_STORAGE_PATTERN
+            .matcher(command)
+            .replaceAll(throwFunction(matchResult -> saveOnLocalStorage(runContext, matchResult.group())));
+    }
+
     public static List<String> uploadInputFiles(RunContext runContext, List<String> commands) throws IOException {
         return commands
             .stream()
-            .map(throwFunction(s -> INTERNAL_STORAGE_PATTERN
-                .matcher(s)
-                .replaceAll(throwFunction(matchResult -> saveOnLocalStorage(runContext, matchResult.group())))
-            ))
+            .map(throwFunction(s -> replaceInternalStorage(runContext, s)))
             .collect(Collectors.toList());
 
     }

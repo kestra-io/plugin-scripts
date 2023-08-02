@@ -12,10 +12,13 @@ import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.ScriptException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.stream.Stream;
@@ -102,6 +105,36 @@ class ScriptTest {
 
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getVars().get("extract"), is("200"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("source")
+    void inputs(RunnerType runner, DockerOptions dockerOptions) throws Exception {
+        URI put = storageInterface.put(
+            new URI("/file/storage/get.yml"),
+            IOUtils.toInputStream(
+                "hello there!",
+                StandardCharsets.UTF_8
+            )
+        );
+
+        Script python = Script.builder()
+            .id("test-python-task")
+            .type(Script.class.getName())
+            .docker(dockerOptions)
+            .runner(runner)
+            .script("import os\n" +
+                "\n" +
+                "file_size = os.path.getsize(\"" + put.toString() + "\")\n" +
+                "print('::{\"outputs\": {\"extract\":' + str(file_size) + '}}::')"
+            )
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
+        ScriptOutput run = python.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+        assertThat(run.getVars().get("extract"), is(12));
     }
 
     @ParameterizedTest
