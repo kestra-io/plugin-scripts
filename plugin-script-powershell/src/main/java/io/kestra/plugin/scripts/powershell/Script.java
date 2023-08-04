@@ -35,6 +35,21 @@ import javax.validation.constraints.NotNull;
                 "  'Hello, World!' | Write-Output"
             }
         ),
+        @Example(
+            full = true,
+            title = """
+            If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{outputDir}}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`.
+            """,
+            code = """
+                id: powershell
+                namespace: dev
+                tasks:
+                  - id: hello
+                    type: io.kestra.plugin.scripts.powershell.Script
+                    script: |
+                      Set-Content -Path {{outputDir}}\\hello.txt -Value "Hello World"
+                """
+        )           
     }
 )
 public class Script extends AbstractExecScript {
