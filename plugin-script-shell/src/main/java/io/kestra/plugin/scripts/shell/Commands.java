@@ -27,6 +27,29 @@ import javax.validation.constraints.NotNull;
 @Plugin(
     examples = {
         @Example(
+            full = true,
+            title = "Execute ETL in Rust in a Docker container and output CSV files generated as a result of the script.",
+            code = """     
+id: rustFlow
+namespace: dev
+tasks:
+  - id: wdir
+    type: io.kestra.core.tasks.flows.WorkingDirectory
+    tasks:
+      - id: rust
+        type: io.kestra.plugin.scripts.shell.Commands
+        commands:
+          - etl
+        docker:
+          image: ghcr.io/kestra-io/rust:latest
+
+      - id: downloadFiles
+        type: io.kestra.core.tasks.storages.LocalFiles
+        outputs:
+          - "*.csv"
+"""
+        ),        
+        @Example(
             title = "Single shell command",
             code = {
                 "commands:",
