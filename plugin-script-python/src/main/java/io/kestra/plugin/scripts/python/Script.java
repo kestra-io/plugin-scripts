@@ -28,7 +28,7 @@ import java.util.List;
 @Plugin(
     examples = {
         @Example(
-            title = "Execute a python script",
+            title = "Execute a Python script",
             code = {
                 "script: |",
                 "  from kestra import Kestra",
@@ -43,7 +43,7 @@ import java.util.List;
             }
         ),
         @Example(
-            title = "Execute a python script with an input file from Kestra's local storage created by a previous task.",
+            title = "Execute a Python script with an input file from Kestra's local storage created by a previous task.",
             code = {
                 "script:",
                 "  with open('{{ outputs.previousTaskId.uri }}', 'r') as f:",
@@ -51,13 +51,46 @@ import java.util.List;
             }
         ),
         @Example(
-            title = "Execute a python script that output a file",
+            title = "Execute a Python script that outputs a file",
             code = {
                 "script: |",
                 "   f = open(\"{{outputDir}}/myfile.txt\", \"a\")",
                 "   f.write(\"I can output files from my script!\")",
                 "   f.close()"
             }
+        ),
+        @Example(
+            full = true,
+            title = """
+            If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{outputDir}}` [variable](https://kestra.io/docs/developer-guide/03.variables/). Files stored in that directory will be persisted in Kestra's internal storage. The first task in this example creates a file `'myfile.txt'` and the next task can access it by leveraging the syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`. Check the [Outputs](https://kestra.io/docs/developer-guide/outputs) page for more details about managing outputs.
+            """,
+            code = """     
+id: outputsPython
+namespace: dev
+tasks:
+  - id: cleanDataset
+    type: io.kestra.plugin.scripts.python.Script
+    docker:
+      image: ghcr.io/kestra-io/pydata:latest
+    script: |
+      import pandas as pd
+      df = pd.read_csv("https://raw.githubusercontent.com/kestra-io/datasets/main/csv/messy_dataset.csv")
+      
+      # Replace non-numeric age values with NaN
+      df["Age"] = pd.to_numeric(df["Age"], errors="coerce")
+
+      # mean imputation: fill NaN values with the mean age
+      mean_age = int(df["Age"].mean())
+      print(f"Filling NULL values with mean: {mean_age}")
+      df["Age"] = df["Age"].fillna(mean_age)
+      df.to_csv("{{outputDir}}/clean_dataset.csv", index=False)
+
+  - id: readFileFromPython
+    type: io.kestra.plugin.scripts.shell.Commands
+    runner: PROCESS
+    commands:
+      - head -n 10 {{outputs.cleanDataset.outputFiles['clean_dataset.csv']}}
+                """
         )
     }
 )

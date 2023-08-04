@@ -28,7 +28,176 @@ import javax.validation.constraints.NotNull;
 @Plugin(examples = {
     @Example(
         full = true,
-        title = "Create a python script and execute it on virtual env",
+        title = "Execute a Python script from Git in a Docker container and output a file",
+        code = """     
+id: pythonCommandsExample
+namespace: dev
+
+tasks:
+  - id: wdir
+    type: io.kestra.core.tasks.flows.WorkingDirectory
+    tasks:
+      - id: cloneRepository
+        type: io.kestra.plugin.git.Clone
+        url: https://github.com/kestra-io/examples
+        branch: main
+
+      - id: gitPythonScripts
+        type: io.kestra.plugin.scripts.python.Commands
+        warningOnStdErr: false
+        docker:
+          image: ghcr.io/kestra-io/pydata:latest
+        beforeCommands:
+          - pip install faker > /dev/null
+        commands:
+          - python scripts/etl_script.py
+          - python scripts/generate_orders.py
+      
+      - id: outputFile
+        type: io.kestra.core.tasks.storages.LocalFiles
+        outputs:
+          - orders.csv
+
+  - id: loadCsvToS3
+    type: io.kestra.plugin.aws.s3.Upload
+    accessKeyId: "{{secret('AWS_ACCESS_KEY_ID')}}"
+    secretKeyId: "{{secret('AWS_SECRET_ACCESS_KEY')}}"
+    region: eu-central-1
+    bucket: kestraio
+    key: stage/orders.csv
+    from: "{{outputs.outputFile.uris['orders.csv']}}"
+                """
+        ),
+    @Example(
+        full = true,
+        title = "Execute a Python script in a Conda virtual environment",
+        code = """     
+id: localPythonScript
+namespace: dev
+
+tasks:
+  - id: hello
+    type: io.kestra.plugin.scripts.python.Commands
+    runner: PROCESS
+    beforeCommands:
+      - conda activate myCondaEnv
+    commands:
+      - python /Users/you/scripts/etl_script.py
+                """
+        ),
+    @Example(
+        full = true,
+        title = "Execute a Python script on a remote worker with a GPU",
+        code = """     
+id: gpuTask
+namespace: dev
+
+tasks:
+  - id: hello
+    type: io.kestra.plugin.scripts.python.Commands
+    runner: PROCESS
+    commands:
+      - python ml_on_gpu.py
+    workerGroup:
+      key: gpu
+                """
+        ),
+    @Example(
+        full = true,
+        title = "Pass detected S3 objects from the event trigger to a Python script",
+        code = """     
+id: s3TriggerCommands
+namespace: blueprint
+description: process CSV file from S3 trigger
+
+tasks:
+  - id: wdir
+    type: io.kestra.core.tasks.flows.WorkingDirectory
+    tasks:
+      - id: cloneRepo
+        type: io.kestra.plugin.git.Clone
+        url: https://github.com/kestra-io/examples
+        branch: main
+
+      - id: local
+        type: io.kestra.core.tasks.storages.LocalFiles
+        inputs:
+          data.csv: "{{ trigger.objects | jq('.[].uri') | first }}"
+
+      - id: python
+        type: io.kestra.plugin.scripts.python.Commands
+        description: this script reads a file `data.csv` from S3 trigger
+        docker:
+          image: ghcr.io/kestra-io/pydata:latest
+        warningOnStdErr: false
+        commands:
+          - python scripts/clean_messy_dataset.py
+
+      - id: output
+        type: io.kestra.core.tasks.storages.LocalFiles
+        outputs:
+          - "*.csv"
+          - "*.parquet"
+
+triggers:
+  - id: waitForS3object
+    type: io.kestra.plugin.aws.s3.Trigger
+    bucket: declarative-orchestration
+    maxKeys: 1
+    interval: PT1S
+    filter: FILES
+    action: MOVE
+    prefix: raw/
+    moveTo:
+      key: archive/raw/
+    accessKeyId: "{{ secret('AWS_ACCESS_KEY_ID') }}"
+    secretKeyId: "{{ secret('AWS_SECRET_ACCESS_KEY') }}"
+    region: "{{ secret('AWS_DEFAULT_REGION') }}"
+                """
+        ),        
+    @Example(
+        full = true,
+        title = "Execute a Python script from Git using a private Docker container image",
+        code = """     
+id: pythonInContainer
+namespace: dev
+
+tasks:
+  - id: wdir
+    type: io.kestra.core.tasks.flows.WorkingDirectory
+    tasks:
+      - id: cloneRepository
+        type: io.kestra.plugin.git.Clone
+        url: https://github.com/kestra-io/examples
+        branch: main
+
+      - id: gitPythonScripts
+        type: io.kestra.plugin.scripts.python.Commands
+        warningOnStdErr: false
+        commands:
+          - python scripts/etl_script.py
+        runner: DOCKER
+        docker:
+          image: annageller/kestra:latest
+          config: |
+            {
+              "auths": {
+                  "https://index.docker.io/v1/": {
+                      "username": "annageller",
+                      "password": "{{ secret('DOCKER_PAT') }}"
+                  }
+              }
+            }
+      - id: output
+        type: io.kestra.core.tasks.storages.LocalFiles
+        outputs:
+          - "*.csv"
+          - "*.parquet"
+                """
+        ),
+    @Example(
+        full = true,
+        title = "Create a python script and execute it in a virtual environment",
         code = """
             id: "local-files"
             namespace: "io.kestra.tests"
@@ -56,7 +225,7 @@ import javax.validation.constraints.NotNull;
                   commands:
                     - python main.py
             """
-    )
+    )        
 })
 public class Commands extends AbstractExecScript {
     @Schema(

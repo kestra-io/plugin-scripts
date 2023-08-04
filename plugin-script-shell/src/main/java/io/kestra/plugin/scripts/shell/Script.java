@@ -32,7 +32,22 @@ import java.util.List;
                 "  echo \"1\" >> {{ outputDir }}/first.txt",
                 "  cat {{ outputs.previousTaskId.uri }}"
             }
-        )
+        ),
+        @Example(
+            full = true,
+            title = """
+            If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{outputDir}}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`.
+            """,
+            code = """
+                id: shell
+                namespace: dev
+                tasks:
+                  - id: hello
+                    type: io.kestra.plugin.scripts.shell.Script
+                    runner: PROCESS
+                    script: |
+                      echo "Hello world!" > {{outputDir}}/hello.txt"""
+        )        
     }
 )
 public class Script extends AbstractExecScript {
