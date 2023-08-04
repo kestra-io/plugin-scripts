@@ -36,7 +36,72 @@ import java.util.Map;
             "  const colors = require(\"colors\");",
             "  console.log(colors.red(\"Hello\"));",
         }
-    )
+    ),
+    @Example(
+        full = true,
+        title = """
+        If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{outputDir}}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`.
+        """,
+        code = """
+            id: nodeJS
+            namespace: dev
+            tasks:
+              - id: node
+                type: io.kestra.plugin.scripts.node.Script
+                warningOnStdErr: false
+                beforeCommands:
+                    - npm install json2csv > /dev/null 2>&1
+                script: |
+                    const fs = require('fs');
+                    const { Parser } = require('json2csv');
+
+                    // Product prices in our simulation
+                    const productPrices = {
+                        'T-shirt': 20,
+                        'Jeans': 75,
+                        'Shoes': 80,
+                        'Socks': 5,
+                        'Hat': 25
+                    }
+
+                    const generateOrder = () => {
+                        const products = ['T-shirt', 'Jeans', 'Shoes', 'Socks', 'Hat'];
+                        const statuses = ['pending', 'shipped', 'delivered', 'cancelled'];
+
+                        const randomProduct = products[Math.floor(Math.random() * products.length)];
+                        const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+                        const randomQuantity = Math.floor(Math.random() * 10) + 1;
+
+                        const order = {
+                            product: randomProduct,
+                            status: randomStatus,
+                            quantity: randomQuantity,
+                            total: randomQuantity * productPrices[randomProduct]
+                        };
+
+                        return order;
+                    }
+
+                    let totalSales = 0;
+                    let orders = [];
+
+                    for (let i = 0; i < 100; i++) {
+                        const order = generateOrder();
+                        orders.push(order);
+                        totalSales += order.total;
+                    }
+
+                    console.log(`Total sales: $${totalSales}`);
+
+                    const fields = ['product', 'status', 'quantity', 'total'];
+                    const json2csvParser = new Parser({ fields });
+                    const csvData = json2csvParser.parse(orders);
+
+                    fs.writeFileSync('{{outputDir}}/orders.csv', csvData);
+
+                    console.log('Orders saved to orders.csv');       
+            """
+    )    
 })
 public class Script extends AbstractExecScript {
     @Schema(

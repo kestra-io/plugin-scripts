@@ -39,6 +39,48 @@ import java.util.List;
                 "  - Rscript -e 'install.packages(\"lubridate\")'"
             }
         ),
+        @Example(
+            full = true,
+            title = """
+            If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{outputDir}}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`.
+            """,
+            code = """
+                id: rCars
+                namespace: dev
+
+                tasks:
+                  - id: r
+                    type: io.kestra.plugin.scripts.r.Script
+                    warningOnStdErr: false
+                    docker:
+                    image: ghcr.io/kestra-io/rdata:latest
+                    script: |
+                    library(dplyr)
+                    library(arrow)
+
+                    data(mtcars) # Load mtcars data
+                    print(head(mtcars))
+
+                    final <- mtcars %>%
+                        summarise(
+                        avg_mpg = mean(mpg),
+                        avg_disp = mean(disp),
+                        avg_hp = mean(hp),
+                        avg_drat = mean(drat),
+                        avg_wt = mean(wt),
+                        avg_qsec = mean(qsec),
+                        avg_vs = mean(vs),
+                        avg_am = mean(am),
+                        avg_gear = mean(gear),
+                        avg_carb = mean(carb)
+                        ) 
+                    final %>% print()
+                    write.csv(final, "{{outputDir}}/final.csv")
+
+                    mtcars_clean <- na.omit(mtcars) # remove rows with NA values
+                    write_parquet(mtcars_clean, "{{outputDir}}/mtcars_clean.parquet")          
+                """
+        )        
     }
 )
 public class Script extends AbstractExecScript {
