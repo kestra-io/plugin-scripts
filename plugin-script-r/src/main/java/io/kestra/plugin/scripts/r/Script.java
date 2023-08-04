@@ -53,7 +53,7 @@ import java.util.List;
                     type: io.kestra.plugin.scripts.r.Script
                     warningOnStdErr: false
                     docker:
-                    image: ghcr.io/kestra-io/rdata:latest
+                      image: ghcr.io/kestra-io/rdata:latest
                     script: |
                     library(dplyr)
                     library(arrow)
