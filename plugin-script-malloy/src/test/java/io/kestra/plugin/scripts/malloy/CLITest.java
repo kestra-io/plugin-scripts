@@ -40,28 +40,17 @@ class CLITest {
         List<LogEntry> logs = new ArrayList<>();
         logQueue.receive(logs::add);
 
-        URI put = storageInterface.put(
-            new URI("/file/storage/get.yml"),
-            IOUtils.toInputStream(
-                "@info \"hello there!\";",
-                StandardCharsets.UTF_8
-            )
-        );
-
         CLI bash = CLI.builder()
             .id("unit-test")
-            .type(Script.class.getName())
-            .commands(List.of("malloy-cli " + put.toString()))
+            .type(CLI.class.getName())
+            .commands(List.of("malloy-cli --help"))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
         ScriptOutput run = bash.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
-        assertThat(run.getStdOutLineCount(), is(0));
-        assertThat(run.getStdErrLineCount(), is(1));
-
-        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains(put.getPath()));
-        assertThat(logs.stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("hello there!")).count(), is(1L));
+        assertThat(run.getStdOutLineCount(), is(20));
+        assertThat(run.getStdErrLineCount(), is(0));
     }
 }

@@ -67,7 +67,7 @@ public class CLI extends AbstractExecScript {
     @PluginProperty
     @Builder.Default
     protected DockerOptions docker = DockerOptions.builder()
-        .image("malloy")
+        .image("ghcr.io/kestra-io/malloy")
         .build();
 
     @Schema(
