@@ -52,9 +52,6 @@ import java.util.List;
                
                      - id: run_malloy
                        type: io.kestra.plugin.scripts.malloy.CLI
-                       docker:
-                         image: malloy
-                         pullPolicy: NEVER
                        commands:
                          - malloy-cli run model.malloy
                 """
