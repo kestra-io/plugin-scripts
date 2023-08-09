@@ -20,33 +20,44 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute one or more Julia commands from the Command Line Interface."
+    title = "Execute one or more Malloy commands from the Command Line Interface."
 )
 @Plugin(examples = {
     @Example(
         full = true,
-        title = "Install package, create a julia script and execute it",
+        title = "Create a malloy script and run the malloy-cli run command",
         code = """
-            id: "local-files"
-            namespace: "io.kestra.tests"
-
-            tasks:
-              - id: workingDir
-                type: io.kestra.core.tasks.flows.WorkingDirectory
-                tasks:
-                - id: inputFiles
-                  type: io.kestra.core.tasks.storages.LocalFiles
-                  inputs:
-                    main.js: |
-                      const colors = require("colors");
-                      console.log(colors.red("Hello"));
-                - id: bash
-                  type: io.kestra.plugin.scripts.julia.Commands
-                  beforeCommands:
-                    - npm install colors
-                  commands:
-                    - julia main.jl
-            """
+               id: malloy
+               namespace: dev
+               
+               tasks:
+               
+                 - id: working_dir
+                   type: io.kestra.core.tasks.flows.WorkingDirectory
+                   tasks:
+                     - id: local_file
+                       type: io.kestra.core.tasks.storages.LocalFiles
+                       inputs:
+                         model.malloy: |
+                           source: my_model is table('duckdb:https://raw.githubusercontent.com/kestra-io/datasets/main/csv/Iris.csv')
+               
+                           run: my_model -> {
+                               group_by: variety
+                               aggregate:
+                                   avg_petal_width is avg(petal_width)
+                                   avg_petal_length is avg(petal_length)
+                                   avg_sepal_width is avg(sepal_width)
+                                   avg_sepal_length is avg(sepal_length)
+                           }
+               
+                     - id: run_malloy
+                       type: io.kestra.plugin.scripts.malloy.CLI
+                       docker:
+                         image: malloy
+                         pullPolicy: NEVER
+                       commands:
+                         - malloy-cli run model.malloy
+                """
     )
 })
 public class CLI extends AbstractExecScript {
