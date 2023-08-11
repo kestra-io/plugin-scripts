@@ -95,9 +95,9 @@ public class ProcessBuilderScriptRunner {
                 }
             } catch (Exception e) {
                 try {
-                    throw new RuntimeException(e);
-                } catch (Exception ignored) {
-
+                    this.logConsumerInterface.accept(e.getMessage(), true);
+                } catch (Exception ex) {
+                    // do nothing if we cannot send the error message to the log consumer
                 }
             }
         }
