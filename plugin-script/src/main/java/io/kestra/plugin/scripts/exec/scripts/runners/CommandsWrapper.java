@@ -133,7 +133,7 @@ public class CommandsWrapper {
             .stdErrLineCount(runnerResult.getLogConsumer().getStdErrCount())
             .warningOnStdErr(this.warningOnStdErr)
             .vars(runnerResult.getLogConsumer().getOutputs())
-             .outputFiles(outputFiles)
+            .outputFiles(outputFiles)
             .build();
     }
 }
