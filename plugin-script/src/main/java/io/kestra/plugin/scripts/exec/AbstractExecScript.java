@@ -69,9 +69,9 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
 
     protected CommandsWrapper commands(RunContext runContext) throws IllegalVariableEvaluationException {
         CommandsWrapper commands = new CommandsWrapper(runContext)
-            .withEnv(this.env)
-            .withWarningOnStdErr(this.warningOnStdErr)
-            .withRunnerType(this.runner)
+            .withEnv(this.getEnv())
+            .withWarningOnStdErr(this.getWarningOnStdErr())
+            .withRunnerType(this.getRunner())
             .withDockerOptions(this.getDocker());
 
         return commands;
