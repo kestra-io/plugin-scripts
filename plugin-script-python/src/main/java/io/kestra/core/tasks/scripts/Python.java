@@ -87,7 +87,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 )
 @Slf4j
 @Deprecated
-public class Python extends AbstractPython implements RunnableTask<ScriptOutput> {
+public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
     @Builder.Default
     @Schema(
         title = "The python interpreter to use",
@@ -111,7 +111,6 @@ public class Python extends AbstractPython implements RunnableTask<ScriptOutput>
     )
     @PluginProperty(dynamic = true)
     protected List<String> requirements;
-
 
     @Schema(
         title = "The commands to run",
@@ -165,7 +164,7 @@ public class Python extends AbstractPython implements RunnableTask<ScriptOutput>
         Map<String, String> map = super.finalInputFiles(runContext);
 
         map.put("kestra.py", IOUtils.toString(
-            Objects.requireNonNull(AbstractPython.class.getClassLoader().getResourceAsStream(
+            Objects.requireNonNull(Python.class.getClassLoader().getResourceAsStream(
                 "kestra.py")),
             Charsets.UTF_8
         ));
