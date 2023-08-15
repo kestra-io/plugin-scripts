@@ -32,7 +32,19 @@ import io.kestra.core.runners.RunContext;
       - id: groovy
         type: io.kestra.plugin.scripts.groovy.Eval
         script: |
-        logger.info('{{ outputs.request.body }}')
+          logger.info('{{ outputs.request.body }}')
+
+      - id: download
+        type: io.kestra.plugin.fs.http.Download
+        uri: "https://dummyjson.com/products/1"
+
+      - id: runContextGroovy
+        type: io.kestra.plugin.scripts.groovy.Eval
+        script: |
+          // logger.info('Vars: {}', runContext.getVariables())
+          URI uri = new URI(runContext.variables.outputs.download.uri)
+          InputStream istream = runContext.uriToInputStream(uri)
+          logger.info('Content: {}', istream.text)
                     """
             ),        
         @Example(
