@@ -18,6 +18,24 @@ import io.kestra.core.runners.RunContext;
 @Plugin(
     examples = {
         @Example(
+            full = true,
+            title = "Make an API call and pass request body to a Groovy script",
+            code = """     
+    id: api-request-to-groovy
+    namespace: dev
+
+    tasks:
+      - id: request
+        type: io.kestra.plugin.fs.http.Request
+        uri: "https://dummyjson.com/products/1"
+
+      - id: groovy
+        type: io.kestra.plugin.scripts.groovy.Eval
+        script: |
+        logger.info('{{ outputs.request.body }}')
+                    """
+            ),        
+        @Example(
             code = {
                 "outputs:",
                 "  - out",
