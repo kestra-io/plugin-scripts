@@ -1,7 +1,7 @@
 package io.kestra.plugin.scripts.exec.scripts.runners;
 
 import io.kestra.core.runners.RunContext;
-import io.kestra.plugin.scripts.exec.scripts.services.LogService;
+import io.kestra.core.tasks.PluginUtilsService;
 
 public class DefaultLogConsumer extends AbstractLogConsumer {
     private final RunContext runContext;
@@ -12,7 +12,7 @@ public class DefaultLogConsumer extends AbstractLogConsumer {
 
     @Override
     public void accept(String line, Boolean isStdErr) {
-        outputs.putAll(LogService.parse(line, runContext.logger(), runContext));
+        outputs.putAll(PluginUtilsService.parseOut(line, runContext.logger(), runContext));
 
         if (isStdErr) {
             this.stdErrCount.incrementAndGet();
