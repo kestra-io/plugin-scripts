@@ -6,7 +6,6 @@ import io.kestra.core.utils.IdUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.plugin.scripts.exec.scripts.services.LogService;
 import io.kestra.plugin.scripts.exec.scripts.services.ScriptService;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -63,7 +62,7 @@ public class CommandsWrapper {
             "outputDir", outputDirectory.toString()
         ));
 
-        this.logConsumer = LogService.defaultLogSupplier(runContext);
+        this.logConsumer = new DefaultLogConsumer(runContext);
     }
 
     public CommandsWrapper withCommands(List<String> commands) throws IOException, IllegalVariableEvaluationException {
