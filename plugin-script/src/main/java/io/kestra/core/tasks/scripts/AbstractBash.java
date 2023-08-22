@@ -4,6 +4,7 @@ import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.tasks.Task;
 import io.kestra.core.runners.RunContext;
+import io.kestra.core.tasks.PluginUtilsService;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
@@ -160,7 +161,7 @@ abstract public class AbstractBash extends Task {
     }
 
     protected Map<String, String> finalInputFiles(RunContext runContext) throws IOException, IllegalVariableEvaluationException {
-        return this.inputFiles != null ? new HashMap<>(BashService.transformInputFiles(runContext, this.inputFiles)) : new HashMap<>();
+        return this.inputFiles != null ? new HashMap<>(PluginUtilsService.transformInputFiles(runContext, this.inputFiles)) : new HashMap<>();
     }
 
     protected Map<String, String> finalEnv() throws IOException {
@@ -189,13 +190,13 @@ abstract public class AbstractBash extends Task {
             allOutputs.addAll(files);
         }
 
-        Map<String, String> outputFiles = BashService.createOutputFiles(
+        Map<String, String> outputFiles = PluginUtilsService.createOutputFiles(
             workingDirectory,
             allOutputs,
             additionalVars
         );
 
-        BashService.createInputFiles(
+        PluginUtilsService.createInputFiles(
             runContext,
             workingDirectory,
             this.finalInputFiles(runContext),
@@ -208,7 +209,7 @@ abstract public class AbstractBash extends Task {
             allOutputDirs.addAll(this.outputDirs);
         }
 
-        Map<String, String> outputDirs = BashService.createOutputFiles(
+        Map<String, String> outputDirs = PluginUtilsService.createOutputFiles(
             workingDirectory,
             allOutputDirs,
             additionalVars,
