@@ -215,4 +215,14 @@ public class DockerOptions {
         @PluginProperty(dynamic = false)
         private Boolean oomKillDisable;
     }
+
+    @Deprecated
+    public void setDockerHost(String host) {
+        this.host = host;
+    }
+
+    @Deprecated
+    public void setDockerConfig(String config) {
+        this.config = config;
+    }
 }
