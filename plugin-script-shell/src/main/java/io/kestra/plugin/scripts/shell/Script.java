@@ -51,20 +51,31 @@ import java.util.List;
     }
 )
 public class Script extends AbstractExecScript {
+    private static final String DEFAULT_IMAGE = "ubuntu";
+
     @Schema(
-        title = "Docker options when using the `DOCKER` runner"
+        title = "Docker options when using the `DOCKER` runner",
+        defaultValue = "{image=" + DEFAULT_IMAGE + ", pullPolicy=ALWAYS}"
     )
     @PluginProperty
     @Builder.Default
-    protected DockerOptions docker = DockerOptions.builder()
-        .image("ubuntu")
-        .build();
+    protected DockerOptions docker = DockerOptions.builder().build();
 
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
     )
     @PluginProperty(dynamic = true)
     protected String script;
+
+    @Override
+    protected DockerOptions injectDefaults(DockerOptions original) {
+        var builder = original.toBuilder();
+        if (original.getImage() == null) {
+            builder.image(DEFAULT_IMAGE);
+        }
+
+        return builder.build();
+    }
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {

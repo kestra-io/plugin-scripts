@@ -67,13 +67,29 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
 
     abstract public DockerOptions getDocker();
 
+    /**
+     * Allow to set Docker options defaults values.
+     * To make it works, it is advised to set the 'docker' field like:
+     *
+     * <pre>
+     *     @Schema(
+     *         title = "Docker options when using the `DOCKER` runner",
+     *         defaultValue = "{image=python, pullPolicy=ALWAYS}"
+     *     )
+     *     @PluginProperty
+     *     @Builder.Default
+     *     protected DockerOptions docker = DockerOptions.builder().build();
+     * </pre>
+     */
+    protected DockerOptions injectDefaults(@NotNull DockerOptions original) {
+        return original;
+    }
+
     protected CommandsWrapper commands(RunContext runContext) throws IllegalVariableEvaluationException {
-        CommandsWrapper commands = new CommandsWrapper(runContext)
+        return new CommandsWrapper(runContext)
             .withEnv(this.getEnv())
             .withWarningOnStdErr(this.getWarningOnStdErr())
             .withRunnerType(this.getRunner())
-            .withDockerOptions(this.getDocker());
-
-        return commands;
+            .withDockerOptions(this.injectDefaults(getDocker()));
     }
 }
