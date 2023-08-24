@@ -36,7 +36,7 @@ class ScriptTest {
     static Stream<Arguments> source() {
         return Stream.of(
             Arguments.of(RunnerType.DOCKER, DockerOptions.builder().image("ubuntu").build()),
-            Arguments.of(RunnerType.PROCESS, null)
+            Arguments.of(RunnerType.PROCESS, DockerOptions.builder().build())
         );
     }
 

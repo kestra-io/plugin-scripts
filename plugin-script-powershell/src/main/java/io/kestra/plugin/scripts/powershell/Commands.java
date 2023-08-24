@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -49,15 +50,15 @@ import javax.validation.constraints.NotNull;
     )
 })
 public class Commands extends AbstractExecScript {
+    private static final String DEFAULT_IMAGE = "mcr.microsoft.com/powershell";
+
     @Schema(
-        title = "Docker options when using the `DOCKER` runner"
+        title = "Docker options when using the `DOCKER` runner",
+        defaultValue = "{image=" + DEFAULT_IMAGE + ", pullPolicy=ALWAYS}"
     )
     @PluginProperty
     @Builder.Default
-    protected DockerOptions docker = DockerOptions.builder()
-        .image("mcr.microsoft.com/powershell")
-        .entryPoint(List.of())
-        .build();
+    protected DockerOptions docker = DockerOptions.builder().build();
 
     @Schema(
         title = "The commands to run"
@@ -75,6 +76,19 @@ public class Commands extends AbstractExecScript {
     @NotNull
     @NotEmpty
     protected List<String> interpreter = List.of("/bin/sh", "-c");
+
+    @Override
+    protected DockerOptions injectDefaults(DockerOptions original) {
+        var builder = original.toBuilder();
+        if (original.getImage() == null) {
+            builder.image(DEFAULT_IMAGE);
+        }
+        if (original.getEntryPoint() == null) {
+            builder.entryPoint(Collections.emptyList());
+        }
+
+        return builder.build();
+    }
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {

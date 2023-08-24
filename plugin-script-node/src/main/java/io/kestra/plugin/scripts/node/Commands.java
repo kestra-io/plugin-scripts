@@ -50,20 +50,31 @@ import java.util.List;
     )
 })
 public class Commands extends AbstractExecScript {
+    private static final String DEFAULT_IMAGE = "node";
+
     @Schema(
-        title = "Docker options when using the `DOCKER` runner"
+        title = "Docker options when using the `DOCKER` runner",
+        defaultValue = "{image=" + DEFAULT_IMAGE + ", pullPolicy=ALWAYS}"
     )
     @PluginProperty
     @Builder.Default
-    protected DockerOptions docker = DockerOptions.builder()
-        .image("node")
-        .build();
+    protected DockerOptions docker = DockerOptions.builder().build();
 
     @Schema(
         title = "The commands to run"
     )
     @PluginProperty(dynamic = true)
     protected List<String> commands;
+
+    @Override
+    protected DockerOptions injectDefaults(DockerOptions original) {
+        var builder = original.toBuilder();
+        if (original.getImage() == null) {
+            builder.image(DEFAULT_IMAGE);
+        }
+
+        return builder.build();
+    }
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
