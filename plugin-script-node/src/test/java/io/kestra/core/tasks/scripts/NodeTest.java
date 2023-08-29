@@ -1,11 +1,10 @@
-package io.kestra.core.tasks.script;
+package io.kestra.core.tasks.scripts;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.AbstractMetricEntry;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
-import io.kestra.core.tasks.scripts.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.ScriptException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
