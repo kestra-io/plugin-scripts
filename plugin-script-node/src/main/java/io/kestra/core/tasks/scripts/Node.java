@@ -1,9 +1,7 @@
-package io.kestra.core.tasks.script;
+package io.kestra.core.tasks.scripts;
 
 import com.google.common.base.Charsets;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
-import io.kestra.core.tasks.scripts.AbstractBash;
-import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
