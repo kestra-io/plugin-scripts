@@ -18,6 +18,36 @@ import io.kestra.core.runners.RunContext;
 @Plugin(
     examples = {
         @Example(
+            full = true,
+            title = "Make an API call and pass request body to a Groovy script",
+            code = """     
+    id: api-request-to-groovy
+    namespace: dev
+
+    tasks:
+      - id: request
+        type: io.kestra.plugin.fs.http.Request
+        uri: "https://dummyjson.com/products/1"
+
+      - id: groovy
+        type: io.kestra.plugin.scripts.groovy.Eval
+        script: |
+          logger.info('{{ outputs.request.body }}')
+
+      - id: download
+        type: io.kestra.plugin.fs.http.Download
+        uri: "https://dummyjson.com/products/1"
+
+      - id: runContextGroovy
+        type: io.kestra.plugin.scripts.groovy.Eval
+        script: |
+          // logger.info('Vars: {}', runContext.getVariables())
+          URI uri = new URI(runContext.variables.outputs.download.uri)
+          InputStream istream = runContext.uriToInputStream(uri)
+          logger.info('Content: {}', istream.text)
+                    """
+            ),        
+        @Example(
             code = {
                 "outputs:",
                 "  - out",
