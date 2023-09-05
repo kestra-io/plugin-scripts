@@ -39,7 +39,7 @@ class CommandsTest {
     @Test
     void task() throws Exception {
         List<LogEntry> logs = new ArrayList<>();
-        logQueue.receive(logs::add);
+        logQueue.receive(l -> logs.add(l.getLeft()));
 
         URI put = storageInterface.put(
             new URI("/file/storage/get.yml"),
