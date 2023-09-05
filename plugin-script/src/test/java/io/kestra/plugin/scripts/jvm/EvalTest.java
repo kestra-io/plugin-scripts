@@ -39,7 +39,7 @@ abstract public class EvalTest {
     @Test
     void run() throws Exception {
         List<LogEntry> logs = new ArrayList<>();
-        workerTaskLogQueue.receive(logs::add);
+        workerTaskLogQueue.receive(l -> logs.add(l.getLeft()));
 
         Eval task = this.task();
 

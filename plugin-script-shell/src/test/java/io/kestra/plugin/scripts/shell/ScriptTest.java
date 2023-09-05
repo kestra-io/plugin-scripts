@@ -68,7 +68,7 @@ class ScriptTest {
     @MethodSource("source")
     void massLog(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         List<LogEntry> logs = new ArrayList<>();
-        logQueue.receive(logs::add);
+        logQueue.receive(l -> logs.add(l.getLeft()));
 
         Script bash = Script.builder()
             .id("unit-test")

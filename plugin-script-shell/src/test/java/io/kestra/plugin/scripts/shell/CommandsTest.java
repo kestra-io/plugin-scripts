@@ -185,7 +185,7 @@ class CommandsTest {
     @Test
     void pull() throws Exception {
         List<LogEntry> logs = new ArrayList<>();
-        logQueue.receive(logs::add);
+        logQueue.receive(l -> logs.add(l.getLeft()));
 
         Commands bash = Commands.builder()
             .id("unit-test")

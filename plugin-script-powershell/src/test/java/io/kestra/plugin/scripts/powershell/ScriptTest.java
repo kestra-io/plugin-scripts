@@ -31,7 +31,7 @@ class ScriptTest {
     @Test
     void script() throws Exception {
         List<LogEntry> logs = new ArrayList<>();
-        logQueue.receive(logs::add);
+        logQueue.receive(l -> logs.add(l.getLeft()));
 
         Script bash = Script.builder()
             .id("unit-test")
