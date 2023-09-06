@@ -58,7 +58,7 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
     protected FileTransform.Output run(RunContext runContext, String engineName) throws Exception {
         // temp out file
         String from = runContext.render(this.from);
-        File tempFile = runContext.tempFile().toFile();
+        File tempFile = runContext.tempFile(".ion").toFile();
 
         // prepare script
         ScriptEngineService.CompiledScript scripts = ScriptEngineService.scripts(
