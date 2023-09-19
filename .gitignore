@@ -16,3 +16,4 @@ out/
 src/test/resources/application-test.yml
 kotlin/
 jython/.jython_cache
+plugin-script-shell/src/test/java/io/kestra/plugin/scripts/shell/DockerPrivateTest.java

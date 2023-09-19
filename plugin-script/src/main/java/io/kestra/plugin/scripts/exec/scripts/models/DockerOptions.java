@@ -26,10 +26,17 @@ public class DockerOptions {
 
     @Schema(
         title = "Docker config file",
-        description = "Docker configuration file that can set access credentials to private container registries. Usually located in `~/.docker/config.json`"
+        description = "Docker configuration file that can set access credentials to private container registries. Usually located in `~/.docker/config.json`",
+        anyOf = {String.class, Map.class}
     )
     @PluginProperty(dynamic = true)
-    private String config;
+    private Object config;
+
+    @Schema(
+        title = "Credentials for a private container registry."
+    )
+    @PluginProperty(dynamic = true)
+    private Credentials credentials;
 
     @Schema(
         title = "Docker image to use"
@@ -114,6 +121,40 @@ public class DockerOptions {
         NEVER
     }
 
+    @SuperBuilder
+    @NoArgsConstructor
+    @Getter
+    @Introspected
+    @Schema(
+        title = "Credentials for a private container registry."
+    )
+    public static class Credentials {
+        @Schema(
+            title = "The registry url.",
+            description = "if not defined, the registry will be extracted from the image name."
+        )
+        @PluginProperty(dynamic = true)
+        private String registry;
+
+        @Schema(
+            title = "The registry username."
+        )
+        @PluginProperty(dynamic = true)
+        private String username;
+
+        @Schema(
+            title = "The registry password."
+        )
+        @PluginProperty(dynamic = true)
+        private String password;
+
+        @Schema(
+            title = "The registry auth.",
+            description = "The `auth` field is a base64-encoded authentication string of `username:password` or a token."
+        )
+        @PluginProperty(dynamic = true)
+        private String auth;
+    }
 
     @SuperBuilder
     @NoArgsConstructor
