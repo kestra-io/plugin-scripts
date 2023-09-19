@@ -16,7 +16,9 @@ import com.google.common.collect.ImmutableMap;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.tasks.retrys.Exponential;
 import io.kestra.core.runners.RunContext;
+import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.core.utils.Await;
+import io.kestra.core.utils.MapUtils;
 import io.kestra.core.utils.RetryUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.micronaut.context.ApplicationContext;
@@ -25,6 +27,7 @@ import lombok.SneakyThrows;
 import org.slf4j.Logger;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -65,11 +68,48 @@ public class DockerScriptRunner {
                 dockerHost = runContext.render(dockerOptions.getHost());
             }
 
-            if (dockerOptions.getConfig() != null) {
+            if (dockerOptions.getConfig() != null || dockerOptions.getCredentials() != null) {
+                Map<String, Object> finalConfig = new HashMap<>();
+
+                if (dockerOptions.getConfig() != null) {
+                    if (dockerOptions.getConfig() instanceof String) {
+                        finalConfig = JacksonMapper.toMap(runContext.render(dockerOptions.getConfig().toString()));
+                    } else {
+                        //noinspection unchecked
+                        finalConfig = runContext.render((Map<String, Object>) dockerOptions.getConfig());
+                    }
+                }
+
+                if (dockerOptions.getCredentials() != null) {
+                    Map<String, Object> auths = new HashMap<>();
+                    String registry = "https://index.docker.io/v1/";
+
+                    if (dockerOptions.getCredentials().getUsername() != null) {
+                        auths.put("username", runContext.render(dockerOptions.getCredentials().getUsername()));
+                    }
+
+                    if (dockerOptions.getCredentials().getPassword() != null) {
+                        auths.put("password", runContext.render(dockerOptions.getCredentials().getPassword()));
+                    }
+
+                    if (dockerOptions.getCredentials().getAuth() != null) {
+                        auths.put("auth", runContext.render(dockerOptions.getCredentials().getAuth()));
+                    }
+
+                    if (dockerOptions.getCredentials().getRegistry() != null) {
+                        auths.put("auth", runContext.render(dockerOptions.getCredentials().getRegistry()));
+                    } else {
+                        NameParser.ReposTag imageParse = NameParser.parseRepositoryTag(runContext.render(dockerOptions.getImage()));
+                        registry = URI.create(imageParse.repos.startsWith("http") ? imageParse.repos : "https://" + imageParse.repos).getHost();
+                    }
+
+                    finalConfig = MapUtils.merge(finalConfig, Map.of("auths", Map.of(registry, auths)));
+                }
+
                 Path docker = Files.createTempDirectory(workingDirectory, "docker");
                 Path file = Files.createFile(docker.resolve("config.json"));
 
-                Files.write(file, runContext.render(dockerOptions.getConfig()).getBytes());
+                Files.write(file, runContext.render(JacksonMapper.ofJson().writeValueAsString(finalConfig)).getBytes());
 
                 dockerClientConfigBuilder.withDockerConfig(docker.toFile().getAbsolutePath());
             }
