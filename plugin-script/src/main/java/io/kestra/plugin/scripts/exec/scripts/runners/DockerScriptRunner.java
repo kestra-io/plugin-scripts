@@ -59,82 +59,28 @@ public class DockerScriptRunner {
         ).orElse(false);
     }
 
+
     private static DockerClient dockerClient(DockerOptions dockerOptions, RunContext runContext, Path workingDirectory) throws IOException, IllegalVariableEvaluationException {
-        DefaultDockerClientConfig.Builder dockerClientConfigBuilder = DefaultDockerClientConfig.createDefaultConfigBuilder();
+        DefaultDockerClientConfig.Builder dockerClientConfigBuilder = DefaultDockerClientConfig.createDefaultConfigBuilder()
+            .withDockerHost(DockerService.findHost(runContext, dockerOptions != null ? dockerOptions.getHost() : null));
 
-        String dockerHost = null;
         if (dockerOptions != null) {
-            if (dockerOptions.getHost() != null) {
-                dockerHost = runContext.render(dockerOptions.getHost());
-            }
-
             if (dockerOptions.getConfig() != null || dockerOptions.getCredentials() != null) {
-                Map<String, Object> finalConfig = new HashMap<>();
 
-                if (dockerOptions.getConfig() != null) {
-                    if (dockerOptions.getConfig() instanceof String) {
-                        finalConfig = JacksonMapper.toMap(runContext.render(dockerOptions.getConfig().toString()));
-                    } else {
-                        //noinspection unchecked
-                        finalConfig = runContext.render((Map<String, Object>) dockerOptions.getConfig());
-                    }
-                }
+                Path config = DockerService.createConfig(
+                    runContext,
+                    dockerOptions.getConfig(),
+                    List.of(dockerOptions.getCredentials()),
+                    dockerOptions.getImage()
+                );
 
-                if (dockerOptions.getCredentials() != null) {
-                    Map<String, Object> auths = new HashMap<>();
-                    String registry = "https://index.docker.io/v1/";
-
-                    if (dockerOptions.getCredentials().getUsername() != null) {
-                        auths.put("username", runContext.render(dockerOptions.getCredentials().getUsername()));
-                    }
-
-                    if (dockerOptions.getCredentials().getPassword() != null) {
-                        auths.put("password", runContext.render(dockerOptions.getCredentials().getPassword()));
-                    }
-
-                    if (dockerOptions.getCredentials().getAuth() != null) {
-                        auths.put("auth", runContext.render(dockerOptions.getCredentials().getAuth()));
-                    }
-
-                    if (dockerOptions.getCredentials().getRegistry() != null) {
-                        auths.put("auth", runContext.render(dockerOptions.getCredentials().getRegistry()));
-                    } else {
-                        NameParser.ReposTag imageParse = NameParser.parseRepositoryTag(runContext.render(dockerOptions.getImage()));
-                        registry = URI.create(imageParse.repos.startsWith("http") ? imageParse.repos : "https://" + imageParse.repos).getHost();
-                    }
-
-                    finalConfig = MapUtils.merge(finalConfig, Map.of("auths", Map.of(registry, auths)));
-                }
-
-                Path docker = Files.createTempDirectory(workingDirectory, "docker");
-                Path file = Files.createFile(docker.resolve("config.json"));
-
-                Files.write(file, runContext.render(JacksonMapper.ofJson().writeValueAsString(finalConfig)).getBytes());
-
-                dockerClientConfigBuilder.withDockerConfig(docker.toFile().getAbsolutePath());
-            }
-        }
-
-        if (dockerHost != null) {
-            dockerClientConfigBuilder.withDockerHost(dockerHost);
-        } else {
-            if (Files.exists(Path.of("/var/run/docker.sock"))) {
-                dockerClientConfigBuilder.withDockerHost("unix:///var/run/docker.sock");
-            } else if (Files.exists(Path.of("/dind/docker.sock"))) {
-                dockerClientConfigBuilder.withDockerHost("unix:///dind/docker.sock");
+                dockerClientConfigBuilder.withDockerConfig(config.toFile().getAbsolutePath());
             }
         }
 
         DockerClientConfig dockerClientConfig = dockerClientConfigBuilder.build();
 
-        ZerodepDockerHttpClient dockerHttpClient = new ZerodepDockerHttpClient.Builder()
-            .dockerHost(dockerClientConfig.getDockerHost())
-            .build();
-
-        return DockerClientBuilder
-            .getInstance(dockerClientConfig)
-            .withDockerHttpClient(dockerHttpClient)
-            .build();
+        return DockerService.client(dockerClientConfig);
     }
 
     public RunnerResult run(CommandsWrapper commands, DockerOptions dockerOptions) throws Exception {

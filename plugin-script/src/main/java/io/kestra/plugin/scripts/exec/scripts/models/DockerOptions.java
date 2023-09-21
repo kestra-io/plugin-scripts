@@ -149,6 +149,18 @@ public class DockerOptions {
         private String password;
 
         @Schema(
+            title = "The registry token."
+        )
+        @PluginProperty(dynamic = true)
+        private String registryToken;
+
+        @Schema(
+            title = "The identity token."
+        )
+        @PluginProperty(dynamic = true)
+        private String identityToken;
+
+        @Schema(
             title = "The registry auth.",
             description = "The `auth` field is a base64-encoded authentication string of `username:password` or a token."
         )
