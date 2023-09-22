@@ -138,6 +138,11 @@ subprojects { Project subproject ->
             dependsOn(":plugin-script:jar")
             archiveClassifier.set(null)
             mergeServiceFiles()
+            dependencies {
+                exclude(dependency {
+                    it.moduleGroup.startsWith("com.fasterxml.jackson")
+                })
+            }
         }
     }
 
