@@ -70,7 +70,7 @@ public class DockerScriptRunner {
                 Path config = DockerService.createConfig(
                     runContext,
                     dockerOptions.getConfig(),
-                    List.of(dockerOptions.getCredentials()),
+                    dockerOptions.getCredentials() != null ? List.of(dockerOptions.getCredentials()) : null,
                     dockerOptions.getImage()
                 );
 
