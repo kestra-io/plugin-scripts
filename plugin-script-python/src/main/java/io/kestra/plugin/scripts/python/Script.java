@@ -16,6 +16,7 @@ import lombok.experimental.SuperBuilder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 @SuperBuilder
 @ToString
@@ -137,6 +138,7 @@ public class Script extends AbstractExecScript {
         );
 
         return commands
+            .addEnv(Map.of("PYTHONUNBUFFERED", "true"))
             .withCommands(commandsArgs)
             .run();
     }
