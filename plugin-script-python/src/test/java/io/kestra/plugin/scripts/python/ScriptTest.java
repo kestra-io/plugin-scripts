@@ -111,6 +111,7 @@ class ScriptTest {
     @MethodSource("source")
     void inputs(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         URI put = storageInterface.put(
+            null,
             new URI("/file/storage/get.yml"),
             IOUtils.toInputStream(
                 "hello there!",
