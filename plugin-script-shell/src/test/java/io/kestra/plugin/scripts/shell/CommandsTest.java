@@ -139,6 +139,7 @@ class CommandsTest {
     @MethodSource("source")
     void files(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         URI put = storageInterface.put(
+            null,
             new URI("/file/storage/get.yml"),
             IOUtils.toInputStream("I'm here", StandardCharsets.UTF_8)
         );
@@ -167,14 +168,14 @@ class CommandsTest {
         assertThat(run.getVars().get("extract"), is("I'm here"));
         assertThat(run.getOutputFiles().size(), is(2));
 
-        InputStream get = storageInterface.get(run.getOutputFiles().get("file.xml"));
+        InputStream get = storageInterface.get(null, run.getOutputFiles().get("file.xml"));
 
         assertThat(
             CharStreams.toString(new InputStreamReader(get)),
             is("1\n3\n")
         );
 
-        get = storageInterface.get(run.getOutputFiles().get("sub/dir/file.csv"));
+        get = storageInterface.get(null, run.getOutputFiles().get("sub/dir/file.csv"));
 
         assertThat(
             CharStreams.toString(new InputStreamReader(get)),
