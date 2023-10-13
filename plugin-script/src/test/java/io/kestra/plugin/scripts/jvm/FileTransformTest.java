@@ -55,6 +55,7 @@ public abstract class FileTransformTest {
         ));
 
         URI source = storageInterface.put(
+            null,
             new URI("/" + IdUtils.create()),
             new FileInputStream(tempFile)
         );
@@ -100,7 +101,7 @@ public abstract class FileTransformTest {
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());
         FileTransform.Output runOutput = task.run(runContext);
 
-        BufferedReader inputStream = new BufferedReader(new InputStreamReader(storageInterface.get(runOutput.getUri())));
+        BufferedReader inputStream = new BufferedReader(new InputStreamReader(storageInterface.get(null, runOutput.getUri())));
         List<Object> result = new ArrayList<>();
         FileSerde.reader(inputStream, result::add);
 

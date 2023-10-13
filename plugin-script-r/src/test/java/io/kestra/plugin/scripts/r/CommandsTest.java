@@ -41,6 +41,7 @@ class CommandsTest {
         logQueue.receive(l -> logs.add(l.getLeft()));
 
         URI put = storageInterface.put(
+            null,
             new URI("/file/storage/get.yml"),
             IOUtils.toInputStream(
                 "aString = \"Hello World!\"\n" +
