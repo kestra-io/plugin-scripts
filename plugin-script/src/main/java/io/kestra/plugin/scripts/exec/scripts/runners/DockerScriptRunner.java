@@ -45,7 +45,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 
 public class DockerScriptRunner {
     private static final ReadableBytesTypeConverter READABLE_BYTES_TYPE_CONVERTER = new ReadableBytesTypeConverter();
-    public static final Pattern NEWLINE_PATTERN = Pattern.compile("[\\r\\n]+$");
+    public static final Pattern NEWLINE_PATTERN = Pattern.compile("([^\\r\\n]+)[\\r\\n]+");
 
     private final RetryUtils retryUtils;
 
@@ -127,13 +127,21 @@ public class DockerScriptRunner {
                             String frameStr = new String(frame.getPayload());
 
                             Matcher newLineMatcher = NEWLINE_PATTERN.matcher(frameStr);
-                            logBuffers.computeIfAbsent(frame.getStreamType(), streamType -> new StringBuilder())
-                                .append(newLineMatcher.replaceAll(""));
 
-                            if (newLineMatcher.reset().find()) {
+                            int lastIndex = 0;
+                            while (newLineMatcher.find()) {
+                                String fragment = newLineMatcher.group(1);
+                                logBuffers.computeIfAbsent(frame.getStreamType(), streamType -> new StringBuilder())
+                                    .append(fragment);
+
                                 StringBuilder logBuffer = logBuffers.get(frame.getStreamType());
                                 defaultLogConsumer.accept(logBuffer.toString(), frame.getStreamType() == StreamType.STDERR);
                                 logBuffer.setLength(0);
+                                lastIndex = newLineMatcher.end();
+                            }
+                            if (lastIndex < frameStr.length()) {
+                                logBuffers.computeIfAbsent(frame.getStreamType(), streamType -> new StringBuilder())
+                                    .append(frameStr.substring(lastIndex));
                             }
                         }
 

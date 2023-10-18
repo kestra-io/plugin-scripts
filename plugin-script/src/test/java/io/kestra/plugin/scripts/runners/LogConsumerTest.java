@@ -55,4 +55,37 @@ public class LogConsumerTest {
         assertThat(run.getLogConsumer().getStdOutCount(), is(2));
         assertThat(run.getLogConsumer().getOutputs().get("someOutput"), is(outputValue));
     }
+
+    @Test
+    void testWithMultipleCrInSameFrame() throws Exception {
+        Task task = new Task() {
+            @Override
+            public String getId() {
+                return "id";
+            }
+
+            @Override
+            public String getType() {
+                return "type";
+            }
+        };
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());
+        StringBuilder outputValue = new StringBuilder();
+        for (int i = 0; i < 3; i++) {
+            outputValue.append(Integer.toString(i).repeat(100)).append("\r")
+                    .append(Integer.toString(i).repeat(800)).append("\r")
+                .append(Integer.toString(i).repeat(2000)).append("\r");
+        }
+        RunnerResult run = new DockerScriptRunner(applicationContext).run(
+            new CommandsWrapper(runContext).withCommands(List.of(
+                "/bin/sh", "-c",
+                "echo " + outputValue +
+                    "echo -n another line"
+            )),
+            DockerOptions.builder().image("alpine").build()
+        );
+
+        Await.until(() -> run.getLogConsumer().getStdOutCount() == 10, null, Duration.ofSeconds(5));
+        assertThat(run.getLogConsumer().getStdOutCount(), is(10));
+    }
 }
