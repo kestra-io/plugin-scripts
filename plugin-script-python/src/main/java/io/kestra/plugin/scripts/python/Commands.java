@@ -242,7 +242,6 @@ public class Commands extends AbstractExecScript {
         title = "The commands to run"
     )
     @PluginProperty(dynamic = true)
-    @NotNull
     @NotEmpty
     protected List<String> commands;
 

@@ -16,6 +16,7 @@ import lombok.experimental.SuperBuilder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
 @SuperBuilder
 @ToString
@@ -98,6 +99,7 @@ public class Script extends AbstractExecScript {
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
     )
     @PluginProperty(dynamic = true)
+    @NotNull
     protected String script;
 
     @Override
