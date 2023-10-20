@@ -13,6 +13,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
+import javax.validation.constraints.NotEmpty;
 
 @SuperBuilder
 @ToString
@@ -64,6 +65,7 @@ public class Commands extends AbstractExecScript {
         title = "The commands to run"
     )
     @PluginProperty(dynamic = true)
+    @NotEmpty
     protected List<String> commands;
 
     @Override

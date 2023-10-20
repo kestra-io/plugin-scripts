@@ -64,7 +64,6 @@ public class Commands extends AbstractExecScript {
         title = "The commands to run"
     )
     @PluginProperty(dynamic = true)
-    @NotNull
     @NotEmpty
     protected List<String> commands;
 
@@ -73,7 +72,6 @@ public class Commands extends AbstractExecScript {
         title = "Which interpreter to use"
     )
     @PluginProperty
-    @NotNull
     @NotEmpty
     protected List<String> interpreter = List.of("/bin/sh", "-c");
 
