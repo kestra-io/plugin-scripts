@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,7 +95,11 @@ public class DockerService {
         Path docker = runContext.tempDir(true);
         Path file = Files.createFile(docker.resolve("config.json"));
 
-        Files.write(file, runContext.render(JacksonMapper.ofJson().writeValueAsString(finalConfig)).getBytes());
+        Files.write(
+            file,
+            runContext.render(JacksonMapper.ofJson().writeValueAsString(finalConfig)).getBytes(),
+            StandardOpenOption.TRUNCATE_EXISTING
+        );
 
         return file.getParent();
     }
