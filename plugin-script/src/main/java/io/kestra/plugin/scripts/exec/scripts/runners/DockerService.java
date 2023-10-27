@@ -11,8 +11,10 @@ import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.core.utils.MapUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -92,16 +94,21 @@ public class DockerService {
             finalConfig = MapUtils.merge(finalConfig, Map.of("auths", Map.of(registry, auths)));
         }
 
-        Path docker = runContext.tempDir(true);
-        Path file = Files.createFile(docker.resolve("config.json"));
+        File docker = runContext.tempDir(true).resolve("config.json").toFile();
+
+        if (docker.exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            docker.delete();
+        } else {
+            Files.createFile(docker.toPath());
+        }
 
         Files.write(
-            file,
-            runContext.render(JacksonMapper.ofJson().writeValueAsString(finalConfig)).getBytes(),
-            StandardOpenOption.TRUNCATE_EXISTING
+            docker.toPath(),
+            runContext.render(JacksonMapper.ofJson().writeValueAsString(finalConfig)).getBytes()
         );
 
-        return file.getParent();
+        return docker.toPath().getParent();
     }
 
     public static String registryUrlFromImage(String image) {
