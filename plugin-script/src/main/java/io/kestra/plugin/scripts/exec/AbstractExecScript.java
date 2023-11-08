@@ -2,6 +2,8 @@ package io.kestra.plugin.scripts.exec;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.tasks.NamespaceFiles;
+import io.kestra.core.models.tasks.NamespaceFilesInterface;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.Task;
 import io.kestra.core.runners.RunContext;
@@ -23,7 +25,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-public abstract class AbstractExecScript extends Task implements RunnableTask<ScriptOutput> {
+public abstract class AbstractExecScript extends Task implements RunnableTask<ScriptOutput>, NamespaceFilesInterface {
     @Builder.Default
     @Schema(
         title = "Runner to use"
@@ -65,6 +67,8 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
     @NotEmpty
     protected List<String> interpreter = List.of("/bin/sh", "-c");
 
+    private NamespaceFiles namespaceFiles;
+
     abstract public DockerOptions getDocker();
 
     /**
@@ -90,6 +94,7 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
             .withEnv(this.getEnv())
             .withWarningOnStdErr(this.getWarningOnStdErr())
             .withRunnerType(this.getRunner())
-            .withDockerOptions(this.injectDefaults(getDocker()));
+            .withDockerOptions(this.injectDefaults(getDocker()))
+            .withNamespaceFiles(namespaceFiles);
     }
 }

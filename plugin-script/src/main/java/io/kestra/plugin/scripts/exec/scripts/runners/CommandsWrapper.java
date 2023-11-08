@@ -1,6 +1,8 @@
 package io.kestra.plugin.scripts.exec.scripts.runners;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
+import io.kestra.core.models.tasks.NamespaceFiles;
+import io.kestra.core.runners.NamespaceFilesService;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.utils.IdUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
@@ -49,6 +51,9 @@ public class CommandsWrapper {
     @With
     private Boolean warningOnStdErr;
 
+    @With
+    private NamespaceFiles namespaceFiles;
+
     public CommandsWrapper(RunContext runContext) {
         this.runContext = runContext;
 
@@ -76,7 +81,8 @@ public class CommandsWrapper {
             logConsumer,
             runnerType,
             dockerOptions,
-            warningOnStdErr
+            warningOnStdErr,
+            namespaceFiles
         );
     }
 
@@ -99,7 +105,8 @@ public class CommandsWrapper {
             logConsumer,
             runnerType,
             dockerOptions,
-            warningOnStdErr
+            warningOnStdErr,
+            namespaceFiles
         );
     }
 
@@ -115,8 +122,23 @@ public class CommandsWrapper {
         return this;
     }
 
+    @SuppressWarnings("unchecked")
     public ScriptOutput run() throws Exception {
         RunnerResult runnerResult;
+
+        if (this.namespaceFiles != null) {
+            String tenantId = ((Map<String, String>) runContext.getVariables().get("flow")).get("tenantId");
+            String namespace = ((Map<String, String>) runContext.getVariables().get("flow")).get("namespace");
+
+            NamespaceFilesService namespaceFilesService = runContext.getApplicationContext().getBean(NamespaceFilesService.class);
+            namespaceFilesService.inject(
+                runContext,
+                tenantId,
+                namespace,
+                this.workingDirectory,
+                this.namespaceFiles
+            );
+        }
 
         if (runnerType.equals(RunnerType.DOCKER)) {
             runnerResult = new DockerScriptRunner(runContext.getApplicationContext()).run(this, this.dockerOptions);
