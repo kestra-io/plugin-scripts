@@ -285,28 +285,28 @@ public class DockerScriptRunner {
             }
 
             if (dockerOptions.getMemory().getMemorySwap() != null) {
-                hostConfig.withMemorySwap(convertBytes(runContext.render(dockerOptions.getMemory()
-                    .getMemorySwap())));
+                hostConfig.withMemorySwap(convertBytes(runContext.render(dockerOptions.getMemory().getMemorySwap())));
             }
 
             if (dockerOptions.getMemory().getMemorySwappiness() != null) {
-                hostConfig.withMemorySwappiness(convertBytes(runContext.render(dockerOptions.getMemory()
-                    .getMemorySwappiness())));
+                hostConfig.withMemorySwappiness(convertBytes(runContext.render(dockerOptions.getMemory().getMemorySwappiness())));
             }
 
             if (dockerOptions.getMemory().getMemoryReservation() != null) {
-                hostConfig.withMemoryReservation(convertBytes(runContext.render(dockerOptions.getMemory()
-                    .getMemoryReservation())));
+                hostConfig.withMemoryReservation(convertBytes(runContext.render(dockerOptions.getMemory().getMemoryReservation())));
             }
 
             if (dockerOptions.getMemory().getKernelMemory() != null) {
-                hostConfig.withKernelMemory(convertBytes(runContext.render(dockerOptions.getMemory()
-                    .getKernelMemory())));
+                hostConfig.withKernelMemory(convertBytes(runContext.render(dockerOptions.getMemory().getKernelMemory())));
             }
 
             if (dockerOptions.getMemory().getOomKillDisable() != null) {
                 hostConfig.withOomKillDisable(dockerOptions.getMemory().getOomKillDisable());
             }
+        }
+
+        if (dockerOptions.getShmSize() != null) {
+            hostConfig.withShmSize(convertBytes(runContext.render(dockerOptions.getShmSize())));
         }
 
         if (dockerOptions.getNetworkMode() != null) {

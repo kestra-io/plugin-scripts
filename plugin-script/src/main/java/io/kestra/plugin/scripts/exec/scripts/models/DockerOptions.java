@@ -111,6 +111,13 @@ public class DockerOptions {
     @PluginProperty(dynamic = false)
     protected Memory memory;
 
+    @Schema(
+        title = "Size of `/dev/shm` in bytes.",
+        description = "The size must be greater than 0. If omitted the system uses 64MB."
+    )
+    @PluginProperty(dynamic = true)
+    private String shmSize;
+
     @Introspected
     @Schema(
         title = "The PullPolicy for a container and the tag of the image affect when docker attempts to pull (download) the specified image."
