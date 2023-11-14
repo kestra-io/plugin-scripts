@@ -2,10 +2,7 @@ package io.kestra.plugin.scripts.exec;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.PluginProperty;
-import io.kestra.core.models.tasks.NamespaceFiles;
-import io.kestra.core.models.tasks.NamespaceFilesInterface;
-import io.kestra.core.models.tasks.RunnableTask;
-import io.kestra.core.models.tasks.Task;
+import io.kestra.core.models.tasks.*;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
@@ -25,7 +22,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-public abstract class AbstractExecScript extends Task implements RunnableTask<ScriptOutput>, NamespaceFilesInterface {
+public abstract class AbstractExecScript extends Task implements RunnableTask<ScriptOutput>, NamespaceFilesInterface, InputFilesInterface, OutputFilesInterface {
     @Builder.Default
     @Schema(
         title = "Runner to use"
@@ -69,6 +66,10 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
 
     private NamespaceFiles namespaceFiles;
 
+    private Object inputFiles;
+
+    private List<String> outputFiles;
+
     abstract public DockerOptions getDocker();
 
     /**
@@ -95,6 +96,8 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
             .withWarningOnStdErr(this.getWarningOnStdErr())
             .withRunnerType(this.getRunner())
             .withDockerOptions(this.injectDefaults(getDocker()))
-            .withNamespaceFiles(namespaceFiles);
+            .withNamespaceFiles(namespaceFiles)
+            .withInputFiles(this.inputFiles)
+            .withOutputFiles(this.outputFiles);
     }
 }

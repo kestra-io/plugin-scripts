@@ -2,6 +2,7 @@ package io.kestra.plugin.scripts.exec.scripts.runners;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.tasks.NamespaceFiles;
+import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.NamespaceFilesService;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.utils.IdUtils;
@@ -54,6 +55,12 @@ public class CommandsWrapper {
     @With
     private NamespaceFiles namespaceFiles;
 
+    @With
+    private Object inputFiles;
+
+    @With
+    private List<String> outputFiles;
+
     public CommandsWrapper(RunContext runContext) {
         this.runContext = runContext;
 
@@ -82,7 +89,9 @@ public class CommandsWrapper {
             runnerType,
             dockerOptions,
             warningOnStdErr,
-            namespaceFiles
+            namespaceFiles,
+            inputFiles,
+            outputFiles
         );
     }
 
@@ -106,7 +115,9 @@ public class CommandsWrapper {
             runnerType,
             dockerOptions,
             warningOnStdErr,
-            namespaceFiles
+            namespaceFiles,
+            inputFiles,
+            outputFiles
         );
     }
 
@@ -140,6 +151,10 @@ public class CommandsWrapper {
             );
         }
 
+        if (this.inputFiles != null) {
+            FilesService.inputFiles(runContext, this.inputFiles);
+        }
+
         if (runnerType.equals(RunnerType.DOCKER)) {
             runnerResult = new DockerScriptRunner(runContext.getApplicationContext()).run(this, this.dockerOptions);
         } else {
@@ -147,6 +162,10 @@ public class CommandsWrapper {
         }
 
         Map<String, URI> outputFiles = ScriptService.uploadOutputFiles(runContext, outputDirectory);
+
+        if (this.outputFiles != null) {
+            outputFiles.putAll(FilesService.outputFiles(runContext, this.outputFiles));
+        }
 
         return ScriptOutput.builder()
             .exitCode(runnerResult.getExitCode())
