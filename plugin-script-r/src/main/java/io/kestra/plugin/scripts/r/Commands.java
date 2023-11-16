@@ -45,7 +45,7 @@ import javax.validation.constraints.NotNull;
                       mdy("06-04-2011");
                       dmy("04/06/2012")
                 - id: bash
-                  type: io.kestra.plugin.scripts.powershell.Commands
+                  type: io.kestra.plugin.scripts.r.Commands
                   beforeCommands:
                     - Rscript -e 'install.packages("lubridate")'
                   commands:
