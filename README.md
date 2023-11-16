@@ -52,6 +52,7 @@ Plugin to orchestrate custom scripts in any language including Python, Node.js, 
     * [for PowerShell](https://kestra.io/plugins/plugin-script-powershell/)
     * [for Python](https://kestra.io/plugins/plugin-script-python/)
     * [for R](https://kestra.io/plugins/plugin-script-r/)
+    * [for R](https://kestra.io/plugins/plugin-script-ruby/)
     * [for Shell](https://kestra.io/plugins/plugin-script-shell/).
 
 
