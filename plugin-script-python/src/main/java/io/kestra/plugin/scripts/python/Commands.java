@@ -28,6 +28,44 @@ import javax.validation.constraints.NotNull;
 @Plugin(examples = {
     @Example(
         full = true,
+        title = """
+        Execute a Python script in a Conda virtual environment. First, add the following script in the embedded VS Code editor and name it `etl_script.py`:
+          
+        ```python
+        import argparse
+
+        parser = argparse.ArgumentParser()
+
+        parser.add_argument("--num", type=int, default=42, help="Enter an integer")
+
+        args = parser.parse_args()
+        result = args.num * 2
+        print(result)
+        ```
+          
+        Then, make sure to set the `enabled` flag of the `namespaceFiles` property to `true` to enable [namespace files](https://kestra.io/docs/developer-guide/namespace-files).           
+        ```
+
+        This flow uses a `PROCESS` runner and Conda virtual environment for process isolation and dependency management. However, note that, by default, Kestra runs tasks in a Docker container (i.e. a `DOCKER` runner), and you can use the `docker` property to customize many options, such as the Docker image to use.
+        """,
+        code = """     
+id: python_venv
+namespace: dev
+
+tasks:
+  - id: hello
+    type: io.kestra.plugin.scripts.python.Commands
+    namespaceFiles:
+      enabled: true
+    runner: PROCESS
+    beforeCommands:
+      - conda activate myCondaEnv
+    commands:
+      - python etl_script.py
+                """
+        ),  
+    @Example(
+        full = true,
         title = "Execute a Python script from Git in a Docker container and output a file",
         code = """     
 id: pythonCommandsExample
@@ -63,23 +101,6 @@ tasks:
     bucket: kestraio
     key: stage/orders.csv
     from: "{{outputs.outputFile.uris['orders.csv']}}"
-                """
-        ),
-    @Example(
-        full = true,
-        title = "Execute a Python script in a Conda virtual environment",
-        code = """     
-id: localPythonScript
-namespace: dev
-
-tasks:
-  - id: hello
-    type: io.kestra.plugin.scripts.python.Commands
-    runner: PROCESS
-    beforeCommands:
-      - conda activate myCondaEnv
-    commands:
-      - python /Users/you/scripts/etl_script.py
                 """
         ),
     @Example(
