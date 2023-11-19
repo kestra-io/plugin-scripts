@@ -21,32 +21,26 @@ import javax.validation.constraints.NotEmpty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute one or more Node commands from the Command Line Interface."
+    title = "Execute one or more Node commands from the Command Line Interface. Note that instead of adding the script using the `inputFiles` property, you could also add the script from the embedded VS Code editor and point to its location by path. If you do so, make sure to enable namespace files by setting the `enabled` flag of the `namespaceFiles` property to `true`."
 )
 @Plugin(examples = {
     @Example(
         full = true,
-        title = "Install package, create a node script and execute it",
+        title = "Install required npm packages, create a Node script and execute it.",
         code = """
-            id: "local-files"
-            namespace: "io.kestra.tests"
-
+            id: node
+            namespace: dev
             tasks:
-              - id: workingDir
-                type: io.kestra.core.tasks.flows.WorkingDirectory
-                tasks:
-                - id: inputFiles
-                  type: io.kestra.core.tasks.storages.LocalFiles
-                  inputs:
-                    main.js: |
-                      const colors = require("colors");
-                      console.log(colors.red("Hello"));
-                - id: bash
-                  type: io.kestra.plugin.scripts.node.Commands
-                  beforeCommands:
-                    - npm install colors
-                  commands:
-                    - node main.js
+              - id: node_script
+                type: io.kestra.plugin.scripts.node.Commands
+                inputFiles:
+                  main.js: |
+                    const colors = require("colors");
+                    console.log(colors.red("Hello"));
+                beforeCommands:
+                  - npm install colors
+                commands:
+                  - node main.js
             """
     )
 })

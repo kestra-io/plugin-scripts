@@ -25,7 +25,7 @@ import javax.validation.constraints.NotNull;
 public abstract class AbstractExecScript extends Task implements RunnableTask<ScriptOutput>, NamespaceFilesInterface, InputFilesInterface, OutputFilesInterface {
     @Builder.Default
     @Schema(
-        title = "Runner to use"
+        title = "Which script runner to use — by default, Kestra runs all scripts in `DOCKER`."
     )
     @PluginProperty
     @NotNull
@@ -33,7 +33,7 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
     protected RunnerType runner = RunnerType.DOCKER;
 
     @Schema(
-        title = "A list of commands that will run before `commands`, allowing to set up the environment e.g. `pip install -r requirements.txt`"
+        title = "A list of commands that will run before the `commands`, allowing to set up the environment e.g. `pip install -r requirements.txt`"
     )
     @PluginProperty(dynamic = true)
     protected List<String> beforeCommands;

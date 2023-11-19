@@ -52,10 +52,7 @@ tasks:
         commands:
           - python scripts/etl_script.py
           - python scripts/generate_orders.py
-      
-      - id: outputFile
-        type: io.kestra.core.tasks.storages.LocalFiles
-        outputs:
+        outputFiles:
           - orders.csv
 
   - id: loadCsvToS3
@@ -119,23 +116,17 @@ tasks:
         url: https://github.com/kestra-io/examples
         branch: main
 
-      - id: local
-        type: io.kestra.core.tasks.storages.LocalFiles
-        inputs:
-          data.csv: "{{ trigger.objects | jq('.[].uri') | first }}"
-
       - id: python
         type: io.kestra.plugin.scripts.python.Commands
+        inputFiles:
+          data.csv: "{{ trigger.objects | jq('.[].uri') | first }}"
         description: this script reads a file `data.csv` from S3 trigger
         docker:
           image: ghcr.io/kestra-io/pydata:latest
         warningOnStdErr: false
         commands:
           - python scripts/clean_messy_dataset.py
-
-      - id: output
-        type: io.kestra.core.tasks.storages.LocalFiles
-        outputs:
+        outputFiles:
           - "*.csv"
           - "*.parquet"
 
@@ -188,9 +179,10 @@ tasks:
                   }
               }
             }
+
       - id: output
         type: io.kestra.core.tasks.storages.LocalFiles
-        outputs:
+        outputFiles:
           - "*.csv"
           - "*.parquet"
                 """
@@ -199,31 +191,25 @@ tasks:
         full = true,
         title = "Create a python script and execute it in a virtual environment",
         code = """
-            id: "local-files"
-            namespace: "io.kestra.tests"
-
+            id: "script_in_venv"
+            namespace: "dev"
             tasks:
-              - id: workingDir
-                type: io.kestra.core.tasks.flows.WorkingDirectory
-                tasks:
-                - id: inputFiles
-                  type: io.kestra.core.tasks.storages.LocalFiles
-                  inputs:
-                    main.py: |
-                      import requests
-                      from kestra import Kestra
+              - id: bash
+                type: io.kestra.plugin.scripts.python.Commands
+                inputFiles:
+                  main.py: |
+                    import requests
+                    from kestra import Kestra
 
-                      response = requests.get('https://google.com')
-                      print(response.status_code)
-                      Kestra.outputs({'status': response.status_code, 'text': response.text})
-                - id: bash
-                  type: io.kestra.plugin.scripts.python.Commands
-                  beforeCommands:
-                    - python -m venv venv
-                    - . venv/bin/activate
-                    - pip install requests kestra > /dev/null
-                  commands:
-                    - python main.py
+                    response = requests.get('https://google.com')
+                    print(response.status_code)
+                    Kestra.outputs({'status': response.status_code, 'text': response.text})                    
+                beforeCommands:
+                  - python -m venv venv
+                  - . venv/bin/activate
+                  - pip install requests kestra > /dev/null
+                commands:
+                  - python main.py
             """
     )        
 })

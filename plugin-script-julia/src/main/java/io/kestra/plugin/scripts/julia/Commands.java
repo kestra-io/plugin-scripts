@@ -21,32 +21,30 @@ import javax.validation.constraints.NotEmpty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute one or more Julia commands from the Command Line Interface."
+    title = "Execute Julia scripts from the Command Line Interface."
 )
 @Plugin(examples = {
     @Example(
         full = true,
-        title = "Install package, create a julia script and execute it",
+        title = "Create a Julia script, install required packages and execute it. Note that instead of defining the script inline, you could create the Julia script in the embedded VS Code editor and point to its location by path. If you do so, make sure to enable namespace files by setting the `enabled` flag of the `namespaceFiles` property to `true`.",
         code = """
-            id: "local-files"
-            namespace: "io.kestra.tests"
-
+            id: "script"
+            namespace: "dev"
             tasks:
-              - id: workingDir
-                type: io.kestra.core.tasks.flows.WorkingDirectory
-                tasks:
-                - id: inputFiles
-                  type: io.kestra.core.tasks.storages.LocalFiles
-                  inputs:
-                    main.js: |
-                      const colors = require("colors");
-                      console.log(colors.red("Hello"));
-                - id: bash
-                  type: io.kestra.plugin.scripts.julia.Commands
-                  beforeCommands:
-                    - npm install colors
-                  commands:
-                    - julia main.jl
+              - id: bash
+                type: io.kestra.plugin.scripts.julia.Commands
+                warningOnStdErr: false
+                inputFiles:
+                  main.jl: |
+                    using DataFrames, CSV
+                    df = DataFrame(Name = ["Alice", "Bob", "Charlie"], Age = [25, 30, 35])
+                    CSV.write("output.csv", df)
+                outputFiles:
+                  - output.csv
+                beforeCommands:
+                  - julia -e 'using Pkg; Pkg.add("DataFrames"); Pkg.add("CSV")'
+                commands:
+                  - julia main.jl
             """
     )
 })

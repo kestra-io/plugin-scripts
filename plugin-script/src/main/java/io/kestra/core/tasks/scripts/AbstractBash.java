@@ -37,7 +37,7 @@ import static io.kestra.core.utils.Rethrow.throwConsumer;
 abstract public class AbstractBash extends Task {
     @Builder.Default
     @Schema(
-        title = "Runner to use"
+        title = "The script runner — by default, Kestra runs all scripts in `DOCKER`."
     )
     @PluginProperty
     @NotNull
@@ -45,14 +45,14 @@ abstract public class AbstractBash extends Task {
     protected RunnerType runner = RunnerType.PROCESS;
 
     @Schema(
-        title = "Docker options when using runner `DOCKER`"
+        title = "Docker options when using the `DOCKER` runner."
     )
     @PluginProperty
     protected DockerOptions dockerOptions;
 
     @Builder.Default
     @Schema(
-        title = "Interpreter to used"
+        title = "Interpreter to use when launching the process."
     )
     @PluginProperty
     @NotNull
@@ -68,10 +68,9 @@ abstract public class AbstractBash extends Task {
 
     @Builder.Default
     @Schema(
-        title = "Exit if any non true return value",
+        title = "Exit if any non true value is returned",
         description = "This tells bash that it should exit the script if any statement returns a non-true return value. \n" +
-            "The benefit of using -e is that it prevents errors snowballing into serious issues when they could " +
-            "have been caught earlier."
+            "Setting this to `true` helps catch cases where a command fails and the script continues to run anyway."
     )
     @PluginProperty
     @NotNull
@@ -106,8 +105,8 @@ abstract public class AbstractBash extends Task {
     protected List<String> outputFiles;
 
     @Schema(
-        title = "Output dirs list that will be uploaded to internal storage",
-        description = "List of key that will generate temporary directories.\n" +
+        title = "List of output directories that will be uploaded to internal storage",
+        description = "List of keys that will generate temporary directories.\n" +
             "On the command, just can use with special variable named `outputDirs.key`.\n" +
             "If you add a files with `[\"myDir\"]`, you can use the special vars `echo 1 >> {[ outputDirs.myDir }}/file1.txt` " +
             "and `echo 2 >> {[ outputDirs.myDir }}/file2.txt` and both files will be uploaded to internal storage." +
@@ -117,9 +116,10 @@ abstract public class AbstractBash extends Task {
     protected List<String> outputDirs;
 
     @Schema(
-        title = "Input files are extra files that will be available in the script working directory.",
-        description = "You can define the files as map or a JSON string." +
-            "Each file can be defined inlined or can reference a file from Kestra's internal storage."
+        title = "Input files are extra files that will be available in the script's working directory.",
+        description = "Define the files **as a map** of a file name being the key, and the value being the file's content.\n" +
+            "Alternatively, configure the files **as a JSON string** with the same key/value structure as the map.\n" +
+            "In both cases, you can either specify the file's content inline, or reference a file from Kestra's internal storage by its URI, e.g. a file from an input, output of a previous task, or a [namespace file](https://kestra.io/docs/developer-guide/namespace-files)."
     )
     @PluginProperty(
         additionalProperties = String.class,
@@ -128,7 +128,7 @@ abstract public class AbstractBash extends Task {
     protected Object inputFiles;
 
     @Schema(
-        title = "Additional environments variable to add for current process."
+        title = "One or more additional environment variable(s) to add to the task run."
     )
     @PluginProperty(
         additionalProperties = String.class,
@@ -138,7 +138,7 @@ abstract public class AbstractBash extends Task {
 
     @Builder.Default
     @Schema(
-        title = "Use `WARNING` state if any stdErr is sent"
+        title = "Whether to set the execution state in `WARNING` if any `stdErr` is sent."
     )
     @PluginProperty
     @NotNull
