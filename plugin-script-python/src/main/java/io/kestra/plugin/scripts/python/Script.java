@@ -57,7 +57,7 @@ import javax.validation.constraints.NotNull;
             code = {
                 "script: |",
                 "   f = open(\"{{outputDir}}/myfile.txt\", \"a\")",
-                "   f.write(\"I can output files from my script!\")",
+                "   f.write(\"Hello from a Kestra task!\")",
                 "   f.close()"
             }
         ),

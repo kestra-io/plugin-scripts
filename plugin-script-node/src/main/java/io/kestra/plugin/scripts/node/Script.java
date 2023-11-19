@@ -41,7 +41,9 @@ import javax.validation.constraints.NotNull;
     @Example(
         full = true,
         title = """
-        If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{outputDir}}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`.
+        If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{outputDir}}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`. 
+        
+        Alternatively, instead of the `{{outputDir}}` variable, you could use the `outputFiles` property to output files from your script. You can access those files in downstream tasks using the same syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`, and you can download the files from the UI's Output tab.
         """,
         code = """
             id: nodeJS
