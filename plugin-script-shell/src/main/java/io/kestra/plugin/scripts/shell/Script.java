@@ -26,7 +26,7 @@ import javax.validation.constraints.NotNull;
 @Plugin(
     examples = {
         @Example(
-            title = "Run a shell inline script.",
+            title = "Create an inline Shell script and execute it",
             code = {
                 "script: |",
                 "  echo \"The current execution is : {{ execution.id }}\"",

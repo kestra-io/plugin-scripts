@@ -23,29 +23,23 @@ import javax.validation.constraints.NotNull;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute one or more PowerShell commands."
+    title = "Execute one or more PowerShell commands. Note that instead of adding the script using the `inputFiles` property, you could also add the script from the embedded VS Code editor and point to its location by path. If you do so, make sure to enable namespace files by setting the `enabled` flag of the `namespaceFiles` property to `true`."
 )
 @Plugin(examples = {
     @Example(
         full = true,
-        title = "Create a PowerShell script and execute it",
+        title = "Create a PowerShell script and execute it.",
         code = """
-            id: "local-files"
-            namespace: "io.kestra.tests"
-
+            id: powershell
+            namespace: dev
             tasks:
-              - id: workingDir
-                type: io.kestra.core.tasks.flows.WorkingDirectory
-                tasks:
-                - id: inputFiles
-                  type: io.kestra.core.tasks.storages.LocalFiles
-                  inputs:
-                    main.ps1: |
-                      Get-ChildItem | Format-List
-                - id: bash
-                  type: io.kestra.plugin.scripts.powershell.Commands
-                  commands:
-                    - pwsh main.ps1
+              - id: powershell_script
+                type: io.kestra.plugin.scripts.powershell.Commands
+                inputFiles:
+                  main.ps1: |
+                    Get-ChildItem | Format-List
+                commands:
+                  - pwsh main.ps1
             """
     )
 })

@@ -22,34 +22,28 @@ import javax.validation.constraints.NotNull;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute R from the Command Line Interface."
+    title = "Execute R scripts from the Command Line Interface."
 )
 @Plugin(examples = {
     @Example(
         full = true,
-        title = "Create a R script, install a package and execute it",
+        title = "Create an R script, install required packages and execute it. Note that instead of defining the script inline, you could create the script as a dedicated R script in the embedded VS Code editor and point to its location by path. If you do so, make sure to enable namespace files by setting the `enabled` flag of the `namespaceFiles` property to `true`.",
         code = """
-            id: "local-files"
-            namespace: "io.kestra.tests"
-
+            id: "script"
+            namespace: "dev"
             tasks:
-              - id: workingDir
-                type: io.kestra.core.tasks.flows.WorkingDirectory
-                tasks:
-                - id: inputFiles
-                  type: io.kestra.core.tasks.storages.LocalFiles
-                  inputs:
-                    main.R: |
-                      library(lubridate)
-                      ymd("20100604");
-                      mdy("06-04-2011");
-                      dmy("04/06/2012")
-                - id: bash
-                  type: io.kestra.plugin.scripts.r.Commands
-                  beforeCommands:
-                    - Rscript -e 'install.packages("lubridate")'
-                  commands:
-                    - Rscript main.R
+              - id: bash
+                type: io.kestra.plugin.scripts.r.Commands
+                inputFiles:
+                  main.R: |
+                    library(lubridate)
+                    ymd("20100604");
+                    mdy("06-04-2011");
+                    dmy("04/06/2012")
+                beforeCommands:
+                  - Rscript -e 'install.packages("lubridate")'
+                commands:
+                  - Rscript main.R
             """
     )
 })
