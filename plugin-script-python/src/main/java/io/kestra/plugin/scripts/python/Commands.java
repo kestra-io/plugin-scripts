@@ -44,11 +44,10 @@ import javax.validation.constraints.NotNull;
         ```
           
         Then, make sure to set the `enabled` flag of the `namespaceFiles` property to `true` to enable [namespace files](https://kestra.io/docs/developer-guide/namespace-files).           
-        ```
 
         This flow uses a `PROCESS` runner and Conda virtual environment for process isolation and dependency management. However, note that, by default, Kestra runs tasks in a Docker container (i.e. a `DOCKER` runner), and you can use the `docker` property to customize many options, such as the Docker image to use.
         """,
-        code = """     
+        code = """
 id: python_venv
 namespace: dev
 
