@@ -30,34 +30,28 @@ import javax.validation.constraints.NotNull;
             full = true,
             title = "Execute ETL in Rust in a Docker container and output CSV files generated as a result of the script.",
             code = """     
-id: rustFlow
-namespace: dev
-tasks:
-  - id: wdir
-    type: io.kestra.core.tasks.flows.WorkingDirectory
-    tasks:
-      - id: rust
-        type: io.kestra.plugin.scripts.shell.Commands
-        commands:
-          - etl
-        docker:
-          image: ghcr.io/kestra-io/rust:latest
-
-      - id: downloadFiles
-        type: io.kestra.core.tasks.storages.LocalFiles
-        outputs:
-          - "*.csv"
+                id: rust_flow
+                namespace: dev
+                tasks:
+                  - id: rust
+                    type: io.kestra.plugin.scripts.shell.Commands
+                    commands:
+                      - etl
+                    docker:
+                      image: ghcr.io/kestra-io/rust:latest
+                    outputFiles:
+                      - "*.csv"
 """
         ),        
         @Example(
-            title = "Single shell command",
+            title = "Execute a single Shell command",
             code = {
                 "commands:",
-                "- 'echo \"The current execution is : {{ execution.id }}\"'"
+                "- 'echo \"The current execution is: {{ execution.id }}\"'"
             }
         ),
         @Example(
-            title = "Shell command that generate file in storage accessible through outputs",
+            title = "Execute Shell commands that generate files accessible by other tasks and available for download in the UI's Output tab.",
             code = {
                 "commands:",
                 "- echo \"1\" >> {{ outputDir }}/first.txt",
@@ -65,14 +59,14 @@ tasks:
             }
         ),
         @Example(
-            title = "Shell with an input file from Kestra's local storage created by a previous task.",
+            title = "Execute a Shell command using an input file generated in a previous task.",
             code = {
                 "commands:",
                 "  - cat {{ outputs.previousTaskId.uri }}"
             }
         ),
         @Example(
-            title = "Run a command on a docker image",
+            title = "Run a PHP Docker container and execute a command",
             code = {
                 "runner: DOCKER",
                 "docker:",
@@ -82,14 +76,14 @@ tasks:
             }
         ),
         @Example(
-            title = "Set outputs from bash standard output",
+            title = "Create output variables from a standard output",
             code = {
                 "commands:",
                 "  - echo '::{\"outputs\":{\"test\":\"value\",\"int\":2,\"bool\":true,\"float\":3.65}}::'",
             }
         ),
         @Example(
-            title = "Send a counter metric from bash standard output",
+            title = "Send a counter metric from a standard output",
             code = {
                 "commands:",
                 "  - echo '::{\"metrics\":[{\"name\":\"count\",\"type\":\"counter\",\"value\":1,\"tags\":{\"tag1\":\"i\",\"tag2\":\"win\"}}]}::'",
