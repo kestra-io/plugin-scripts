@@ -29,12 +29,24 @@ import javax.validation.constraints.NotNull;
 )
 @Plugin(examples = {
     @Example(
-        title = "Create a julia script and execute it",
-        code = {
-            "script: |",
-            "  const colors = require(\"colors\");",
-            "  console.log(colors.red(\"Hello\"));",
-        }
+        full = true,
+        title = "Create a Julia script, install required packages and execute it. Note that instead of defining the script inline, you could create the Julia script in the embedded VS Code editor and read its content using the `{{ read('your_script.jl') }}` function.",
+        code = """
+            id: "script"
+            namespace: "dev"
+            tasks:
+              - id: bash
+                type: io.kestra.plugin.scripts.julia.Script
+                warningOnStdErr: false
+                script: |
+                  using DataFrames, CSV
+                  df = DataFrame(Name = ["Alice", "Bob", "Charlie"], Age = [25, 30, 35])
+                  CSV.write("output.csv", df)
+                outputFiles:
+                  - output.csv
+                beforeCommands:
+                  - julia -e 'using Pkg; Pkg.add("DataFrames"); Pkg.add("CSV")'
+            """
     )
 })
 public class Script extends AbstractExecScript {
@@ -49,7 +61,7 @@ public class Script extends AbstractExecScript {
     protected DockerOptions docker = DockerOptions.builder().build();
 
     @Schema(
-        title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
+        title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command such as `julia myscript.jl`, use the `Commands` task instead."
     )
     @PluginProperty(dynamic = true)
     @NotNull
@@ -81,7 +93,6 @@ public class Script extends AbstractExecScript {
         );
 
         return commands
-            .addEnv(Map.of("PYTHONUNBUFFERED", "true"))
             .withCommands(commandsArgs)
             .run();
     }
