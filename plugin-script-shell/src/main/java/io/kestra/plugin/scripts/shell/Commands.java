@@ -30,17 +30,17 @@ import javax.validation.constraints.NotNull;
             full = true,
             title = "Execute ETL in Rust in a Docker container and output CSV files generated as a result of the script.",
             code = """     
-                id: rust_flow
-                namespace: dev
-                tasks:
-                  - id: rust
-                    type: io.kestra.plugin.scripts.shell.Commands
-                    commands:
-                      - etl
-                    docker:
-                      image: ghcr.io/kestra-io/rust:latest
-                    outputFiles:
-                      - "*.csv"
+id: rust_flow
+namespace: dev
+tasks:
+  - id: rust
+    type: io.kestra.plugin.scripts.shell.Commands
+    commands:
+      - etl
+    docker:
+      image: ghcr.io/kestra-io/rust:latest
+    outputFiles:
+      - "*.csv"
 """
         ),        
         @Example(
