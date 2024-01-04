@@ -41,7 +41,6 @@ abstract public class AbstractBash extends Task {
     )
     @PluginProperty
     @NotNull
-    @NotEmpty
     protected RunnerType runner = RunnerType.PROCESS;
 
     @Schema(
