@@ -10,13 +10,13 @@ import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.kestra.plugin.scripts.exec.scripts.services.ScriptService;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
-import javax.validation.constraints.NotNull;
 
 @SuperBuilder
 @ToString
