@@ -13,7 +13,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotEmpty;
 
 @SuperBuilder
 @ToString

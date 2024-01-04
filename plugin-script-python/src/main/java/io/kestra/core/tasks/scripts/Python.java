@@ -15,8 +15,8 @@ import io.kestra.core.runners.RunContext;
 
 import java.io.IOException;
 import java.util.*;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 import static io.kestra.core.utils.Rethrow.throwSupplier;
 

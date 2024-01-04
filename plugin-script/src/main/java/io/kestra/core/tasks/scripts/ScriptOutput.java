@@ -11,7 +11,7 @@ import lombok.Getter;
 import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 @Builder
 @Getter
