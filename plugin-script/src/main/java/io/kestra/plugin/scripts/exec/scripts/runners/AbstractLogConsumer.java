@@ -1,11 +1,11 @@
 package io.kestra.plugin.scripts.exec.scripts.runners;
 
-import io.reactivex.functions.BiConsumer;
 import lombok.Getter;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 
 public abstract class AbstractLogConsumer implements BiConsumer<String, Boolean> {
     protected final AtomicInteger stdOutCount = new AtomicInteger();
