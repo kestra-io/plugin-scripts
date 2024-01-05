@@ -6,11 +6,6 @@ import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.FileSerde;
 import io.kestra.core.serializers.JacksonMapper;
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
-import io.reactivex.Single;
-import io.reactivex.functions.Function;
-import io.reactivex.schedulers.Schedulers;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -20,9 +15,19 @@ import java.io.*;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 import javax.script.Bindings;
+import javax.script.ScriptException;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+import static io.kestra.core.utils.Rethrow.throwConsumer;
+import static io.kestra.core.utils.Rethrow.throwFunction;
 
 @SuperBuilder
 @ToString
@@ -51,7 +56,7 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
         title = "Number of concurrent parallel transformations to execute.",
         description = "Take care that the order is **not respected** if you use parallelism."
     )
-    @PluginProperty(dynamic = false)
+    @PluginProperty
     private Integer concurrent;
 
     @SuppressWarnings("unchecked")
@@ -75,7 +80,7 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
                 try (BufferedReader inputStream = new BufferedReader(new InputStreamReader(runContext.uriToInputStream(URI.create(from))))) {
                     this.finalize(
                         runContext,
-                        Flowable.create(FileSerde.reader(inputStream), BackpressureStrategy.BUFFER),
+                        Flux.create(FileSerde.reader(inputStream), FluxSink.OverflowStrategy.BUFFER),
                         scripts,
                         output
                     );
@@ -83,17 +88,17 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
             } else {
                 this.finalize(
                     runContext,
-                    Flowable.create(emitter -> {
+                    Flux.create(throwConsumer(emitter -> {
                         Object o = JacksonMapper.toObject(from);
 
                         if (o instanceof List) {
-                            ((List<Object>) o).forEach(emitter::onNext);
+                            ((List<Object>) o).forEach(emitter::next);
                         } else {
-                            emitter.onNext(o);
+                            emitter.next(o);
                         }
 
-                        emitter.onComplete();
-                    }, BackpressureStrategy.BUFFER),
+                        emitter.complete();
+                    }), FluxSink.OverflowStrategy.BUFFER),
                     scripts,
                     output
                 );
@@ -110,16 +115,16 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
 
     protected void finalize(
         RunContext runContext,
-        Flowable<Object> flowable,
+        Flux<Object> flowable,
         ScriptEngineService.CompiledScript scripts,
         OutputStream output
-    ) {
-        Flowable<Object> sequential;
+    ) throws IOException, ScriptException {
+        Flux<Object> sequential;
 
         if (this.concurrent != null) {
             sequential = flowable
                 .parallel(this.concurrent)
-                .runOn(Schedulers.io())
+                .runOn(Schedulers.boundedElastic())
                 .flatMap(this.convert(scripts))
                 .sequential();
         } else {
@@ -127,34 +132,33 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
                 .flatMap(this.convert(scripts));
         }
 
-        Single<Long> count = sequential
-            .doOnNext(row -> FileSerde.write(output, row))
+        Mono<Long> count = sequential
+            .doOnNext(throwConsumer(row -> FileSerde.write(output, row)))
             .count();
 
         // metrics & finalize
-        Long lineCount = count.blockingGet();
+        Long lineCount = count.block();
         runContext.metric(Counter.of("records", lineCount));
     }
 
     @SuppressWarnings("unchecked")
-    protected Function<Object, Publisher<Object>> convert(ScriptEngineService.CompiledScript script) {
-        return row -> {
+    protected Function<Object, Publisher<Object>> convert(ScriptEngineService.CompiledScript script) throws ScriptException {
+        return throwFunction(row -> {
             Bindings bindings = script.getBindings().get();
             bindings.put("row", row);
 
             script.getScript().eval(bindings);
 
-
             if (bindings.get("rows") != null) {
-                return Flowable.fromIterable((Collection<Object>) bindings.get("rows"));
+                return Flux.fromIterable((Collection<Object>) bindings.get("rows"));
             }
 
             if (bindings.get("row") != null) {
-                return Flowable.just(bindings.get("row"));
+                return Flux.just(bindings.get("row"));
             }
 
-            return Flowable.empty();
-        };
+            return Flux.empty();
+        });
     }
 
     @Builder
