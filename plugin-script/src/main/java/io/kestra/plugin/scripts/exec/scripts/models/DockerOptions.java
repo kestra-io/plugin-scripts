@@ -19,14 +19,14 @@ import javax.validation.constraints.NotNull;
 @Introspected
 public class DockerOptions {
     @Schema(
-        title = "Docker api uri"
+        title = "Docker API URI."
     )
     @PluginProperty(dynamic = true)
     private String host;
 
     @Schema(
-        title = "Docker config file",
-        description = "Docker configuration file that can set access credentials to private container registries. Usually located in `~/.docker/config.json`",
+        title = "Docker configuration file.",
+        description = "Docker configuration file that can set access credentials to private container registries. Usually located in `~/.docker/config.json`.",
         anyOf = {String.class, Map.class}
     )
     @PluginProperty(dynamic = true)
@@ -39,7 +39,7 @@ public class DockerOptions {
     private Credentials credentials;
 
     @Schema(
-        title = "Docker image to use"
+        title = "Docker image to use."
     )
     @PluginProperty(dynamic = true)
     @NotNull
@@ -47,19 +47,19 @@ public class DockerOptions {
     protected String image;
 
     @Schema(
-        title = "User within the container"
+        title = "User in the Docker container."
     )
     @PluginProperty(dynamic = true)
     protected String user;
 
     @Schema(
-        title = "Docker entrypoint to use"
+        title = "Docker entrypoint to use."
     )
     @PluginProperty(dynamic = true)
     protected List<String> entryPoint;
 
     @Schema(
-        title = "Extra hostname mappings to the container network interface configuration"
+        title = "Extra hostname mappings to the container network interface configuration."
     )
     @PluginProperty(dynamic = true)
     protected List<String> extraHosts;
@@ -71,15 +71,15 @@ public class DockerOptions {
     protected String networkMode;
 
     @Schema(
-        title = "List of volumes to mount",
-        description = "Must be a valid mount expression as string, example : `/home/user:/app`\n\n" +
-            "Volumes mount are disabled by default for security reasons; you must enable them on server configuration by setting `kestra.tasks.scripts.docker.volume-enabled` to `true`"
+        title = "List of volumes to mount.",
+        description = "Must be a valid mount expression as string, example : `/home/user:/app`.\n\n" +
+            "Volumes mount are disabled by default for security reasons; you must enable them on server configuration by setting `kestra.tasks.scripts.docker.volume-enabled` to `true`."
     )
     @PluginProperty(dynamic = true)
     protected List<String> volumes;
 
     @Schema(
-        title = "The pull policy for an image",
+        title = "The pull policy for an image.",
         description = "Pull policy can be used to prevent pulling of an already existing image `IF_NOT_PRESENT`, or can be set to `ALWAYS` to pull the latest version of the image even if an image with the same tag already exists."
     )
     @PluginProperty
@@ -87,7 +87,7 @@ public class DockerOptions {
     protected PullPolicy pullPolicy = PullPolicy.ALWAYS;
 
     @Schema(
-        title = "A list of device requests to be sent to device drivers"
+        title = "A list of device requests to be sent to device drivers."
     )
     @PluginProperty(dynamic = false)
     protected List<DeviceRequest> deviceRequests;
@@ -113,14 +113,14 @@ public class DockerOptions {
 
     @Schema(
         title = "Size of `/dev/shm` in bytes.",
-        description = "The size must be greater than 0. If omitted the system uses 64MB."
+        description = "The size must be greater than 0. If omitted, the system uses 64MB."
     )
     @PluginProperty(dynamic = true)
     private String shmSize;
 
     @Introspected
     @Schema(
-        title = "The PullPolicy for a container and the tag of the image affect when docker attempts to pull (download) the specified image."
+        title = "The image pull policy for a container image and the tag of the image, which affect when Docker attempts to pull (download) the specified image."
     )
     public enum PullPolicy {
         IF_NOT_PRESENT,
@@ -137,8 +137,8 @@ public class DockerOptions {
     )
     public static class Credentials {
         @Schema(
-            title = "The registry url.",
-            description = "if not defined, the registry will be extracted from the image name."
+            title = "The registry URL.",
+            description = "If not defined, the registry will be extracted from the image name."
         )
         @PluginProperty(dynamic = true)
         private String registry;
@@ -168,7 +168,7 @@ public class DockerOptions {
         private String identityToken;
 
         @Schema(
-            title = "The registry auth.",
+            title = "The registry authentication.",
             description = "The `auth` field is a base64-encoded authentication string of `username:password` or a token."
         )
         @PluginProperty(dynamic = true)
@@ -180,7 +180,7 @@ public class DockerOptions {
     @Getter
     @Introspected
     @Schema(
-        title = "A request for devices to be sent to device drivers"
+        title = "A request for devices to be sent to device drivers."
     )
     public static class DeviceRequest {
         @PluginProperty(dynamic = true)
@@ -213,7 +213,7 @@ public class DockerOptions {
     public static class Cpu {
         @Schema(
             title = "The maximum amount of CPU resources a container can use.",
-            description = "For instance, if the host machine has two CPUs and you set `cpus:\"1.5\"`, the container is guaranteed at most one and a half of the CPUs"
+            description = "For instance, if the host machine has two CPUs and you set `cpus:\"1.5\"`, the container is guaranteed at most one and a half of the CPUs."
         )
         @PluginProperty
         private Long cpus;
@@ -226,13 +226,13 @@ public class DockerOptions {
     public static class Memory {
         @Schema(
             title = "The maximum amount of memory resources the container can use.",
-            description = "That is, you must set the value to at least 6 megabytes."
+            description = "It is recommended that you set the value to at least 6 megabytes."
         )
         @PluginProperty(dynamic = true)
         private String memory;
 
         @Schema(
-            title = "The amount of memory this container is allowed to swap to disk",
+            title = "The amount of memory this container is allowed to swap to disk.",
             description = "If `memory` and `memorySwap` are set to the same value, this prevents containers from " +
                 "using any swap. This is because `memorySwap` is the amount of combined memory and swap that can be " +
                 "used, while `memory` is only the amount of physical memory that can be used."
@@ -241,7 +241,7 @@ public class DockerOptions {
         private String memorySwap;
 
         @Schema(
-            title = "The amount of memory this container is allowed to swap to disk",
+            title = "The amount of memory this container is allowed to swap to disk.",
             description = "By default, the host kernel can swap out a percentage of anonymous pages used by a " +
                 "container. You can set `memorySwappiness` to a value between 0 and 100, to tune this percentage."
         )
@@ -249,7 +249,7 @@ public class DockerOptions {
         private String memorySwappiness;
 
         @Schema(
-            title = "Allows you to specify a soft limit smaller than --memory which is activated when Docker detects contention or low memory on the host machine.",
+            title = "Allows you to specify a soft limit smaller than `memory` which is activated when Docker detects contention or low memory on the host machine.",
             description = "If you use `memoryReservation`, it must be set lower than `memory` for it to take precedence. " +
                 "Because it is a soft limit, it does not guarantee that the container doesn’t exceed the limit."
         )
