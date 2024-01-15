@@ -30,26 +30,26 @@ import javax.validation.constraints.NotNull;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Transform ion format file from kestra with a groovy script.",
-    description = "This allow you to transform the data previously loaded by kestra as you need.\n\n" +
-        "Take a ion format file from kestra and iterate row per row.\n" +
-        "Each row will populate a `row` global variable, you need to alter this variable that will be saved on output file.\n" +
-        "if you set the `row` to `null`, the row will be skipped\n" +
-        "You can create a variables `rows` to return many rows for a single `row`.\n"
+    title = "Transform ion format file from Kestra with a groovy script.",
+    description = "This allows you to transform the data, previously loaded by Kestra, as you need.\n\n" +
+        "Take a ion format file from Kestra and iterate row per row.\n" +
+        "Each row will populate a `row` global variable. You need to alter this variable that will be saved on output file.\n" +
+        "If you set the `row` to `null`, the row will be skipped.\n" +
+        "You can create a variable `rows` to return multiple rows for a single `row`.\n"
 )
 public abstract class FileTransform extends AbstractJvmScript implements RunnableTask<FileTransform.Output> {
     @NotNull
     @Schema(
-        title = "Source file of row to transform",
-        description = "Can be an internal storage uri, a map or a list."
+        title = "Source file containing rows to transform.",
+        description = "Can be Kestra's internal storage URI, a map or a list."
     )
     @PluginProperty(dynamic = true)
     private String from;
 
     @Min(2)
     @Schema(
-        title = "Number of concurrent parallels transform",
-        description = "Take care that the order is **not respected** if you use parallelism"
+        title = "Number of concurrent parallel transformations to execute.",
+        description = "Take care that the order is **not respected** if you use parallelism."
     )
     @PluginProperty(dynamic = false)
     private Integer concurrent;
@@ -161,7 +161,7 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @Schema(
-            title = "URI of a temporary result file",
+            title = "URI of a temporary result file.",
             description = "The file will be serialized as ion file."
         )
         private final URI uri;

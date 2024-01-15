@@ -37,7 +37,7 @@ import static io.kestra.core.utils.Rethrow.throwConsumer;
 abstract public class AbstractBash extends Task {
     @Builder.Default
     @Schema(
-        title = "The script runner — by default, Kestra runs all scripts in `DOCKER`."
+        title = "The script runner."
     )
     @PluginProperty
     @NotNull
@@ -61,14 +61,14 @@ abstract public class AbstractBash extends Task {
 
     @Builder.Default
     @Schema(
-        title = "Interpreter args used"
+        title = "Interpreter arguments to be used."
     )
     @PluginProperty
     protected String[] interpreterArgs = {"-c"};
 
     @Builder.Default
     @Schema(
-        title = "Exit if any non true value is returned",
+        title = "Exit if any non-true value is returned.",
         description = "This tells bash that it should exit the script if any statement returns a non-true return value. \n" +
             "Setting this to `true` helps catch cases where a command fails and the script continues to run anyway."
     )
@@ -77,8 +77,8 @@ abstract public class AbstractBash extends Task {
     protected Boolean exitOnFailed = true;
 
     @Schema(
-        title = "The list of files that will be uploaded to internal storage, ",
-        description ="use `outputFiles` property instead",
+        title = "[Deprecated] The list of files that will be uploaded to Kestra's internal storage.",
+        description ="Use `outputFiles` instead.",
         deprecated = true
     )
     @PluginProperty(dynamic = true)
@@ -86,8 +86,8 @@ abstract public class AbstractBash extends Task {
     protected List<String> files;
 
     @Schema(
-        title = "Deprecated Output file",
-        description = "use `outputFiles`",
+        title = "[Deprecated] Output files.",
+        description = "Use `outputFiles` instead.",
         deprecated = true
     )
     @PluginProperty
@@ -95,22 +95,22 @@ abstract public class AbstractBash extends Task {
     protected List<String> outputsFiles;
 
     @Schema(
-        title = "Output file list that will be uploaded to internal storage",
-        description = "List of key that will generate temporary files.\n" +
-            "On the command, just can use with special variable named `outputFiles.key`.\n" +
-            "If you add a files with `[\"first\"]`, you can use the special vars `echo 1 >> {[ outputFiles.first }}`" +
-            " and you used on others tasks using `{{ outputs.taskId.outputFiles.first }}`"
+        title = "Output file list that will be uploaded to Kestra's internal storage.",
+        description = "List of keys that will generate temporary files.\n" +
+            "This property can be used with a special variable named `outputFiles.key`.\n" +
+            "If you add a file with `[\"first\"]`, you can use the special var `echo 1 >> {[ outputFiles.first }}`," +
+            " and on other tasks, you can reference it using `{{ outputs.taskId.outputFiles.first }}`."
     )
     @PluginProperty
     protected List<String> outputFiles;
 
     @Schema(
-        title = "List of output directories that will be uploaded to internal storage",
+        title = "List of output directories that will be uploaded to Kestra's internal storage.",
         description = "List of keys that will generate temporary directories.\n" +
-            "On the command, just can use with special variable named `outputDirs.key`.\n" +
-            "If you add a files with `[\"myDir\"]`, you can use the special vars `echo 1 >> {[ outputDirs.myDir }}/file1.txt` " +
-            "and `echo 2 >> {[ outputDirs.myDir }}/file2.txt` and both files will be uploaded to internal storage." +
-            " Then you can used them on others tasks using `{{ outputs.taskId.outputFiles['myDir/file1.txt'] }}`"
+            "This property can be used with a special variable named `outputDirs.key`.\n" +
+            "If you add a file with `[\"myDir\"]`, you can use the special var `echo 1 >> {[ outputDirs.myDir }}/file1.txt` " +
+            "and `echo 2 >> {[ outputDirs.myDir }}/file2.txt`, and both the files will be uploaded to Kestra's internal storage. " +
+            "You can reference them in other tasks using `{{ outputs.taskId.outputFiles['myDir/file1.txt'] }}`."
     )
     @PluginProperty
     protected List<String> outputDirs;
@@ -119,7 +119,8 @@ abstract public class AbstractBash extends Task {
         title = "Input files are extra files that will be available in the script's working directory.",
         description = "Define the files **as a map** of a file name being the key, and the value being the file's content.\n" +
             "Alternatively, configure the files **as a JSON string** with the same key/value structure as the map.\n" +
-            "In both cases, you can either specify the file's content inline, or reference a file from Kestra's internal storage by its URI, e.g. a file from an input, output of a previous task, or a [namespace file](https://kestra.io/docs/developer-guide/namespace-files)."
+            "In both cases, you can either specify the file's content inline, or reference a file from Kestra's internal " +
+            "storage by its URI, e.g. a file from an input, output of a previous task, or a [Namespace File](https://kestra.io/docs/developer-guide/namespace-files)."
     )
     @PluginProperty(
         additionalProperties = String.class,
@@ -138,7 +139,7 @@ abstract public class AbstractBash extends Task {
 
     @Builder.Default
     @Schema(
-        title = "Whether to set the execution state in `WARNING` if any `stdErr` is sent."
+        title = "Whether to set the execution state to `WARNING` if any `stdErr` is emitted."
     )
     @PluginProperty
     @NotNull

@@ -17,7 +17,7 @@ import io.kestra.core.runners.RunContext;
 @Plugin(
     examples = {
         @Example(
-            title = "Convert every row by row with file from internal storage",
+            title = "Convert row by row of a file from Kestra's internal storage.",
             code = {
                 "from: \"{{ outputs['avro-to-gcs'] }}\"",
                 "script: |",
@@ -31,7 +31,7 @@ import io.kestra.core.runners.RunContext;
             }
         ),
         @Example(
-            title = "Create multiple rows from one row",
+            title = "Create multiple rows from one row.",
             code = {
                 "from: \"{{ outputs['avro-to-gcs'] }}\"",
                 "script: |",
@@ -40,9 +40,9 @@ import io.kestra.core.runners.RunContext;
             }
         ),
         @Example(
-            title = "Transform with file from json string",
+            title = "Transform a JSON string to a file.",
             code = {
-                "from: \"[{\"name\":\"jane\"}, {\"name\":\"richard\"}]\"",
+                "from: \"[{\\\"name\\\":\\\"jane\\\"}, {\\\"name\":\\\"richard\\\"}]\"",
                 "script: |",
                 "  logger.info('row: {}', row)",
                 "",
