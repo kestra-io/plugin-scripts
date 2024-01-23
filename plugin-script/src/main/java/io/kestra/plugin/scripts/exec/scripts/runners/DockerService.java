@@ -87,7 +87,12 @@ public class DockerService {
                 if (c.getRegistry() != null) {
                     registry = runContext.render(c.getRegistry());
                 } else if (image != null) {
-                    registry = registryUrlFromImage(runContext.render(image));
+                    String renderedImage = runContext.render(image);
+                    String detectedRegistry = registryUrlFromImage(renderedImage);
+
+                    if (!detectedRegistry.startsWith(renderedImage)) {
+                        registry = detectedRegistry;
+                    }
                 }
             }
 
