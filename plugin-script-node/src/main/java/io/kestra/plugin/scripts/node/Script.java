@@ -25,25 +25,26 @@ import javax.validation.constraints.NotNull;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Node script."
+    title = "Execute a Node.js script."
 )
 @Plugin(examples = {
     @Example(
-        title = "Install package, create a node script and execute it",
+        title = "Install package, create a Node.js script and execute it.",
         code = {
             "beforeCommands:",
             "  - npm install colors",
             "script: |",
             "  const colors = require(\"colors\");",
             "  console.log(colors.red(\"Hello\"));",
+            "warningOnStdErr: false",
         }
     ),
     @Example(
         full = true,
         title = """
-        If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{outputDir}}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`. 
+        If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{ outputDir }}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{ outputs.yourTaskId.outputFiles['yourFileName.fileExtension'] }}`. 
         
-        Alternatively, instead of the `{{outputDir}}` variable, you could use the `outputFiles` property to output files from your script. You can access those files in downstream tasks using the same syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`, and you can download the files from the UI's Output tab.
+        Alternatively, instead of the `{{ outputDir }}` variable, you could use the `outputFiles` property to output files from your script. You can access those files in downstream tasks using the same syntax `{{ outputs.yourTaskId.outputFiles['yourFileName.fileExtension'] }}`, and you can download the files from the UI's Output tab.
         """,
         code = """
             id: nodeJS
@@ -100,7 +101,7 @@ import javax.validation.constraints.NotNull;
                     const json2csvParser = new Parser({ fields });
                     const csvData = json2csvParser.parse(orders);
 
-                    fs.writeFileSync('{{outputDir}}/orders.csv', csvData);
+                    fs.writeFileSync('{{ outputDir }}/orders.csv', csvData);
 
                     console.log('Orders saved to orders.csv');       
             """
@@ -110,7 +111,7 @@ public class Script extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "node";
 
     @Schema(
-        title = "Docker options when using the `DOCKER` runner",
+        title = "Docker options when using the `DOCKER` runner.",
         defaultValue = "{image=" + DEFAULT_IMAGE + ", pullPolicy=ALWAYS}"
     )
     @PluginProperty
