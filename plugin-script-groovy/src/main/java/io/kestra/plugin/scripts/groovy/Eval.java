@@ -13,13 +13,13 @@ import io.kestra.core.runners.RunContext;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a groovy script."
+    title = "Execute a Groovy script."
 )
 @Plugin(
     examples = {
         @Example(
             full = true,
-            title = "Make an API call and pass request body to a Groovy script",
+            title = "Make an API call and pass request body to a Groovy script.",
             code = """     
     id: api-request-to-groovy
     namespace: dev
