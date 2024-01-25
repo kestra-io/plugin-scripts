@@ -15,7 +15,7 @@ import io.kestra.core.runners.RunContext;
 @NoArgsConstructor
 public abstract class AbstractJvmScript extends Task {
     @Schema(
-        title = "A full script"
+        title = "A full script."
     )
     @PluginProperty(dynamic = true)
     protected String script;

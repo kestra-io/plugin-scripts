@@ -17,18 +17,18 @@ import javax.validation.constraints.NotNull;
 @Getter
 public class ScriptOutput implements Output {
     @Schema(
-        title = "The value extracted from the output of the executed `commands`"
+        title = "The value extracted from the output of the executed `commands`."
     )
     private final Map<String, Object> vars;
 
     @Schema(
-        title = "The exit code of the entire Flow Execution"
+        title = "The exit code of the entire flow execution."
     )
     @NotNull
     private final int exitCode;
 
     @Schema(
-        title = "The output files URI in Kestra internal storage"
+        title = "The output files' URIs in Kestra's internal storage."
     )
     @PluginProperty(additionalProperties = URI.class)
     private final Map<String, URI> outputFiles;

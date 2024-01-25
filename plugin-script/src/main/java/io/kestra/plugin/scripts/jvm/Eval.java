@@ -20,18 +20,18 @@ import javax.script.*;
 @Schema(
     description = "You can use a full script. \n" +
         "The script contains some predefined variables:\n" +
-        "- All the variables you have in handlebars vars like `execution.id` for example\n" +
-        "- `logger` that you can used as the standard java logger (`logger.info('my message')`)\n" +
-        "- `runContext` that allow you to :\n" +
+        "- All the variables you have in handlebars vars like `execution.id`. For example:\n" +
+        "- `logger`: use as the standard Java logger (`logger.info('my message')`)\n" +
+        "- `runContext` that allows you to:\n" +
         "  - `runContext.metric(Counter.of(\"file.size\", response.contentLength()))`: send metrics\n" +
-        "  - `runContext.uriToInputStream(URI uri): get a file from kestra internal storage\n" +
-        "  - `runContext.putTempFile(File file)`: store a file in kestra internal storage\n" +
+        "  - `runContext.uriToInputStream(URI uri)`: get a file from Kestra's internal storage\n" +
+        "  - `runContext.putTempFile(File file)`: store a file in Kestra's internal storage\n" +
         "\n" +
-        "The stdOut & stdErr is not captured, so you must use `logger`\n"
+        "The stdOut & stdErr is not captured, so you must use `logger`.\n"
 )
 public abstract class Eval extends AbstractJvmScript implements RunnableTask<Eval.Output> {
     @Schema(
-        title = "A List of outputs variables that will be usable in outputs."
+        title = "A list of output variables that will be usable in outputs."
     )
     @PluginProperty
     protected List<String> outputs;
@@ -74,8 +74,8 @@ public abstract class Eval extends AbstractJvmScript implements RunnableTask<Eva
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @Schema(
-            title = "The resulting object",
-            description = "Mostly the last return of eval (if the language allow it)"
+            title = "The resulting object.",
+            description = "Mostly the last return of eval (if the language allows it)."
         )
         private final Object result;
 
