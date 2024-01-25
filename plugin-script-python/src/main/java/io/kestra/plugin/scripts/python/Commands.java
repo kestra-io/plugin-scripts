@@ -270,7 +270,10 @@ public class Commands extends AbstractExecScript {
         );
 
         return this.commands(runContext)
-            .addEnv(Map.of("PYTHONUNBUFFERED", "true"))
+            .addEnv(Map.of(
+                "PYTHONUNBUFFERED", "true",
+                "PIP_ROOT_USER_ACTION", "ignore"
+            ))
             .withCommands(commandsArgs)
             .run();
     }
