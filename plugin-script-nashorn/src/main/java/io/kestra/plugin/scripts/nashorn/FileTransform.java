@@ -13,7 +13,7 @@ import io.kestra.core.runners.RunContext;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Transform ion format file from kestra with a nashorn (javascript) script."
+    title = "Transform ion format file from Kestra's internal storage with a Nashorn (JavaScript) script."
 )
 @Plugin(
     examples = {
@@ -27,21 +27,21 @@ import io.kestra.core.runners.RunContext;
                 "  if (row['name'] === 'richard') {",
                 "    row = null",
                 "  } else {",
-                "    row['email'] = row['name'] + '@kestra.io')",
+                "    row['email'] = row['name'] + '@kestra.io'",
                 "  }"
             }
         ),
         @Example(
-            title = "Transform with file from json string",
+            title = "Transform JSON string input with a Nashorn script.",
             code = {
-                "from: \"[{\"name\":\"jane\"}, {\"name\":\"richard\"}]\"",
+                "from: \"[{\\\"name\":\\\"jane\\\"}, {\\\"name\\\":\\\"richard\\\"}]\"",
                 "script: |",
                 "  logger.info('row: {}', row)",
                 "",
                 "  if (row['name'] === 'richard') {",
                 "    row = null",
                 "  } else {",
-                "    row['email'] = row['name'] + '@kestra.io')",
+                "    row['email'] = row['name'] + '@kestra.io'",
                 "  }"
             }
         )

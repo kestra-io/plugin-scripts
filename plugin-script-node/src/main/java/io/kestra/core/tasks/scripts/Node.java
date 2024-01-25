@@ -24,15 +24,15 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Node.js script",
-    description = "This task is deprecated, please use the io.kestra.plugin.scripts.node.Script or io.kestra.plugin.scripts.node.Commands task instead.\n\n" +
-        "With the Node task, you can execute a full javascript script.\n" +
-        "The task will create a temporary folder for each tasks and allows to install some npm packages defined in an optional `package.json` file.\n" +
+    title = "Execute a Node.js script.",
+    description = "This task is deprecated, please use the `io.kestra.plugin.scripts.node.Script` or `io.kestra.plugin.scripts.node.Commands` task instead.\n\n" +
+        "With the Node task, you can execute a full JavaScript script.\n" +
+        "The task will create a temporary folder for each task, and allows you to install some npm packages defined in an optional `package.json` file.\n" +
         "\n" +
-        "By convention, you need to define at least a `main.js` files in `inputFiles` that will be the script used.\n" +
-        "You can also  add as many javascript files as you need in `inputFiles`.\n" +
+        "By convention, you need to define at least a `main.js` file in `inputFiles` that will be the script used.\n" +
+        "You can also add as many JavaScript files as you need in `inputFiles`.\n" +
         "\n" +
-        "You can send outputs & metrics from your node script that can be used by others tasks. In order to help, we inject a node package directly on the working dir." +
+        "The outputs & metrics from your Node.js script can be used by others tasks. In order to make things easy, we inject a node package directly on the working directory." +
         "Here is an example usage:\n" +
         "```javascript\n" +
         "const Kestra = require(\"./kestra\");\n" +
@@ -46,7 +46,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 @Plugin(
     examples = {
         @Example(
-            title = "Execute a node script",
+            title = "Execute a Node.js script.",
             code = {
                 "inputFiles:",
                 "  main.js: |",
@@ -79,13 +79,14 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
                 "    }",
                 "args:",
                 "  - data.json",
+                "warningOnStdErr: false",
             }
         ),
         @Example(
-            title = "Execute a node script with an input file from Kestra's local storage created by a previous task.",
+            title = "Execute a Node.js script with an input file from Kestra's internal storage created by a previous task.",
             code = {
                 "inputFiles:",
-                "  data.csv: {{outputs.previousTaskId.uri}}",
+                "  data.csv: {{ outputs.previousTaskId.uri }}",
                 "  main.js: |",
                 "    const fs = require('fs')",
                 "    const result = fs.readFileSync('data.csv', 'utf-8')",
@@ -98,23 +99,23 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 public class Node extends AbstractBash implements RunnableTask<io.kestra.core.tasks.scripts.ScriptOutput> {
     @Builder.Default
     @Schema(
-        title = "The node interpreter to use",
-        description = "Set the node interpreter path to use"
+        title = "The node interpreter to use.",
+        description = "Set the node interpreter path to use."
     )
     @PluginProperty
     private final String nodePath = "node";
 
     @Builder.Default
     @Schema(
-        title = "The npm binary to use",
-        description = "Set the npm binary path for node dependencies setup"
+        title = "The npm binary to use.",
+        description = "Set the npm binary path for node dependencies setup."
     )
     @PluginProperty
     private final String npmPath = "npm";
 
     @Schema(
-        title = "node command args",
-        description = "Arguments list to pass to main javascript script"
+        title = "Node command args.",
+        description = "Arguments list to pass to main JavaScript script."
 
     )
     @PluginProperty(dynamic = true)
