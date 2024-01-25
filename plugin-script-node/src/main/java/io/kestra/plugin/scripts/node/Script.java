@@ -150,7 +150,10 @@ public class Script extends AbstractExecScript {
         );
 
         return commands
-            .addEnv(Map.of("PYTHONUNBUFFERED", "true"))
+            .addEnv(Map.of(
+                "PYTHONUNBUFFERED", "true",
+                "PIP_ROOT_USER_ACTION", "ignore"
+            ))
             .withCommands(commandsArgs)
             .run();
     }
