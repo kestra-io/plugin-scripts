@@ -42,7 +42,7 @@ import io.kestra.core.runners.RunContext;
         @Example(
             title = "Transform a JSON string to a file.",
             code = {
-                "from: \"[{\\\"name\\\":\\\"jane\\\"}, {\\\"name\":\\\"richard\\\"}]\"",
+                "from: \"[{\\\"name\\\":\\\"jane\\\"}, {\\\"name\\\":\\\"richard\\\"}]\"",
                 "script: |",
                 "  logger.info('row: {}', row)",
                 "",
