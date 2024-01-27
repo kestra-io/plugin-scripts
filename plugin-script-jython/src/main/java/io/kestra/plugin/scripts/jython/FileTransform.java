@@ -18,7 +18,7 @@ import io.kestra.core.runners.RunContext;
     examples = {
         @Example(
             full = true,
-            title = "Extract data from an API, add a column and store it as a downloadable CSV file",
+            title = "Extract data from an API, add a column, and store it as a downloadable CSV file.",
             code = """     
 id: etl-api-to-csv
 namespace: dev
@@ -51,7 +51,7 @@ tasks:
 """
         ),           
         @Example(
-            title = "Transform with file from internal storage",
+            title = "Transform with file from internal storage.",
             code = {
                 "from: \"{{ outputs['avro-to-gcs'] }}\"",
                 "script: |",
@@ -64,9 +64,9 @@ tasks:
             }
         ),
         @Example(
-            title = "Transform with file from json string",
+            title = "Transform with file from JSON string.",
             code = {
-                "from: \"[{\"name\":\"jane\"}, {\"name\":\"richard\"}]\"",
+                "from: \"[{\\\"name\\\":\\\"jane\\\"}, {\\\"name\\\":\\\"richard\\\"}]\"",
                 "script: |",
                 "  logger.info('row: {}', row)",
                 "",

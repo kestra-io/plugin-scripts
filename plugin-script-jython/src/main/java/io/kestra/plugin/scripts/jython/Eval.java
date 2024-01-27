@@ -13,7 +13,7 @@ import io.kestra.core.runners.RunContext;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a jython script."
+    title = "Execute a Jython script."
 )
 @Plugin(
     examples = {
