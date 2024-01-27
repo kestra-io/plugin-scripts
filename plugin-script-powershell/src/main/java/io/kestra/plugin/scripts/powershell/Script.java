@@ -38,7 +38,7 @@ import javax.validation.constraints.NotNull;
         @Example(
             full = true,
             title = """
-            If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{outputDir}}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`.
+            If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{ outputDir }}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{ outputs.yourTaskId.outputFiles['yourFileName.fileExtension'] }}`.
             """,
             code = """
                 id: powershell
@@ -47,7 +47,7 @@ import javax.validation.constraints.NotNull;
                   - id: hello
                     type: io.kestra.plugin.scripts.powershell.Script
                     script: |
-                      Set-Content -Path {{outputDir}}\\hello.txt -Value "Hello World"
+                      Set-Content -Path {{ outputDir }}\\hello.txt -Value "Hello World"
                 """
         )           
     }
@@ -56,7 +56,7 @@ public class Script extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "mcr.microsoft.com/powershell";
 
     @Schema(
-        title = "Docker options when using the `DOCKER` runner",
+        title = "Docker options when using the `DOCKER` runner.",
         defaultValue = "{image=" + DEFAULT_IMAGE + ", pullPolicy=ALWAYS}"
     )
     @PluginProperty
@@ -72,7 +72,7 @@ public class Script extends AbstractExecScript {
 
     @Builder.Default
     @Schema(
-        title = "Which interpreter to use"
+        title = "Which interpreter to use."
     )
     @PluginProperty
     @NotEmpty
