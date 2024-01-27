@@ -53,7 +53,7 @@ public class Script extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "julia";
 
     @Schema(
-        title = "Docker options when using the `DOCKER` runner",
+        title = "Docker options when using the `DOCKER` runner.",
         defaultValue = "{image=" + DEFAULT_IMAGE + ", pullPolicy=ALWAYS}"
     )
     @PluginProperty
