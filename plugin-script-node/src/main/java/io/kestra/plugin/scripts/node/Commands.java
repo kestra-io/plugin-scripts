@@ -21,12 +21,12 @@ import jakarta.validation.constraints.NotEmpty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute one or more Node commands from the Command Line Interface. Note that instead of adding the script using the `inputFiles` property, you could also add the script from the embedded VS Code editor and point to its location by path. If you do so, make sure to enable namespace files by setting the `enabled` flag of the `namespaceFiles` property to `true`."
+    title = "Execute one or more Node.js commands from the Command Line Interface. Note that instead of adding the script using the `inputFiles` property, you could also add the script from the embedded VS Code editor and point to its location by path. If you do so, make sure to enable Namespace Files by setting the `enabled` flag of the `namespaceFiles` property to `true`."
 )
 @Plugin(examples = {
     @Example(
         full = true,
-        title = "Install required npm packages, create a Node script and execute it.",
+        title = "Install required npm packages, create a Node.js script and execute it.",
         code = """
             id: node
             namespace: dev
@@ -41,6 +41,7 @@ import jakarta.validation.constraints.NotEmpty;
                   - npm install colors
                 commands:
                   - node main.js
+                warningOnStdErr: false
             """
     )
 })
@@ -48,7 +49,7 @@ public class Commands extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "node";
 
     @Schema(
-        title = "Docker options when using the `DOCKER` runner",
+        title = "Docker options when using the `DOCKER` runner.",
         defaultValue = "{image=" + DEFAULT_IMAGE + ", pullPolicy=ALWAYS}"
     )
     @PluginProperty
@@ -56,7 +57,7 @@ public class Commands extends AbstractExecScript {
     protected DockerOptions docker = DockerOptions.builder().build();
 
     @Schema(
-        title = "The commands to run"
+        title = "The commands to run."
     )
     @PluginProperty(dynamic = true)
     @NotEmpty
