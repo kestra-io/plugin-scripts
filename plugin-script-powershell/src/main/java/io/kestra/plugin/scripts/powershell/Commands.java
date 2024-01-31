@@ -47,7 +47,7 @@ public class Commands extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "mcr.microsoft.com/powershell";
 
     @Schema(
-        title = "Docker options when using the `DOCKER` runner",
+        title = "Docker options when using the `DOCKER` runner.",
         defaultValue = "{image=" + DEFAULT_IMAGE + ", pullPolicy=ALWAYS}"
     )
     @PluginProperty
@@ -55,7 +55,7 @@ public class Commands extends AbstractExecScript {
     protected DockerOptions docker = DockerOptions.builder().build();
 
     @Schema(
-        title = "The commands to run"
+        title = "The commands to run."
     )
     @PluginProperty(dynamic = true)
     @NotEmpty
@@ -63,7 +63,7 @@ public class Commands extends AbstractExecScript {
 
     @Builder.Default
     @Schema(
-        title = "Which interpreter to use"
+        title = "Which interpreter to use."
     )
     @PluginProperty
     @NotEmpty
