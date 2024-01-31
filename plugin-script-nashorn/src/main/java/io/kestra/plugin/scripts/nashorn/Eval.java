@@ -13,7 +13,7 @@ import io.kestra.core.runners.RunContext;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a nashorn (javascript) script."
+    title = "Execute a Nashorn (JavaScript) script."
 )
 @Plugin(
     examples = {
