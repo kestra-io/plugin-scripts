@@ -20,7 +20,7 @@ import javax.script.*;
 @Schema(
     description = "You can use a full script. \n" +
         "The script contains some predefined variables:\n" +
-        "- All the variables you have in handlebars vars like `execution.id`. For example:\n" +
+        "- All the variables you have in expression vars like `execution.id`. For example:\n" +
         "- `logger`: use as the standard Java logger (`logger.info('my message')`)\n" +
         "- `runContext` that allows you to:\n" +
         "  - `runContext.metric(Counter.of(\"file.size\", response.contentLength()))`: send metrics\n" +
