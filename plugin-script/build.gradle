@@ -16,5 +16,5 @@ dependencies {
     api ('com.github.docker-java:docker-java:3.3.4') {
         exclude group: 'com.github.docker-java', module: 'docker-java-transport-jersey'
     }
-    api 'com.github.docker-java:docker-java-transport-zerodep:3.3.4'
+    api 'com.github.docker-java:docker-java-transport-zerodep:3.3.5'
 }
