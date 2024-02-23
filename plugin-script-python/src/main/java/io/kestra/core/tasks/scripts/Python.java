@@ -27,7 +27,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 @NoArgsConstructor
 @Schema(
     title = "Execute a Python script",
-    description = "This task is deprecated, please use the io.kestra.plugin.scripts.python.Script or io.kestra.plugin.scripts.python.Commands task instead.\n\n" +
+    description = "This task is deprecated, please use the [io.kestra.plugin.scripts.python.Script](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.python.script) or [io.kestra.plugin.scripts.python.Commands](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.python.commands) task instead.\n\n" +
         "With the Python task, you can execute a full Python script.\n" +
         "The task will create a fresh `virtualenv` for every tasks and allows to install some Python package define in `requirements` property.\n" +
         "\n" +
