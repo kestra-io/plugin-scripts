@@ -12,6 +12,7 @@ import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.NameParser;
 import com.github.dockerjava.zerodep.ZerodepDockerHttpClient;
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.ConnectionClosedException;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.tasks.retrys.Exponential;
@@ -125,24 +126,36 @@ public class DockerScriptRunner {
                         @Override
                         public void onNext(Frame frame) {
                             String frameStr = new String(frame.getPayload());
+//                            defaultLogConsumer.accept(
+//                                new String(frame.getPayload()).trim(),
+//                                frame.getStreamType() == StreamType.STDERR
+//                            );
 
                             Matcher newLineMatcher = NEWLINE_PATTERN.matcher(frameStr);
+                            logBuffers.computeIfAbsent(frame.getStreamType(), streamType -> new StringBuilder());
 
                             int lastIndex = 0;
                             while (newLineMatcher.find()) {
-                                String fragment = newLineMatcher.group(1);
-                                logBuffers.computeIfAbsent(frame.getStreamType(), streamType -> new StringBuilder())
+                                String fragment = newLineMatcher.group(0);
+                                logBuffers.get(frame.getStreamType())
                                     .append(fragment);
 
                                 StringBuilder logBuffer = logBuffers.get(frame.getStreamType());
-                                defaultLogConsumer.accept(logBuffer.toString(), frame.getStreamType() == StreamType.STDERR);
+                                this.send(logBuffer.toString(), frame.getStreamType() == StreamType.STDERR);
                                 logBuffer.setLength(0);
+
                                 lastIndex = newLineMatcher.end();
                             }
+
                             if (lastIndex < frameStr.length()) {
-                                logBuffers.computeIfAbsent(frame.getStreamType(), streamType -> new StringBuilder())
+                                logBuffers.get(frame.getStreamType())
                                     .append(frameStr.substring(lastIndex));
                             }
+                        }
+
+                        private void send(String logBuffer, Boolean isStdErr) {
+                            List.of(logBuffer.split("\n"))
+                                .forEach(s -> defaultLogConsumer.accept(s, isStdErr));
                         }
 
                         @Override
@@ -151,7 +164,7 @@ public class DockerScriptRunner {
                             try {
                                 logBuffers.entrySet().stream().filter(entry -> !entry.getValue().isEmpty()).forEach(throwConsumer(entry -> {
                                     String log = entry.getValue().toString();
-                                    defaultLogConsumer.accept(log, entry.getKey() == StreamType.STDERR);
+                                    this.send(log, entry.getKey() == StreamType.STDERR);
                                 }));
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
