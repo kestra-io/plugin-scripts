@@ -32,57 +32,57 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 @Plugin(
     examples = {
         @Example(
-            title = "Single bash command",
+            title = "Single bash command.",
             code = {
                 "commands:",
-                "- 'echo \"The current execution is : {{execution.id}}\"'"
+                "  - 'echo \"The current execution is : {{ execution.id }}\"'"
             }
         ),
         @Example(
-            title = "Bash command that generate file in storage accessible through outputs",
+            title = "Bash command that generate file in storage accessible through outputs.",
             code = {
                 "outputFiles:",
-                "- first",
-                "- second",
+                "  - first",
+                "  - second",
                 "commands:",
-                "- echo \"1\" >> {{ outputFiles.first }}",
-                "- echo \"2\" >> {{ outputFiles.second }}"
+                "  - echo \"1\" >> {{ outputFiles.first }}",
+                "  - echo \"2\" >> {{ outputFiles.second }}"
             }
         ),
         @Example(
-            title = "Bash with some inputs files",
+            title = "Bash with some inputs files.",
             code = {
                 "inputFiles:",
                 "  script.sh: |",
                 "    echo {{ workingDir }}",
                 "commands:",
-                "- /bin/bash script.sh",
+                "  - /bin/bash script.sh",
             }
         ),
         @Example(
             title = "Bash with an input file from Kestra's local storage created by a previous task.",
             code = {
                 "inputFiles:",
-                "  data.csv: {{outputs.previousTaskId.uri}}",
+                "  data.csv: {{ outputs.previousTaskId.uri }}",
                 "commands:",
                 "  - cat data.csv"
             }
         ),
         @Example(
-            title = "Run a command on a docker image",
+            title = "Run a command on a Docker image.",
             code = {
                 "runner: DOCKER",
                 "dockerOptions:",
                 "  image: php",
                 "commands:",
-                "- 'php -r 'print(phpversion() . \"\\n\");'",
+                "  - 'php -r 'print(phpversion() . \"\\n\");'",
             }
         ),
         @Example(
-            title = "Execute cmd on windows",
+            title = "Execute cmd on Windows.",
             code = {
                 "commands:",
-                "  - 'echo \"The current execution is : {{execution.id}}\"'",
+                "  - 'echo \"The current execution is : {{ execution.id }}\"'",
                 "exitOnFailed: false",
                 "interpreter: cmd",
                 "interpreterArgs:",
@@ -90,14 +90,14 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
             }
         ),
         @Example(
-            title = "Set outputs from bash standard output",
+            title = "Set outputs from bash standard output.",
             code = {
                 "commands:",
                 "  - echo '::{\"outputs\":{\"test\":\"value\",\"int\":2,\"bool\":true,\"float\":3.65}}::'",
             }
         ),
         @Example(
-            title = "Send a counter metric from bash standard output",
+            title = "Send a counter metric from bash standard output.",
             code = {
                 "commands:",
                 "  - echo '::{\"metrics\":[{\"name\":\"count\",\"type\":\"counter\",\"value\":1,\"tags\":{\"tag1\":\"i\",\"tag2\":\"win\"}}]}::'",
@@ -108,8 +108,8 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 @Deprecated
 public class Bash extends AbstractBash implements RunnableTask<io.kestra.core.tasks.scripts.ScriptOutput> {
     @Schema(
-        title = "The commands to run",
-        description = "Default command will be launched with `/bin/sh -c \"commands\"`"
+        title = "The commands to run.",
+        description = "Default command will be launched with `/bin/sh -c \"commands\"`."
     )
     @PluginProperty(dynamic = true)
     @NotNull

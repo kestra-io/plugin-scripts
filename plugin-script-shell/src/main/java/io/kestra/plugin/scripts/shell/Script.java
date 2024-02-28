@@ -26,7 +26,7 @@ import jakarta.validation.constraints.NotNull;
 @Plugin(
     examples = {
         @Example(
-            title = "Create an inline Shell script and execute it",
+            title = "Create an inline Shell script and execute it.",
             code = {
                 "script: |",
                 "  echo \"The current execution is : {{ execution.id }}\"",
@@ -37,7 +37,7 @@ import jakarta.validation.constraints.NotNull;
         @Example(
             full = true,
             title = """
-            If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{outputDir}}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`.
+            If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{ outputDir }}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{ outputs.yourTaskId.outputFiles['yourFileName.fileExtension'] }}`.
             """,
             code = """
                 id: shell
@@ -47,7 +47,7 @@ import jakarta.validation.constraints.NotNull;
                     type: io.kestra.plugin.scripts.shell.Script
                     runner: PROCESS
                     script: |
-                      echo "Hello world!" > {{outputDir}}/hello.txt"""
+                      echo "Hello world!" > {{ outputDir }}/hello.txt"""
         )        
     }
 )
@@ -55,7 +55,7 @@ public class Script extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "ubuntu";
 
     @Schema(
-        title = "Docker options when using the `DOCKER` runner",
+        title = "Docker options when using the `DOCKER` runner.",
         defaultValue = "{image=" + DEFAULT_IMAGE + ", pullPolicy=ALWAYS}"
     )
     @PluginProperty
