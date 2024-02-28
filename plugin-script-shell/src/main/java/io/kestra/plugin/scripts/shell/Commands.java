@@ -29,33 +29,33 @@ import jakarta.validation.constraints.NotNull;
         @Example(
             full = true,
             title = "Execute ETL in Rust in a Docker container and output CSV files generated as a result of the script.",
-            code = """     
-id: rust_flow
-namespace: dev
-tasks:
-  - id: rust
-    type: io.kestra.plugin.scripts.shell.Commands
-    commands:
-      - etl
-    docker:
-      image: ghcr.io/kestra-io/rust:latest
-    outputFiles:
-      - "*.csv"
-"""
+            code = """
+            id: rust_flow
+            namespace: dev
+            tasks:
+              - id: rust
+                type: io.kestra.plugin.scripts.shell.Commands
+                commands:
+                  - etl
+                docker:
+                  image: ghcr.io/kestra-io/rust:latest
+                outputFiles:
+                  - "*.csv"
+            """
         ),        
         @Example(
-            title = "Execute a single Shell command",
+            title = "Execute a single Shell command.",
             code = {
                 "commands:",
-                "- 'echo \"The current execution is: {{ execution.id }}\"'"
+                "  - 'echo \"The current execution is: {{ execution.id }}\"'"
             }
         ),
         @Example(
             title = "Execute Shell commands that generate files accessible by other tasks and available for download in the UI's Output tab.",
             code = {
                 "commands:",
-                "- echo \"1\" >> {{ outputDir }}/first.txt",
-                "- echo \"2\" >> {{ outputDir }}/second.txt"
+                "  - echo \"1\" >> {{ outputDir }}/first.txt",
+                "  - echo \"2\" >> {{ outputDir }}/second.txt"
             }
         ),
         @Example(
@@ -66,24 +66,24 @@ tasks:
             }
         ),
         @Example(
-            title = "Run a PHP Docker container and execute a command",
+            title = "Run a PHP Docker container and execute a command.",
             code = {
                 "runner: DOCKER",
                 "docker:",
                 "  image: php",
                 "commands:",
-                "- 'php -r 'print(phpversion() . \"\\n\");'",
+                "  - php -r 'print(phpversion() . \"\\n\");'",
             }
         ),
         @Example(
-            title = "Create output variables from a standard output",
+            title = "Create output variables from a standard output.",
             code = {
                 "commands:",
                 "  - echo '::{\"outputs\":{\"test\":\"value\",\"int\":2,\"bool\":true,\"float\":3.65}}::'",
             }
         ),
         @Example(
-            title = "Send a counter metric from a standard output",
+            title = "Send a counter metric from a standard output.",
             code = {
                 "commands:",
                 "  - echo '::{\"metrics\":[{\"name\":\"count\",\"type\":\"counter\",\"value\":1,\"tags\":{\"tag1\":\"i\",\"tag2\":\"win\"}}]}::'",
@@ -95,7 +95,7 @@ public class Commands extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "ubuntu";
 
     @Schema(
-        title = "Docker options when using the `DOCKER` runner",
+        title = "Docker options when using the `DOCKER` runner.",
         defaultValue = "{image=" + DEFAULT_IMAGE + ", pullPolicy=ALWAYS}"
     )
     @PluginProperty
@@ -103,7 +103,7 @@ public class Commands extends AbstractExecScript {
     protected DockerOptions docker = DockerOptions.builder().build();
 
     @Schema(
-        title = "The commands to run"
+        title = "Shell commands to run."
     )
     @PluginProperty(dynamic = true)
     @NotEmpty
