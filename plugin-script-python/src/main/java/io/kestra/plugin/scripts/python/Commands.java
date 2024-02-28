@@ -99,7 +99,7 @@ tasks:
     region: eu-central-1
     bucket: kestraio
     key: stage/orders.csv
-    from: "{{outputs.outputFile.uris['orders.csv']}}"
+    from: "{{ outputs.gitPythonScripts.outputFiles['orders.csv'] }}"
                 """
         ),
     @Example(

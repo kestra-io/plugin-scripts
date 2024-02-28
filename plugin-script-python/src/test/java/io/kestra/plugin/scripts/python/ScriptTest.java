@@ -140,6 +140,32 @@ class ScriptTest {
 
     @ParameterizedTest
     @MethodSource("source")
+    void multiline(RunnerType runner, DockerOptions dockerOptions) throws Exception {
+        Script python = Script.builder()
+            .id("unit-test")
+            .type(Script.class.getName())
+            .docker(dockerOptions)
+            .runner(runner)
+            .script("from kestra import Kestra\n" +
+                "print(\"1234\\n\\n\")\n" +
+                "Kestra.outputs({'secrets': \"test string\"})"
+            )
+            .beforeCommands(List.of(
+                "python -m venv venv",
+                ". venv/bin/activate",
+                "pip install kestra > /dev/null"
+            ))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
+        ScriptOutput run = python.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+        assertThat(run.getVars().get("secrets"), is("test string"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("source")
     void kestraLibs(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Script python = Script.builder()
             .id("test-python-task")
