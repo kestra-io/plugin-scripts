@@ -87,15 +87,15 @@ tasks:
         beforeCommands:
           - pip install faker > /dev/null
         commands:
-          - python scripts/etl_script.py
-          - python scripts/generate_orders.py
+          - python examples/scripts/etl_script.py
+          - python examples/scripts/generate_orders.py
         outputFiles:
           - orders.csv
 
   - id: loadCsvToS3
     type: io.kestra.plugin.aws.s3.Upload
-    accessKeyId: "{{secret('AWS_ACCESS_KEY_ID')}}"
-    secretKeyId: "{{secret('AWS_SECRET_ACCESS_KEY')}}"
+    accessKeyId: "{{ secret('AWS_ACCESS_KEY_ID') }}"
+    secretKeyId: "{{ secret('AWS_SECRET_ACCESS_KEY') }}"
     region: eu-central-1
     bucket: kestraio
     key: stage/orders.csv
@@ -145,7 +145,7 @@ tasks:
           image: ghcr.io/kestra-io/pydata:latest
         warningOnStdErr: false
         commands:
-          - python scripts/clean_messy_dataset.py
+          - python examples/scripts/clean_messy_dataset.py
         outputFiles:
           - "*.csv"
           - "*.parquet"
@@ -186,7 +186,7 @@ tasks:
         type: io.kestra.plugin.scripts.python.Commands
         warningOnStdErr: false
         commands:
-          - python scripts/etl_script.py
+          - python examples/scripts/etl_script.py
         runner: DOCKER
         docker:
           image: annageller/kestra:latest
@@ -202,7 +202,7 @@ tasks:
 
       - id: output
         type: io.kestra.core.tasks.storages.LocalFiles
-        outputFiles:
+        outputs:
           - "*.csv"
           - "*.parquet"
                 """
@@ -237,7 +237,7 @@ public class Commands extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "python";
 
     @Schema(
-        title = "Docker options when using the `DOCKER` runner",
+        title = "Docker options when using the `DOCKER` runner.",
         defaultValue = "{image=" + DEFAULT_IMAGE + ", pullPolicy=ALWAYS}"
     )
     @PluginProperty
@@ -245,7 +245,7 @@ public class Commands extends AbstractExecScript {
     protected DockerOptions docker = DockerOptions.builder().build();
 
     @Schema(
-        title = "The commands to run"
+        title = "The commands to run."
     )
     @PluginProperty(dynamic = true)
     @NotEmpty
