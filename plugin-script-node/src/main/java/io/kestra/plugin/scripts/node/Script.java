@@ -10,6 +10,7 @@ import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.kestra.plugin.scripts.exec.scripts.services.ScriptService;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -123,6 +124,7 @@ public class Script extends AbstractExecScript {
     )
     @PluginProperty(dynamic = true)
     @NotNull
+    @NotEmpty
     protected String script;
 
     @Override

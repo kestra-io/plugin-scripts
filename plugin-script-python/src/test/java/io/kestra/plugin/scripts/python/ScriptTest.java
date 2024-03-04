@@ -166,6 +166,27 @@ class ScriptTest {
 
     @ParameterizedTest
     @MethodSource("source")
+    void emptyScript(RunnerType runner, DockerOptions dockerOptions) throws Exception {
+        Script python = Script.builder()
+            .id("unit-test")
+            .type(Script.class.getName())
+            .docker(dockerOptions)
+            .runner(runner)
+            .beforeCommands(List.of(
+                "python -m venv venv",
+                ". venv/bin/activate",
+                "pip install kestra > /dev/null"
+            ))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
+        ScriptOutput run = python.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+    }
+
+    @ParameterizedTest
+    @MethodSource("source")
     void kestraLibs(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Script python = Script.builder()
             .id("test-python-task")

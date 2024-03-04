@@ -18,13 +18,19 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.annotation.Nullable;
+
 import static io.kestra.core.utils.Rethrow.throwConsumer;
 import static io.kestra.core.utils.Rethrow.throwFunction;
 
 abstract public class ScriptService {
     private static final Pattern INTERNAL_STORAGE_PATTERN = Pattern.compile("(kestra:\\/\\/[-a-zA-Z0-9%._\\+~#=/]*)");
 
-    public static String replaceInternalStorage(RunContext runContext, String command) throws IOException {
+    public static String replaceInternalStorage(RunContext runContext, @Nullable String command) throws IOException {
+        if (command == null) {
+            return "";
+        }
+
         return INTERNAL_STORAGE_PATTERN
             .matcher(command)
             .replaceAll(throwFunction(matchResult -> saveOnLocalStorage(runContext, matchResult.group())));
