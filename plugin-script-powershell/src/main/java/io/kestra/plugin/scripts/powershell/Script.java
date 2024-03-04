@@ -68,6 +68,7 @@ public class Script extends AbstractExecScript {
     )
     @PluginProperty(dynamic = true)
     @NotNull
+    @NotEmpty
     protected String script;
 
     @Builder.Default
