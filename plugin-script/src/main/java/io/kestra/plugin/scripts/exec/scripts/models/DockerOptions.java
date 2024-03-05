@@ -78,10 +78,6 @@ public class DockerOptions {
     @PluginProperty(dynamic = true)
     protected List<String> volumes;
 
-    @Schema(
-        title = "The pull policy for an image.",
-        description = "Pull policy can be used to prevent pulling of an already existing image `IF_NOT_PRESENT`, or can be set to `ALWAYS` to pull the latest version of the image even if an image with the same tag already exists."
-    )
     @PluginProperty
     @Builder.Default
     protected PullPolicy pullPolicy = PullPolicy.ALWAYS;
@@ -120,7 +116,8 @@ public class DockerOptions {
 
     @Introspected
     @Schema(
-        title = "The image pull policy for a container image and the tag of the image, which affect when Docker attempts to pull (download) the specified image."
+        title = "The pull policy for an image.",
+        description = "Pull policy can be used to prevent pulling of an already existing image `IF_NOT_PRESENT`, or can be set to `ALWAYS` to pull the latest version of the image even if an image with the same tag already exists."
     )
     public enum PullPolicy {
         IF_NOT_PRESENT,
