@@ -3,6 +3,7 @@ package io.kestra.plugin.scripts.shell;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
 import io.kestra.core.models.executions.LogEntry;
+import io.kestra.core.models.flows.State;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
@@ -12,7 +13,6 @@ import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.plugin.scripts.exec.scripts.runners.ScriptException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -28,6 +28,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -85,18 +86,18 @@ class CommandsTest {
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptException scriptException = assertThrows(ScriptException.class, () -> {
-            bash.run(runContext);
-        });
 
-        assertThat(scriptException.getExitCode(), is(66));
-        assertThat(scriptException.getStdOutSize(), is(0));
-        assertThat(scriptException.getStdErrSize(), is(1));
+        ScriptOutput output = bash.run(runContext);
+
+        assertThat(output.getExitCode(), is(66));
+        assertThat(output.finalState(), is(Optional.of((State.Type.FAILED))));
+        assertThat(output.getStdErrLineCount(), is(1));
+        assertThat(output.getStdOutLineCount(), is(0));
     }
 
     @ParameterizedTest
     @MethodSource("source")
-    void stopOnFirstFailed(RunnerType runner, DockerOptions dockerOptions) {
+    void stopOnFirstFailed(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Commands bash = Commands.builder()
             .id("unit-test")
             .type(Commands.class.getName())
@@ -107,13 +108,13 @@ class CommandsTest {
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptException scriptException = assertThrows(ScriptException.class, () -> {
-            bash.run(runContext);
-        });
 
-        assertThat(scriptException.getExitCode(), is(127));
-        assertThat(scriptException.getStdOutSize(), is(0));
-        assertThat(scriptException.getStdErrSize(), is(1));
+        ScriptOutput output = bash.run(runContext);
+
+        assertThat(output.getExitCode(), is(127));
+        assertThat(output.finalState(), is(Optional.of((State.Type.FAILED))));
+        assertThat(output.getStdErrLineCount(), is(1));
+        assertThat(output.getStdOutLineCount(), is(0));
     }
 
     @ParameterizedTest

@@ -45,7 +45,7 @@ abstract public class ScriptService {
     }
 
     private static String saveOnLocalStorage(RunContext runContext, String uri) throws IOException {
-        InputStream inputStream = runContext.uriToInputStream(URI.create(uri));
+        InputStream inputStream = runContext.storage().getFile(URI.create(uri));
 
         Path path = runContext.tempFile();
 
@@ -67,7 +67,7 @@ abstract public class ScriptService {
 
                     uploaded.put(
                         filename,
-                        runContext.putTempFile(path.toFile(), filename)
+                        runContext.storage().putFile(path.toFile(), filename)
                     );
                 }));
         }

@@ -3,12 +3,12 @@ package io.kestra.core.tasks.scripts;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
 import io.kestra.core.models.executions.AbstractMetricEntry;
+import io.kestra.core.models.flows.State;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.utils.TestsUtils;
-import io.kestra.plugin.scripts.exec.scripts.runners.ScriptException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
@@ -122,37 +122,34 @@ abstract class AbstractBashTest {
     }
     @Test
     @DisabledIfEnvironmentVariable(named = "GITHUB_WORKFLOW", matches = ".*")
-    void failed() {
+    void failed() throws Exception {
         Bash bash = configure(Bash.builder()
             .commands(new String[]{"echo 1 1>&2", "exit 66", "echo 2"})
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptException bashException = assertThrows(ScriptException.class, () -> {
-            bash.run(runContext);
-        });
+        ScriptOutput output = bash.run(runContext);
 
-
-        assertThat(bashException.getExitCode(), is(66));
-        assertThat(bashException.getStdOutSize(), is(0));
-        assertThat(bashException.getStdErrSize(), is(1));
+        assertThat(output.getExitCode(), is(66));
+        assertThat(output.finalState(), is(Optional.of((State.Type.FAILED))));
+        assertThat(output.getStdErrLineCount(), is(1));
+        assertThat(output.getStdOutLineCount(), is(0));
     }
 
     @Test
     @DisabledIfEnvironmentVariable(named = "GITHUB_WORKFLOW", matches = ".*")
-    void stopOnFirstFailed() {
+    void stopOnFirstFailed() throws Exception {
         Bash bash = configure(Bash.builder()
             .commands(new String[]{"unknown", "echo 1"})
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptException bashException = assertThrows(ScriptException.class, () -> {
-            bash.run(runContext);
-        });
+        ScriptOutput output = bash.run(runContext);
 
-        assertThat(bashException.getExitCode(), is(127));
-        assertThat(bashException.getStdOutSize(), is(0));
-        assertThat(bashException.getStdErrSize(), is(1));
+        assertThat(output.getExitCode(), is(127));
+        assertThat(output.finalState(), is(Optional.of((State.Type.FAILED))));
+        assertThat(output.getStdErrLineCount(), is(1));
+        assertThat(output.getStdOutLineCount(), is(0));
     }
     @Test
     @DisabledIfEnvironmentVariable(named = "GITHUB_WORKFLOW", matches = ".*")

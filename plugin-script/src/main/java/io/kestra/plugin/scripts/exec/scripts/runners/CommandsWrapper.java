@@ -166,7 +166,7 @@ public class CommandsWrapper {
         if (this.outputFiles != null) {
             outputFiles.putAll(FilesService.outputFiles(runContext, this.outputFiles));
         }
-
+        
         return ScriptOutput.builder()
             .exitCode(runnerResult.getExitCode())
             .stdOutLineCount(runnerResult.getLogConsumer().getStdOutCount())

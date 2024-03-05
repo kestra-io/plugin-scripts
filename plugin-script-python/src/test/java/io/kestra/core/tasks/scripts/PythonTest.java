@@ -2,13 +2,13 @@ package io.kestra.core.tasks.scripts;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.AbstractMetricEntry;
+import io.kestra.core.models.flows.State;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
-import io.kestra.plugin.scripts.exec.scripts.runners.ScriptException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
@@ -19,7 +19,6 @@ import java.util.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @MicronautTest
 class PythonTest {
@@ -49,7 +48,7 @@ class PythonTest {
     }
 
     @Test
-    void failed() {
+    void failed() throws Exception {
         RunContext runContext = runContextFactory.of();
         Map<String, String> files = new HashMap<>();
         files.put("main.py", "import sys; sys.exit(1)");
@@ -60,12 +59,12 @@ class PythonTest {
             .inputFiles(files)
             .build();
 
-        ScriptException pythonException = assertThrows(ScriptException.class, () -> {
-            python.run(runContext);
-        });
+        ScriptOutput output = python.run(runContext);
 
-        assertThat(pythonException.getExitCode(), is(1));
-        assertThat(pythonException.getStdOutSize(), is(0));
+        assertThat(output.getExitCode(), is(1));
+        assertThat(output.finalState(), is(Optional.of((State.Type.FAILED))));
+        assertThat(output.getStdErrLineCount(), is(0));
+        assertThat(output.getStdOutLineCount(), is(0));
     }
 
     @Test

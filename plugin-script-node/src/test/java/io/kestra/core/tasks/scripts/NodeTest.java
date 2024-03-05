@@ -5,7 +5,6 @@ import io.kestra.core.models.executions.AbstractMetricEntry;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
-import io.kestra.plugin.scripts.exec.scripts.runners.ScriptException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
@@ -17,7 +16,6 @@ import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @MicronautTest
 class NodeTest {
@@ -59,13 +57,11 @@ class NodeTest {
             .inputFiles(files)
             .build();
 
-        ScriptException nodeException = assertThrows(ScriptException.class, () -> {
-            node.run(runContext);
-        });
+        ScriptOutput output = node.run(runContext);
 
-        assertThat(nodeException.getExitCode(), is(1));
-        assertThat(nodeException.getStdOutSize(), is(0));
-        assertThat(nodeException.getStdErrSize(), equalTo(0));
+        assertThat(output.getExitCode(), is(1));
+        assertThat(output.getStdOutLineCount(), is(0));
+        assertThat(output.getStdErrLineCount(), equalTo(0));
     }
 
     @Test

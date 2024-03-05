@@ -58,6 +58,10 @@ public class ScriptOutput implements io.kestra.core.models.tasks.Output {
 
     @Override
     public Optional<State.Type> finalState() {
-        return this.warningOnStdErr != null && this.warningOnStdErr && this.stdErrLineCount > 0 ? Optional.of(State.Type.WARNING) : Output.super.finalState();
+        return this.exitCode != 0 ? Optional.of(State.Type.FAILED) : isWarning() ? Optional.of(State.Type.WARNING) : Output.super.finalState();
+    }
+
+    private boolean isWarning() {
+        return this.warningOnStdErr != null && this.warningOnStdErr && this.stdErrLineCount > 0;
     }
 }

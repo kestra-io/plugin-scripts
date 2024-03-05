@@ -2,6 +2,7 @@ package io.kestra.plugin.scripts.python;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.AbstractMetricEntry;
+import io.kestra.core.models.flows.State;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
@@ -9,7 +10,6 @@ import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.plugin.scripts.exec.scripts.runners.ScriptException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
 import org.apache.commons.io.IOUtils;
@@ -21,12 +21,12 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @MicronautTest
 class ScriptTest {
@@ -64,7 +64,7 @@ class ScriptTest {
 
     @ParameterizedTest
     @MethodSource("source")
-    void failed(RunnerType runner, DockerOptions dockerOptions) {
+    void failed(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Script python = Script.builder()
             .id("test-python-task")
             .type(Script.class.getName())
@@ -74,12 +74,13 @@ class ScriptTest {
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
-        ScriptException pythonException = assertThrows(ScriptException.class, () -> {
-            python.run(runContext);
-        });
 
-        assertThat(pythonException.getExitCode(), is(1));
-        assertThat(pythonException.getStdOutSize(), is(0));
+        ScriptOutput output = python.run(runContext);
+
+        assertThat(output.getExitCode(), is(1));
+        assertThat(output.finalState(), is(Optional.of((State.Type.FAILED))));
+        assertThat(output.getStdErrLineCount(), is(0));
+        assertThat(output.getStdOutLineCount(), is(0));
     }
 
     @ParameterizedTest

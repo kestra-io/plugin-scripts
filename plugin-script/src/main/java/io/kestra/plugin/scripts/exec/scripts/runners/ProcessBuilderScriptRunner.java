@@ -44,12 +44,6 @@ public class ProcessBuilderScriptRunner {
             stdOut.join();
             stdErr.join();
 
-            if (exitCode != 0) {
-                throw new ScriptException(exitCode, defaultLogConsumer.getStdOutCount(), defaultLogConsumer.getStdErrCount());
-            } else {
-                logger.debug("Command succeed with code " + exitCode);
-            }
-
             return new RunnerResult(exitCode, defaultLogConsumer);
         } catch (InterruptedException e) {
             logger.warn("Killing process {} for InterruptedException", pid);
