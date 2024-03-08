@@ -18,17 +18,18 @@ import io.kestra.core.runners.RunContext;
 @Plugin(
     examples = {
         @Example(
-            title = "Transform with file from internal storage",
+            title = "Convert row by row of a file from Kestra's internal storage.",
             code = {
                 "from: \"{{ outputs['avro-to-gcs'] }}\"",
                 "script: |",
                 "  logger.info('row: {}', row)",
                 "",
-                "  if (row['name'] === 'richard') {",
-                "    row = null",
-                "  } else {",
-                "    row['email'] = row['name'] + '@kestra.io'",
-                "  }"
+                "  # remove a column",
+                "  delete row['useless_column']",
+                "  # update a column",
+                "  row['email'] = row['name'] + '@kestra.io'",
+                "  # set a column to null",
+                "  row['last_update'] = null"
             }
         ),
         @Example(

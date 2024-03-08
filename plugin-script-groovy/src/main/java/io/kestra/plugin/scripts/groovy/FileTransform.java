@@ -1,5 +1,6 @@
 package io.kestra.plugin.scripts.groovy;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,6 +15,9 @@ import io.kestra.core.runners.RunContext;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
+@Schema(
+    title = "Transform ion format file from Kestra's internal storage with a Groovy script."
+)
 @Plugin(
     examples = {
         @Example(
@@ -23,11 +27,12 @@ import io.kestra.core.runners.RunContext;
                 "script: |",
                 "  logger.info('row: {}', row)",
                 "",
-                "  if (row.get('name') == 'richard') {",
-                "    row = null",
-                "  } else {",
-                "    row.put('email', row.get('name') + '@kestra.io')",
-                "  }"
+                "  // remove a column",
+                "  row.remove('useless_column')",
+                "  // update a column",
+                "  row['email'] = row['name'] + '@kestra.io'",
+                "  // set a column to null",
+                "  row['last_update'] = null"
             }
         ),
         @Example(

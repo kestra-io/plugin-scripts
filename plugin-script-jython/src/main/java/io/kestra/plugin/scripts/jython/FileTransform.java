@@ -1,5 +1,6 @@
 package io.kestra.plugin.scripts.jython;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,6 +15,9 @@ import io.kestra.core.runners.RunContext;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
+@Schema(
+    title = "Transform ion format file from Kestra's internal storage with a Jython script."
+)
 @Plugin(
     examples = {
         @Example(
@@ -51,16 +55,18 @@ tasks:
 """
         ),           
         @Example(
-            title = "Transform with file from internal storage.",
+            title = "Convert row by row of a file from Kestra's internal storage.",
             code = {
                 "from: \"{{ outputs['avro-to-gcs'] }}\"",
                 "script: |",
                 "  logger.info('row: {}', row)",
                 "",
-                "  if row['name'] == 'richard': ",
-                "    row = None",
-                "  else: ",
-                "    row['email'] = row['name'] + '@kestra.io'\n"
+                "  // remove a column",
+                "  del row['useless_column']",
+                "  // update a column",
+                "  row['email'] = row['name'] + '@kestra.io'",
+                "  // set a column to null",
+                "  row['last_update'] = None"
             }
         ),
         @Example(
