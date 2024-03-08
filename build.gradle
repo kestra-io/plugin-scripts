@@ -102,6 +102,7 @@ subprojects {
 
         // test
         testImplementation "org.junit.jupiter:junit-jupiter-engine"
+        testImplementation 'org.mockito:mockito-junit-jupiter'
         testImplementation "org.hamcrest:hamcrest:2.2"
         testImplementation "org.hamcrest:hamcrest-library:2.2"
         testImplementation "org.junit-pioneer:junit-pioneer:2.2.0"

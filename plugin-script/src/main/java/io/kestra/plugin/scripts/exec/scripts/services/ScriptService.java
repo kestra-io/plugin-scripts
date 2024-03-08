@@ -1,95 +1,39 @@
 package io.kestra.plugin.scripts.exec.scripts.services;
 
 import io.kestra.core.runners.RunContext;
-import io.kestra.core.utils.ListUtils;
-import org.apache.commons.io.IOUtils;
-
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 
-import static io.kestra.core.utils.Rethrow.throwConsumer;
-import static io.kestra.core.utils.Rethrow.throwFunction;
-
-abstract public class ScriptService {
-    private static final Pattern INTERNAL_STORAGE_PATTERN = Pattern.compile("(kestra:\\/\\/[-a-zA-Z0-9%._\\+~#=/]*)");
+/**
+ * @deprecated use return {@link io.kestra.core.models.script.ScriptService} instead.
+ */
+@Deprecated
+public final class ScriptService {
+    private ScriptService() {
+    }
 
     public static String replaceInternalStorage(RunContext runContext, @Nullable String command) throws IOException {
-        if (command == null) {
-            return "";
-        }
-
-        return INTERNAL_STORAGE_PATTERN
-            .matcher(command)
-            .replaceAll(throwFunction(matchResult -> saveOnLocalStorage(runContext, matchResult.group())));
+        return io.kestra.core.models.script.ScriptService.replaceInternalStorage(runContext, command);
     }
 
     public static List<String> uploadInputFiles(RunContext runContext, List<String> commands) throws IOException {
-        return commands
-            .stream()
-            .map(throwFunction(s -> replaceInternalStorage(runContext, s)))
-            .collect(Collectors.toList());
-
-    }
-
-    private static String saveOnLocalStorage(RunContext runContext, String uri) throws IOException {
-        InputStream inputStream = runContext.uriToInputStream(URI.create(uri));
-
-        Path path = runContext.tempFile();
-
-        IOUtils.copyLarge(inputStream, new FileOutputStream(path.toFile()));
-
-        return path.toString();
+        return io.kestra.core.models.script.ScriptService.uploadInputFiles(runContext, commands);
     }
 
     public static Map<String, URI> uploadOutputFiles(RunContext runContext, Path outputDir) throws IOException {
-        // upload output files
-        Map<String, URI> uploaded = new HashMap<>();
-
-        try (Stream<Path> walk = Files.walk(outputDir)) {
-            walk
-                .filter(Files::isRegularFile)
-                .filter(path -> !path.startsWith("."))
-                .forEach(throwConsumer(path -> {
-                    String filename = outputDir.relativize(path).toString();
-
-                    uploaded.put(
-                        filename,
-                        runContext.putTempFile(path.toFile(), filename)
-                    );
-                }));
-        }
-
-        return uploaded;
+        return io.kestra.core.models.script.ScriptService.uploadOutputFiles(runContext, outputDir);
     }
 
     public static List<String> scriptCommands(List<String> interpreter, List<String> beforeCommands, String command) {
-        return scriptCommands(interpreter, beforeCommands, List.of(command));
+        return io.kestra.core.models.script.ScriptService.scriptCommands(interpreter, beforeCommands, command);
     }
 
     public static List<String> scriptCommands(List<String> interpreter, List<String> beforeCommands, List<String> commands) {
-        ArrayList<String> commandsArgs = new ArrayList<>(interpreter);
-        commandsArgs.add(
-            Stream
-                .concat(
-                    ListUtils.emptyOnNull(beforeCommands).stream(),
-                    commands.stream()
-                )
-                .collect(Collectors.joining(System.lineSeparator()))
-        );
-
-        return commandsArgs;
+        return io.kestra.core.models.script.ScriptService.scriptCommands(interpreter, beforeCommands, commands);
     }
 }

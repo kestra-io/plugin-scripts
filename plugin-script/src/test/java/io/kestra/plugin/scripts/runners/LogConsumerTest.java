@@ -1,6 +1,8 @@
 package io.kestra.plugin.scripts.runners;
 
 import com.google.common.collect.ImmutableMap;
+import io.kestra.core.models.script.RunnerResult;
+import io.kestra.core.models.script.ScriptCommands;
 import io.kestra.core.models.tasks.Task;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
@@ -8,14 +10,14 @@ import io.kestra.core.utils.Await;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
-import io.kestra.plugin.scripts.exec.scripts.runners.DockerScriptRunner;
-import io.kestra.plugin.scripts.exec.scripts.runners.RunnerResult;
+import io.kestra.plugin.scripts.runner.docker.DockerScriptRunner;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -43,13 +45,16 @@ public class LogConsumerTest {
         };
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());
         String outputValue = "a".repeat(10000);
-        RunnerResult run = new DockerScriptRunner(applicationContext).run(
-                new CommandsWrapper(runContext).withCommands(List.of(
-                        "/bin/sh", "-c",
-                        "echo \"::{\\\"outputs\\\":{\\\"someOutput\\\":\\\"" + outputValue + "\\\"}}::\"\n" +
-                                "echo -n another line"
-                )),
-                DockerOptions.builder().image("alpine").build()
+        ScriptCommands scriptCommands = new CommandsWrapper(runContext).withCommands(List.of(
+            "/bin/sh", "-c",
+            "echo \"::{\\\"outputs\\\":{\\\"someOutput\\\":\\\"" + outputValue + "\\\"}}::\"\n" +
+                "echo -n another line"
+        ));
+        RunnerResult run = DockerScriptRunner.from(DockerOptions.builder().image("alpine").build()).run(
+            runContext,
+            scriptCommands,
+            Collections.emptyList(),
+            Collections.emptyList()
         );
         Await.until(() -> run.getLogConsumer().getStdOutCount() == 2, null, Duration.ofSeconds(5));
         assertThat(run.getLogConsumer().getStdOutCount(), is(2));
@@ -76,13 +81,16 @@ public class LogConsumerTest {
                     .append(Integer.toString(i).repeat(800)).append("\r")
                 .append(Integer.toString(i).repeat(2000)).append("\r");
         }
-        RunnerResult run = new DockerScriptRunner(applicationContext).run(
-            new CommandsWrapper(runContext).withCommands(List.of(
-                "/bin/sh", "-c",
-                "echo " + outputValue +
-                    "echo -n another line"
-            )),
-            DockerOptions.builder().image("alpine").build()
+        ScriptCommands scriptCommands = new CommandsWrapper(runContext).withCommands(List.of(
+            "/bin/sh", "-c",
+            "echo " + outputValue +
+                "echo -n another line"
+        ));
+        RunnerResult run = DockerScriptRunner.from(DockerOptions.builder().image("alpine").build()).run(
+            runContext,
+            scriptCommands,
+            Collections.emptyList(),
+            Collections.emptyList()
         );
 
         Await.until(() -> run.getLogConsumer().getStdOutCount() == 10, null, Duration.ofSeconds(5));
