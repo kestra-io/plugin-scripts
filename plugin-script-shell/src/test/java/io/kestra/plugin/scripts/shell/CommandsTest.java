@@ -3,6 +3,7 @@ package io.kestra.plugin.scripts.shell;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
 import io.kestra.core.models.executions.LogEntry;
+import io.kestra.core.models.script.ScriptException;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
@@ -12,7 +13,7 @@ import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.plugin.scripts.exec.scripts.runners.ScriptException;
+import io.kestra.plugin.scripts.runner.docker.PullPolicy;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -216,7 +217,7 @@ class CommandsTest {
             .id("unit-test")
             .type(Commands.class.getName())
             .docker(DockerOptions.builder()
-                .pullPolicy(DockerOptions.PullPolicy.IF_NOT_PRESENT)
+                .pullPolicy(PullPolicy.IF_NOT_PRESENT)
                 .image("alpine:3.15.6")
                 .build()
             )
@@ -243,7 +244,7 @@ class CommandsTest {
             .id("unit-test")
             .type(Commands.class.getName())
             .docker(DockerOptions.builder()
-                .pullPolicy(DockerOptions.PullPolicy.IF_NOT_PRESENT)
+                .pullPolicy(PullPolicy.IF_NOT_PRESENT)
                 .image("alpine:999.15.6")
                 .build()
             )

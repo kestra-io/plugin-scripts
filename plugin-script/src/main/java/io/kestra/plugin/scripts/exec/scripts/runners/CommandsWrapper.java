@@ -1,6 +1,8 @@
 package io.kestra.plugin.scripts.exec.scripts.runners;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
+import io.kestra.core.models.script.*;
+import io.kestra.core.models.script.types.ProcessScriptRunner;
 import io.kestra.core.models.tasks.NamespaceFiles;
 import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.NamespaceFilesService;
@@ -9,25 +11,21 @@ import io.kestra.core.utils.IdUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.plugin.scripts.exec.scripts.services.ScriptService;
+import io.kestra.plugin.scripts.runner.docker.DockerScriptRunner;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.With;
 
-import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.kestra.core.utils.Rethrow.throwFunction;
 
 @AllArgsConstructor
 @Getter
-public class CommandsWrapper {
+public class CommandsWrapper implements ScriptCommands {
     private RunContext runContext;
 
     private Path workingDirectory;
@@ -36,15 +34,22 @@ public class CommandsWrapper {
 
     private Map<String, Object> additionalVars;
 
+    @With
     private List<String> commands;
 
     private Map<String, String> env;
 
     @With
-    private AbstractLogConsumer logConsumer;
+    private io.kestra.core.models.script.AbstractLogConsumer logConsumer;
 
     @With
     private RunnerType runnerType;
+
+    @With
+    private String containerImage;
+
+    @With
+    private ScriptRunner scriptRunner;
 
     @With
     private DockerOptions dockerOptions;
@@ -77,24 +82,6 @@ public class CommandsWrapper {
         this.logConsumer = new DefaultLogConsumer(runContext);
     }
 
-    public CommandsWrapper withCommands(List<String> commands) throws IOException, IllegalVariableEvaluationException {
-        return new CommandsWrapper(
-            runContext,
-            workingDirectory,
-            outputDirectory,
-            additionalVars,
-            ScriptService.uploadInputFiles(runContext, runContext.render(commands, this.additionalVars)),
-            env,
-            logConsumer,
-            runnerType,
-            dockerOptions,
-            warningOnStdErr,
-            namespaceFiles,
-            inputFiles,
-            outputFiles
-        );
-    }
-
     public CommandsWrapper withEnv(Map<String, String> envs) throws IllegalVariableEvaluationException {
         return new CommandsWrapper(
             runContext,
@@ -113,6 +100,8 @@ public class CommandsWrapper {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
             logConsumer,
             runnerType,
+            containerImage,
+            scriptRunner,
             dockerOptions,
             warningOnStdErr,
             namespaceFiles,
@@ -135,36 +124,40 @@ public class CommandsWrapper {
 
     @SuppressWarnings("unchecked")
     public ScriptOutput run() throws Exception {
-        RunnerResult runnerResult;
-
+        List<String> filesToUpload = new ArrayList<>();
         if (this.namespaceFiles != null) {
             String tenantId = ((Map<String, String>) runContext.getVariables().get("flow")).get("tenantId");
             String namespace = ((Map<String, String>) runContext.getVariables().get("flow")).get("namespace");
 
             NamespaceFilesService namespaceFilesService = runContext.getApplicationContext().getBean(NamespaceFilesService.class);
-            namespaceFilesService.inject(
+            List<URI> injectedFiles = namespaceFilesService.inject(
                 runContext,
                 tenantId,
                 namespace,
                 this.workingDirectory,
                 this.namespaceFiles
             );
+            injectedFiles.forEach(uri -> filesToUpload.add(uri.toString().substring(1))); // we need to remove the leading '/'
         }
 
         if (this.inputFiles != null) {
-            FilesService.inputFiles(runContext, this.inputFiles);
+            Map<String, String> finalInputFiles = FilesService.inputFiles(runContext, this.inputFiles);
+            filesToUpload.addAll(finalInputFiles.keySet());
         }
 
-        if (runnerType.equals(RunnerType.DOCKER)) {
-            runnerResult = new DockerScriptRunner(runContext.getApplicationContext()).run(this, this.dockerOptions);
-        } else {
-            runnerResult = new ProcessBuilderScriptRunner().run(this);
-        }
+        ScriptRunner realScriptRunner = scriptRunner != null ? scriptRunner : switch (runnerType) {
+            case DOCKER -> DockerScriptRunner.from(this.dockerOptions);
+            case PROCESS -> new ProcessScriptRunner();
+        };
+        RunContext scriptRunnerRunContext = runContext.forScriptRunner(realScriptRunner);
+        RunnerResult runnerResult = realScriptRunner.run(scriptRunnerRunContext, this, filesToUpload, this.outputFiles);
 
-        Map<String, URI> outputFiles = ScriptService.uploadOutputFiles(runContext, outputDirectory);
+        // FIXME should we really upload all files even if not configured via this.outputFiles ?
+        // FIXME isn't it a security risk if we upload a file that is not listed in the output files?
+        Map<String, URI> outputFiles = ScriptService.uploadOutputFiles(scriptRunnerRunContext, outputDirectory);
 
         if (this.outputFiles != null) {
-            outputFiles.putAll(FilesService.outputFiles(runContext, this.outputFiles));
+            outputFiles.putAll(FilesService.outputFiles(scriptRunnerRunContext, this.outputFiles));
         }
 
         return ScriptOutput.builder()

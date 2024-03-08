@@ -1,5 +1,6 @@
 package io.kestra.plugin.scripts.exec.scripts.runners;
 
+import io.kestra.core.models.script.AbstractLogConsumer;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.tasks.PluginUtilsService;
 

@@ -13,6 +13,7 @@ import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+import io.kestra.plugin.scripts.runner.docker.Credentials;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -114,7 +115,7 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(DockerOptions.builder()
                 .image("ubuntu")
-                .credentials(DockerOptions.Credentials.builder()
+                .credentials(Credentials.builder()
                     .registry("own.registry")
                     .username(username)
                     .password("doe")
