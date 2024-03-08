@@ -1,7 +1,9 @@
 package io.kestra.plugin.scripts.exec;
 
+import com.google.common.annotations.Beta;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.script.ScriptRunner;
 import io.kestra.core.models.tasks.*;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
@@ -9,6 +11,7 @@ import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -25,12 +28,27 @@ import jakarta.validation.constraints.NotNull;
 public abstract class AbstractExecScript extends Task implements RunnableTask<ScriptOutput>, NamespaceFilesInterface, InputFilesInterface, OutputFilesInterface {
     @Builder.Default
     @Schema(
-        title = "The script runner to use — by default, Kestra runs all scripts in `DOCKER`."
+        title = "The script runner to use — by default, Kestra runs all scripts in `DOCKER`.",
+        description = "Only used if the `scriptRunner` property is not set"
     )
     @PluginProperty
-    @NotNull
     @NotEmpty
     protected RunnerType runner = RunnerType.DOCKER;
+
+    @Schema(
+        title = "The script runner container image, only used if the script runner is container-based."
+    )
+    @PluginProperty
+    protected String containerImage;
+
+    @Schema(
+        title = "The script runner to use.",
+        description = "Script runners are provided by plugins, each have their own properties."
+    )
+    @PluginProperty
+    @Valid
+    @Beta
+    protected ScriptRunner scriptRunner;
 
     @Schema(
         title = "A list of commands that will run before the `commands`, allowing to set up the environment e.g. `pip install -r requirements.txt`."
@@ -95,8 +113,10 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
             .withEnv(this.getEnv())
             .withWarningOnStdErr(this.getWarningOnStdErr())
             .withRunnerType(this.getRunner())
+            .withContainerImage(this.containerImage)
+            .withScriptRunner(this.scriptRunner)
             .withDockerOptions(this.injectDefaults(getDocker()))
-            .withNamespaceFiles(namespaceFiles)
+            .withNamespaceFiles(this.namespaceFiles)
             .withInputFiles(this.inputFiles)
             .withOutputFiles(this.outputFiles);
     }

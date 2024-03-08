@@ -2,6 +2,7 @@ package io.kestra.plugin.scripts.python;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.AbstractMetricEntry;
+import io.kestra.core.models.script.ScriptException;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
@@ -9,7 +10,6 @@ import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.plugin.scripts.exec.scripts.runners.ScriptException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
 import org.apache.commons.io.IOUtils;

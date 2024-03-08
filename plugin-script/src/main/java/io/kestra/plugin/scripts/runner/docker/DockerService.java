@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts.exec.scripts.runners;
+package io.kestra.plugin.scripts.runner.docker;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.core.DockerClientBuilder;
@@ -9,19 +9,16 @@ import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.core.utils.MapUtils;
-import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
 
 public class DockerService {
     public static DockerClient client(DockerClientConfig dockerClientConfig) {
@@ -47,7 +44,7 @@ public class DockerService {
         return "unix:///dind/docker.sock";
     }
 
-    public static Path createConfig(RunContext runContext, @Nullable Object config, @Nullable List<DockerOptions.Credentials> credentials, @Nullable String image) throws IllegalVariableEvaluationException, IOException {
+    public static Path createConfig(RunContext runContext, @Nullable Object config, @Nullable List<Credentials> credentials, @Nullable String image) throws IllegalVariableEvaluationException, IOException {
         Map<String, Object> finalConfig = new HashMap<>();
 
         if (config != null) {
@@ -63,7 +60,7 @@ public class DockerService {
             Map<String, Object> auths = new HashMap<>();
             String registry = "https://index.docker.io/v1/";
 
-            for (DockerOptions.Credentials c : credentials) {
+            for (Credentials c : credentials) {
                 if (c.getUsername() != null) {
                     auths.put("username", runContext.render(c.getUsername()));
                 }
