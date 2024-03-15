@@ -31,8 +31,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @MicronautTest
@@ -181,6 +180,31 @@ class CommandsTest {
             CharStreams.toString(new InputStreamReader(get)),
             is("2\n")
         );
+    }
+
+
+    @ParameterizedTest
+    @MethodSource("source")
+    void nullOutputs(RunnerType runner, DockerOptions dockerOptions) throws Exception {
+        Commands bash = Commands.builder()
+            .id("unit-test")
+            .type(Commands.class.getName())
+            .docker(dockerOptions)
+            .runner(runner)
+            .commands(List.of(
+                "echo '::{\"outputs\": {\"extract\":null}}::'"
+            ))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
+        ScriptOutput run = bash.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+        assertThat(run.getStdErrLineCount(), is(0));
+
+        assertThat(run.getStdOutLineCount(), is(1));
+        assertThat(run.getVars().get("extract"), is(nullValue()));
+        assertThat(run.getVars().containsKey("extract"), is(true));
     }
 
     @Test
