@@ -31,7 +31,7 @@ import jakarta.validation.constraints.NotNull;
 @Plugin(
     examples = {
         @Example(
-            title = "Execute a Python script",
+            title = "Execute a Python script.",
             code = {
                 "script: |",
                 "  from kestra import Kestra",
@@ -48,13 +48,13 @@ import jakarta.validation.constraints.NotNull;
         @Example(
             title = "Execute a Python script with an input file from Kestra's local storage created by a previous task.",
             code = {
-                "script:",
+                "script: |",
                 "  with open('{{ outputs.previousTaskId.uri }}', 'r') as f:",
                 "    print(f.read())"
             }
         ),
         @Example(
-            title = "Execute a Python script that outputs a file",
+            title = "Execute a Python script that outputs a file.",
             code = {
                 "script: |",
                 "   f = open(\"{{outputDir}}/myfile.txt\", \"a\")",
@@ -101,7 +101,7 @@ public class Script extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "python";
 
     @Schema(
-        title = "Docker options when using the `DOCKER` runner",
+        title = "Docker options when using the `DOCKER` runner.",
         defaultValue = "{image=" + DEFAULT_IMAGE + ", pullPolicy=ALWAYS}"
     )
     @PluginProperty
