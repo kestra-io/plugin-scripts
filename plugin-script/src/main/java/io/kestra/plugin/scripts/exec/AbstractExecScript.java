@@ -8,6 +8,7 @@ import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
+import io.kestra.plugin.scripts.exec.scripts.validations.AbstractExecScriptValidation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -22,6 +23,7 @@ import jakarta.validation.constraints.NotNull;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
+@AbstractExecScriptValidation
 public abstract class AbstractExecScript extends Task implements RunnableTask<ScriptOutput>, NamespaceFilesInterface, InputFilesInterface, OutputFilesInterface {
     @Builder.Default
     @Schema(
@@ -29,7 +31,6 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
     )
     @PluginProperty
     @NotNull
-    @NotEmpty
     protected RunnerType runner = RunnerType.DOCKER;
 
     @Schema(

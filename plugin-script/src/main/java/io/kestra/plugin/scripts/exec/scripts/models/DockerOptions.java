@@ -4,6 +4,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 import io.micronaut.core.annotation.Introspected;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -17,6 +18,7 @@ import jakarta.validation.constraints.NotNull;
 @NoArgsConstructor
 @Getter
 @Introspected
+@EqualsAndHashCode
 public class DockerOptions {
     @Schema(
         title = "Docker API URI."
