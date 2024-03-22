@@ -234,7 +234,7 @@ tasks:
     )        
 })
 public class Commands extends AbstractExecScript {
-    private static final String DEFAULT_IMAGE = "python";
+    private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/kestrapy:latest";
 
     @Schema(
         title = "Docker options when using the `DOCKER` runner.",
