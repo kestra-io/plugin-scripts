@@ -2,6 +2,7 @@ package io.kestra.plugin.scripts.exec.scripts.runners;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.script.*;
+import io.kestra.core.models.script.DefaultLogConsumer;
 import io.kestra.core.models.script.types.ProcessScriptRunner;
 import io.kestra.core.models.tasks.NamespaceFiles;
 import io.kestra.core.runners.FilesService;
