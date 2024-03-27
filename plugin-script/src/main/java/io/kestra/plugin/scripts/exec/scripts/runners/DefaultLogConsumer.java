@@ -1,26 +1,13 @@
 package io.kestra.plugin.scripts.exec.scripts.runners;
 
-import io.kestra.core.models.script.AbstractLogConsumer;
 import io.kestra.core.runners.RunContext;
-import io.kestra.core.tasks.PluginUtilsService;
 
-public class DefaultLogConsumer extends AbstractLogConsumer {
-    private final RunContext runContext;
-
+/**
+ * Use io.kestra.core.models.script.DefaultLogConsumer instead
+ */
+@Deprecated
+public class DefaultLogConsumer extends io.kestra.core.models.script.DefaultLogConsumer {
     public DefaultLogConsumer(RunContext runContext) {
-        this.runContext = runContext;
-    }
-
-    @Override
-    public void accept(String line, Boolean isStdErr) {
-        outputs.putAll(PluginUtilsService.parseOut(line, runContext.logger(), runContext));
-
-        if (isStdErr) {
-            this.stdErrCount.incrementAndGet();
-            runContext.logger().warn(line);
-        } else {
-            this.stdOutCount.incrementAndGet();
-            runContext.logger().info(line);
-        }
+        super(runContext);
     }
 }
