@@ -36,9 +36,9 @@ import jakarta.validation.constraints.NotEmpty;
                 type: io.kestra.plugin.scripts.powershell.Commands
                 inputFiles:
                   main.ps1: |
-                    Get-ChildItem | Format-List
+                    'Hello, World!' | Write-Output
                 commands:
-                  - pwsh main.ps1
+                  - ./main.ps1
             """
     )
 })
@@ -66,7 +66,7 @@ public class Commands extends AbstractExecScript {
     )
     @PluginProperty
     @NotEmpty
-    protected List<String> interpreter = List.of("/bin/sh", "-c");
+    protected List<String> interpreter = List.of("pwsh", "-NoProfile", "-NonInteractive", "-Command");
 
     @Override
     protected DockerOptions injectDefaults(DockerOptions original) {
