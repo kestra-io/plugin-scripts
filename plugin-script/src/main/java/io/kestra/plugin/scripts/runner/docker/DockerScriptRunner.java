@@ -11,7 +11,6 @@ import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.NameParser;
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.ConnectionClosedException;
 import com.google.common.annotations.Beta;
-import com.google.common.collect.ImmutableMap;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.script.*;
@@ -24,8 +23,6 @@ import io.micronaut.core.annotation.Introspected;
 import io.micronaut.core.convert.format.ReadableBytesTypeConverter;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.slf4j.Logger;
@@ -457,21 +454,8 @@ public class DockerScriptRunner extends ScriptRunner {
             .withAttachStdout(true);
     }
 
-    @SuppressWarnings("unchecked")
     private static void addMetadata(RunContext runContext, CreateContainerCmd container) {
-        Map<String, String> flow = (Map<String, String>) runContext.getVariables().get("flow");
-        Map<String, String> task = (Map<String, String>) runContext.getVariables().get("task");
-        Map<String, String> execution = (Map<String, String>) runContext.getVariables().get("execution");
-        Map<String, String> taskrun = (Map<String, String>) runContext.getVariables().get("taskrun");
-
-        container.withLabels(ImmutableMap.of(
-            "kestra.io/namespace", flow.get("namespace"),
-            "kestra.io/flow-id", flow.get("id"),
-            "kestra.io/task-id", task.get("id"),
-            "kestra.io/execution-id", execution.get("id"),
-            "kestra.io/taskrun-id", taskrun.get("id"),
-            "kestra.io/taskrun-attempt", String.valueOf(taskrun.get("attemptsCount"))
-        ));
+        container.withLabels(ScriptService.labels(runContext, "kestra.io/"));
     }
 
     private static Long convertBytes(String bytes) {
