@@ -49,8 +49,8 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @Schema(
     title = "A script runner that runs a script inside a container in a Docker compatible engine.",
     description = """
-        This script runner is container-based so the `containerImage` property must be set to be able to use it.
-        When the Kestra Worker that runs this script is terminated, the container will still runs until completion.
+        This script runner is container-based so the `containerImage` property must be set.
+        In case a Kestra Worker that runs this script is terminated, the container will still run until completion.
         This is not an issue when using Kestra itself in a container with Docker-In-Docker (dind) as both will be restarted."""
 )
 public class DockerScriptRunner extends ScriptRunner {
