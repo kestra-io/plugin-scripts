@@ -78,7 +78,7 @@ public class DockerScriptRunner extends ScriptRunner {
     private Credentials credentials;
 
     // used for backward compatibility with the old script runner facility
-    @Hidden
+    @Schema(hidden = true)
     protected String image;
 
     @Schema(
