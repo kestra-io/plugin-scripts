@@ -1,11 +1,13 @@
 package io.kestra.plugin.scripts.exec.scripts.services;
 
+import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.runners.RunContext;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -18,11 +20,16 @@ public final class ScriptService {
     }
 
     public static String replaceInternalStorage(RunContext runContext, @Nullable String command) throws IOException {
-        return io.kestra.core.models.script.ScriptService.replaceInternalStorage(runContext, command);
+        return io.kestra.core.models.script.ScriptService.replaceInternalStorage(runContext, command, (ignored, file) -> {}, false);
     }
 
     public static List<String> uploadInputFiles(RunContext runContext, List<String> commands) throws IOException {
-        return io.kestra.core.models.script.ScriptService.uploadInputFiles(runContext, commands);
+        try {
+            return io.kestra.core.models.script.ScriptService.replaceInternalStorage(runContext, Collections.emptyMap(), commands, (ignored, file) -> {}, false);
+        } catch (IllegalVariableEvaluationException e) {
+            // Throw unchecked exception to prevent breaking the old method signature
+            throw new RuntimeException(e);
+        }
     }
 
     public static Map<String, URI> uploadOutputFiles(RunContext runContext, Path outputDir) throws IOException {

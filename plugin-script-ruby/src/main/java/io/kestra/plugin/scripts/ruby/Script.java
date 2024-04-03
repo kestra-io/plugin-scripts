@@ -4,6 +4,7 @@ import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.script.ScriptService;
+import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
@@ -15,9 +16,10 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @SuperBuilder
 @ToString
@@ -117,15 +119,19 @@ public class Script extends AbstractExecScript {
     public ScriptOutput run(RunContext runContext) throws Exception {
         CommandsWrapper commands = this.commands(runContext);
 
-        Path path = runContext.tempFile(
-            ScriptService.replaceInternalStorage(runContext, runContext.render(this.script, commands.getAdditionalVars())).getBytes(StandardCharsets.UTF_8),
-            ".rb"
+        Map<String, String> inputFiles = FilesService.inputFiles(runContext, commands.getScriptRunner().additionalVars(runContext, commands), this.getInputFiles());
+        List<String> internalToLocalFiles = new ArrayList<>();
+        Path relativeScriptPath = runContext.tempDir().relativize(runContext.tempFile(".rb"));
+        inputFiles.put(
+            relativeScriptPath.toString(),
+            commands.render(runContext, this.script, internalToLocalFiles)
         );
+        commands = commands.withInputFiles(inputFiles);
 
         List<String> commandsArgs = ScriptService.scriptCommands(
             this.interpreter,
             this.beforeCommands,
-            String.join(" ", "ruby", path.toAbsolutePath().toString())
+            String.join(" ", "ruby", relativeScriptPath.toString())
         );
 
         return commands

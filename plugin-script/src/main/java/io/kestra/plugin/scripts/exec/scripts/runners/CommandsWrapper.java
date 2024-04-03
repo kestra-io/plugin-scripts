@@ -1,8 +1,8 @@
 package io.kestra.plugin.scripts.exec.scripts.runners;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
-import io.kestra.core.models.script.*;
 import io.kestra.core.models.script.DefaultLogConsumer;
+import io.kestra.core.models.script.*;
 import io.kestra.core.models.script.types.ProcessScriptRunner;
 import io.kestra.core.models.tasks.NamespaceFiles;
 import io.kestra.core.runners.FilesService;
@@ -17,12 +17,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.With;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static io.kestra.core.utils.Rethrow.throwFunction;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @AllArgsConstructor
 @Getter
@@ -101,12 +102,18 @@ public class CommandsWrapper implements ScriptCommands {
     }
 
     public CommandsWrapper addAdditionalVars(Map<String, Object> additionalVars) {
+        if (this.additionalVars == null) {
+            this.additionalVars = new HashMap<>();
+        }
         this.additionalVars.putAll(additionalVars);
 
         return this;
     }
 
     public CommandsWrapper addEnv(Map<String, String> envs) {
+        if (this.env == null) {
+            this.env = new HashMap<>();
+        }
         this.env.putAll(envs);
 
         return this;
@@ -131,16 +138,15 @@ public class CommandsWrapper implements ScriptCommands {
         }
 
         if (this.inputFiles != null) {
-            Map<String, String> finalInputFiles = FilesService.inputFiles(runContext, this.inputFiles);
+            Map<String, String> finalInputFiles = FilesService.inputFiles(runContext, this.getScriptRunner().additionalVars(runContext, this), this.inputFiles);
             filesToUpload.addAll(finalInputFiles.keySet());
         }
 
-        ScriptRunner realScriptRunner = scriptRunner != null ? scriptRunner : switch (runnerType) {
-            case DOCKER -> DockerScriptRunner.from(this.dockerOptions);
-            case PROCESS -> new ProcessScriptRunner();
-        };
-        RunContext scriptRunnerRunContext = runContext.forScriptRunner(realScriptRunner);
-        RunnerResult runnerResult = realScriptRunner.run(scriptRunnerRunContext, this, filesToUpload, this.outputFiles);
+        RunContext scriptRunnerRunContext = runContext.forScriptRunner(this.getScriptRunner());
+
+        this.commands = this.render(runContext, commands, filesToUpload);
+
+        RunnerResult runnerResult = this.getScriptRunner().run(scriptRunnerRunContext, this, filesToUpload, this.outputFiles);
 
         Map<String, URI> outputFiles = ScriptService.uploadOutputFiles(scriptRunnerRunContext, outputDirectory);
 
@@ -157,5 +163,37 @@ public class CommandsWrapper implements ScriptCommands {
             .outputFiles(outputFiles)
             .build();
     }
-}
 
+    public ScriptRunner getScriptRunner() {
+        if (scriptRunner == null) {
+            scriptRunner = switch (runnerType) {
+                case DOCKER -> DockerScriptRunner.from(this.dockerOptions);
+                case PROCESS -> new ProcessScriptRunner();
+            };
+        }
+
+        return scriptRunner;
+    }
+
+    public String render(RunContext runContext, String command, List<String> internalStorageLocalFiles) throws IllegalVariableEvaluationException, IOException {
+        ScriptRunner scriptRunner = this.getScriptRunner();
+        return ScriptService.replaceInternalStorage(
+            this.runContext,
+            scriptRunner.additionalVars(runContext, this),
+            command,
+            (ignored, localFilePath) -> internalStorageLocalFiles.add(localFilePath),
+            scriptRunner instanceof RemoteRunnerInterface
+        );
+    }
+
+    public List<String> render(RunContext runContext, List<String> commands, List<String> internalStorageLocalFiles) throws IllegalVariableEvaluationException, IOException {
+        ScriptRunner scriptRunner = this.getScriptRunner();
+        return ScriptService.replaceInternalStorage(
+            this.runContext,
+            scriptRunner.additionalVars(runContext, this),
+            commands,
+            (ignored, localFilePath) -> internalStorageLocalFiles.add(localFilePath),
+            scriptRunner instanceof RemoteRunnerInterface
+        );
+    }
+}

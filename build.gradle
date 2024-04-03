@@ -22,6 +22,9 @@ group "io.kestra.plugin"
 
 subprojects {
     group "io.kestra.plugin"
+
+    apply plugin: "java-library"
+
     sourceCompatibility = 17
     targetCompatibility = 17
 
@@ -33,7 +36,6 @@ subprojects {
         }
     }
 
-    apply plugin: "java-library"
     apply plugin: "idea"
 
     configurations {
