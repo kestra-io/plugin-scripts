@@ -144,9 +144,8 @@ subprojects { Project subproject ->
             archiveClassifier.set(null)
             mergeServiceFiles()
             dependencies {
-                exclude(dependency {
-                    it.moduleGroup.startsWith("com.fasterxml.jackson")
-                })
+                exclude "com/fasterxml/jackson/**"
+                exclude "org/slf4j/**"
             }
         }
     }
