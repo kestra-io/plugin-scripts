@@ -69,36 +69,25 @@ public class CommandsWrapper implements ScriptCommands {
 
     public CommandsWrapper(RunContext runContext) {
         this.runContext = runContext;
-
         this.workingDirectory = runContext.tempDir();
         this.outputDirectory = this.workingDirectory.resolve(IdUtils.create());
-        //noinspection ResultOfMethodCallIgnored
-        this.outputDirectory.toFile().mkdirs();
-
-        this.additionalVars = new HashMap<>(Map.of(
-            "workingDir", workingDirectory.toAbsolutePath().toString(),
-            "outputDir", outputDirectory.toString()
-        ));
+        if (!this.outputDirectory.toFile().mkdirs()) {
+            throw new RuntimeException("Unable to create the output directory " + this.outputDirectory);
+        }
 
         this.logConsumer = new DefaultLogConsumer(runContext);
+        this.additionalVars = new HashMap<>();
+        this.env = new HashMap<>();
     }
 
-    public CommandsWrapper withEnv(Map<String, String> envs) throws IllegalVariableEvaluationException {
+    public CommandsWrapper withEnv(Map<String, String> envs) {
         return new CommandsWrapper(
             runContext,
             workingDirectory,
             outputDirectory,
             additionalVars,
             commands,
-            (envs == null ? Map.<String, String>of() : envs)
-                .entrySet()
-                .stream()
-                .map(throwFunction(r -> new AbstractMap.SimpleEntry<>(
-                        runContext.render(r.getKey(), additionalVars),
-                        runContext.render(r.getValue(), additionalVars)
-                    )
-                ))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
+            envs,
             logConsumer,
             runnerType,
             containerImage,
@@ -153,8 +142,6 @@ public class CommandsWrapper implements ScriptCommands {
         RunContext scriptRunnerRunContext = runContext.forScriptRunner(realScriptRunner);
         RunnerResult runnerResult = realScriptRunner.run(scriptRunnerRunContext, this, filesToUpload, this.outputFiles);
 
-        // FIXME should we really upload all files even if not configured via this.outputFiles ?
-        // FIXME isn't it a security risk if we upload a file that is not listed in the output files?
         Map<String, URI> outputFiles = ScriptService.uploadOutputFiles(scriptRunnerRunContext, outputDirectory);
 
         if (this.outputFiles != null) {

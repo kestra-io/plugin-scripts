@@ -178,21 +178,26 @@ public class DockerScriptRunner extends ScriptRunner {
 
 
     @Override
-    public RunnerResult run(RunContext runContext, ScriptCommands commands, List<String> filesToUpload, List<String> filesToDownload) throws Exception {
-        if (commands.getContainerImage() == null && this.image == null) {
+    public RunnerResult run(RunContext runContext, ScriptCommands scriptCommands, List<String> filesToUpload, List<String> filesToDownload) throws Exception {
+        if (scriptCommands.getContainerImage() == null && this.image == null) {
             throw new IllegalArgumentException("This script runner needs the `containerImage` property to be set");
         }
         if (this.image == null) {
-            this.image = commands.getContainerImage();
+            this.image = scriptCommands.getContainerImage();
         }
 
         Logger logger = runContext.logger();
-        String image = runContext.render(this.image, commands.getAdditionalVars());
-        AbstractLogConsumer defaultLogConsumer = commands.getLogConsumer();
+        AbstractLogConsumer defaultLogConsumer = scriptCommands.getLogConsumer();
+
+        Map<String, Object> additionalVars = scriptCommands.getAdditionalVars();
+        additionalVars.put(ScriptService.VAR_WORKING_DIR, scriptCommands.getWorkingDirectory().toString());
+        additionalVars.put(ScriptService.VAR_OUTPUT_DIR, scriptCommands.getOutputDirectory().toString());
+
+        String image = runContext.render(this.image, additionalVars);
 
         try (DockerClient dockerClient = dockerClient(runContext, image)) {
             // create container
-            CreateContainerCmd container = configure(commands, dockerClient, runContext);
+            CreateContainerCmd container = configure(scriptCommands, dockerClient, runContext, additionalVars);
 
             // pull image
             if (this.getPullPolicy() != PullPolicy.NEVER) {
@@ -205,7 +210,7 @@ public class DockerScriptRunner extends ScriptRunner {
             logger.debug(
                 "Starting command with container id {} [{}]",
                 exec.getId(),
-                String.join(" ", commands.getCommands())
+                String.join(" ", scriptCommands.getCommands())
             );
 
             AtomicBoolean ended = new AtomicBoolean(false);
@@ -319,7 +324,7 @@ public class DockerScriptRunner extends ScriptRunner {
         return DockerService.client(dockerClientConfig);
     }
 
-    private CreateContainerCmd configure(ScriptCommands commands, DockerClient dockerClient, RunContext runContext) throws IllegalVariableEvaluationException, IOException {
+    private CreateContainerCmd configure(ScriptCommands scriptCommands, DockerClient dockerClient, RunContext runContext, Map<String, Object> additionalVars) throws IllegalVariableEvaluationException, IOException {
         boolean volumesEnabled = runContext.<Boolean>pluginConfiguration("volume-enabled").orElse(Boolean.FALSE);
         if (!volumesEnabled) {
             // check the legacy property and emit a warning if used
@@ -333,8 +338,7 @@ public class DockerScriptRunner extends ScriptRunner {
             }
         }
 
-        Path workingDirectory = commands.getWorkingDirectory();
-        Map<String, Object> additionalVars = commands.getAdditionalVars();
+        Path workingDirectory = scriptCommands.getWorkingDirectory();
         String image = runContext.render(this.image, additionalVars);
 
 
@@ -343,14 +347,15 @@ public class DockerScriptRunner extends ScriptRunner {
 
         HostConfig hostConfig = new HostConfig();
 
-        if (commands.getEnv() != null && !commands.getEnv().isEmpty()) {
-            container.withEnv(commands.getEnv()
-                .entrySet()
-                .stream()
-                .map(throwFunction(r -> r.getKey() + "=" + r.getValue()))
-                .collect(Collectors.toList())
-            );
-        }
+        Map<String, String> environment = new HashMap<>(runContext.renderMap(scriptCommands.getEnv(), additionalVars));
+        environment.put(ScriptService.ENV_WORKING_DIR, scriptCommands.getWorkingDirectory().toString());
+        environment.put(ScriptService.ENV_OUTPUT_DIR, scriptCommands.getOutputDirectory().toString());
+        container.withEnv(environment
+            .entrySet()
+            .stream()
+            .map(r -> r.getKey() + "=" + r.getValue())
+            .collect(Collectors.toList())
+        );
 
         if (workingDirectory != null) {
             container.withWorkingDir(workingDirectory.toFile().getAbsolutePath());
@@ -446,7 +451,7 @@ public class DockerScriptRunner extends ScriptRunner {
             hostConfig.withNetworkMode(runContext.render(this.getNetworkMode(), additionalVars));
         }
 
-        List<String> command = ScriptService.uploadInputFiles(runContext, runContext.render(commands.getCommands(), commands.getAdditionalVars()));
+        List<String> command = ScriptService.uploadInputFiles(runContext, runContext.render(scriptCommands.getCommands(), additionalVars));
         return container
             .withHostConfig(hostConfig)
             .withCmd(command)
