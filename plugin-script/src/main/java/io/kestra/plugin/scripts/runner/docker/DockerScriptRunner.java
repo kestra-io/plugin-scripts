@@ -21,7 +21,6 @@ import io.kestra.core.utils.RetryUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.core.convert.format.ReadableBytesTypeConverter;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -189,9 +188,7 @@ public class DockerScriptRunner extends ScriptRunner {
         Logger logger = runContext.logger();
         AbstractLogConsumer defaultLogConsumer = scriptCommands.getLogConsumer();
 
-        Map<String, Object> additionalVars = scriptCommands.getAdditionalVars();
-        additionalVars.put(ScriptService.VAR_WORKING_DIR, scriptCommands.getWorkingDirectory().toString());
-        additionalVars.put(ScriptService.VAR_OUTPUT_DIR, scriptCommands.getOutputDirectory().toString());
+        Map<String, Object> additionalVars = this.additionalVars(runContext, scriptCommands);
 
         String image = runContext.render(this.image, additionalVars);
 
@@ -304,6 +301,14 @@ public class DockerScriptRunner extends ScriptRunner {
         }
     }
 
+    @Override
+    public Map<String, Object> runnerAdditionalVars(RunContext runContext, ScriptCommands scriptCommands) {
+        return Map.of(
+            ScriptService.VAR_WORKING_DIR, scriptCommands.getWorkingDirectory().toString(),
+            ScriptService.VAR_OUTPUT_DIR, scriptCommands.getOutputDirectory().toString()
+        );
+    }
+
     private DockerClient dockerClient(RunContext runContext, String image) throws IOException, IllegalVariableEvaluationException {
         DefaultDockerClientConfig.Builder dockerClientConfigBuilder = DefaultDockerClientConfig.createDefaultConfigBuilder()
             .withDockerHost(DockerService.findHost(runContext, this.host));
@@ -324,7 +329,7 @@ public class DockerScriptRunner extends ScriptRunner {
         return DockerService.client(dockerClientConfig);
     }
 
-    private CreateContainerCmd configure(ScriptCommands scriptCommands, DockerClient dockerClient, RunContext runContext, Map<String, Object> additionalVars) throws IllegalVariableEvaluationException, IOException {
+    private CreateContainerCmd configure(ScriptCommands scriptCommands, DockerClient dockerClient, RunContext runContext, Map<String, Object> additionalVars) throws IllegalVariableEvaluationException {
         boolean volumesEnabled = runContext.<Boolean>pluginConfiguration("volume-enabled").orElse(Boolean.FALSE);
         if (!volumesEnabled) {
             // check the legacy property and emit a warning if used
@@ -347,10 +352,7 @@ public class DockerScriptRunner extends ScriptRunner {
 
         HostConfig hostConfig = new HostConfig();
 
-        Map<String, String> environment = new HashMap<>(runContext.renderMap(scriptCommands.getEnv(), additionalVars));
-        environment.put(ScriptService.ENV_WORKING_DIR, scriptCommands.getWorkingDirectory().toString());
-        environment.put(ScriptService.ENV_OUTPUT_DIR, scriptCommands.getOutputDirectory().toString());
-        container.withEnv(environment
+        container.withEnv(this.env(runContext, scriptCommands)
             .entrySet()
             .stream()
             .map(r -> r.getKey() + "=" + r.getValue())
@@ -451,10 +453,9 @@ public class DockerScriptRunner extends ScriptRunner {
             hostConfig.withNetworkMode(runContext.render(this.getNetworkMode(), additionalVars));
         }
 
-        List<String> command = ScriptService.uploadInputFiles(runContext, runContext.render(scriptCommands.getCommands(), additionalVars));
         return container
             .withHostConfig(hostConfig)
-            .withCmd(command)
+            .withCmd(scriptCommands.getCommands())
             .withAttachStderr(true)
             .withAttachStdout(true);
     }
