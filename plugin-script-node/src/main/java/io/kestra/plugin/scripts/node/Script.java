@@ -4,6 +4,7 @@ import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.script.ScriptService;
+import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
@@ -11,14 +12,14 @@ import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import jakarta.validation.constraints.NotNull;
 
 @SuperBuilder
 @ToString
@@ -141,15 +142,19 @@ public class Script extends AbstractExecScript {
     public ScriptOutput run(RunContext runContext) throws Exception {
         CommandsWrapper commands = this.commands(runContext);
 
-        Path path = runContext.tempFile(
-            ScriptService.replaceInternalStorage(runContext, runContext.render(this.script, commands.getAdditionalVars())).getBytes(StandardCharsets.UTF_8),
-            ".js"
+        Map<String, String> inputFiles = FilesService.inputFiles(runContext, commands.getScriptRunner().additionalVars(runContext, commands), this.getInputFiles());
+        List<String> internalToLocalFiles = new ArrayList<>();
+        Path relativeScriptPath = runContext.tempDir().relativize(runContext.tempFile(".js"));
+        inputFiles.put(
+            relativeScriptPath.toString(),
+            commands.render(runContext, this.script, internalToLocalFiles)
         );
+        commands = commands.withInputFiles(inputFiles);
 
         List<String> commandsArgs  = ScriptService.scriptCommands(
             this.interpreter,
             this.beforeCommands,
-            String.join(" ", "node", path.toAbsolutePath().toString())
+            String.join(" ", "node", relativeScriptPath.toString())
         );
 
         return commands
