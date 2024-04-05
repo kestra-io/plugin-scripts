@@ -1,8 +1,8 @@
 package io.kestra.plugin.scripts.runners;
 
 import com.google.common.collect.ImmutableMap;
-import io.kestra.core.models.script.RunnerResult;
-import io.kestra.core.models.script.ScriptCommands;
+import io.kestra.core.models.tasks.runners.RunnerResult;
+import io.kestra.core.models.tasks.runners.TaskCommands;
 import io.kestra.core.models.tasks.Task;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
@@ -10,7 +10,7 @@ import io.kestra.core.utils.Await;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
-import io.kestra.plugin.scripts.runner.docker.DockerScriptRunner;
+import io.kestra.plugin.scripts.runner.docker.DockerTaskRunner;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
@@ -45,14 +45,14 @@ public class LogConsumerTest {
         };
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());
         String outputValue = "a".repeat(10000);
-        ScriptCommands scriptCommands = new CommandsWrapper(runContext).withCommands(List.of(
+        TaskCommands taskCommands = new CommandsWrapper(runContext).withCommands(List.of(
             "/bin/sh", "-c",
             "echo \"::{\\\"outputs\\\":{\\\"someOutput\\\":\\\"" + outputValue + "\\\"}}::\"\n" +
                 "echo -n another line"
         ));
-        RunnerResult run = DockerScriptRunner.from(DockerOptions.builder().image("alpine").build()).run(
+        RunnerResult run = DockerTaskRunner.from(DockerOptions.builder().image("alpine").build()).run(
             runContext,
-            scriptCommands,
+            taskCommands,
             Collections.emptyList(),
             Collections.emptyList()
         );
@@ -81,14 +81,14 @@ public class LogConsumerTest {
                     .append(Integer.toString(i).repeat(800)).append("\r")
                 .append(Integer.toString(i).repeat(2000)).append("\r");
         }
-        ScriptCommands scriptCommands = new CommandsWrapper(runContext).withCommands(List.of(
+        TaskCommands taskCommands = new CommandsWrapper(runContext).withCommands(List.of(
             "/bin/sh", "-c",
             "echo " + outputValue +
                 "echo -n another line"
         ));
-        RunnerResult run = DockerScriptRunner.from(DockerOptions.builder().image("alpine").build()).run(
+        RunnerResult run = DockerTaskRunner.from(DockerOptions.builder().image("alpine").build()).run(
             runContext,
-            scriptCommands,
+            taskCommands,
             Collections.emptyList(),
             Collections.emptyList()
         );

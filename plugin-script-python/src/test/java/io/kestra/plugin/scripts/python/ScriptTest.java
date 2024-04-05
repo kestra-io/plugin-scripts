@@ -2,7 +2,7 @@ package io.kestra.plugin.scripts.python;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.AbstractMetricEntry;
-import io.kestra.core.models.script.ScriptException;
+import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
@@ -74,7 +74,7 @@ class ScriptTest {
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
-        ScriptException pythonException = assertThrows(ScriptException.class, () -> {
+        TaskException pythonException = assertThrows(TaskException.class, () -> {
             python.run(runContext);
         });
 

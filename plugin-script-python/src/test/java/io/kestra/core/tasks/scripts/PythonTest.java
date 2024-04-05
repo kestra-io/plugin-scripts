@@ -2,7 +2,7 @@ package io.kestra.core.tasks.scripts;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.AbstractMetricEntry;
-import io.kestra.core.models.script.ScriptException;
+import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
@@ -60,7 +60,7 @@ class PythonTest {
             .inputFiles(files)
             .build();
 
-        ScriptException pythonException = assertThrows(ScriptException.class, () -> {
+        TaskException pythonException = assertThrows(TaskException.class, () -> {
             python.run(runContext);
         });
 
