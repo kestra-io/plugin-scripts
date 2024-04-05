@@ -3,7 +3,7 @@ package io.kestra.core.tasks.scripts;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.tasks.Task;
-import io.kestra.core.models.script.ScriptService;
+import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.tasks.PluginUtilsService;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
@@ -37,7 +37,7 @@ import static io.kestra.core.utils.Rethrow.throwConsumer;
 abstract public class AbstractBash extends Task {
     @Builder.Default
     @Schema(
-        title = "The script runner."
+        title = "The task runner."
     )
     @PluginProperty
     @NotNull

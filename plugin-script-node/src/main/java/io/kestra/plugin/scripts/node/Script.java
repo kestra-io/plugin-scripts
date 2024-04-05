@@ -3,7 +3,7 @@ package io.kestra.plugin.scripts.node;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
-import io.kestra.core.models.script.ScriptService;
+import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
@@ -142,7 +142,7 @@ public class Script extends AbstractExecScript {
     public ScriptOutput run(RunContext runContext) throws Exception {
         CommandsWrapper commands = this.commands(runContext);
 
-        Map<String, String> inputFiles = FilesService.inputFiles(runContext, commands.getScriptRunner().additionalVars(runContext, commands), this.getInputFiles());
+        Map<String, String> inputFiles = FilesService.inputFiles(runContext, commands.getTaskRunner().additionalVars(runContext, commands), this.getInputFiles());
         List<String> internalToLocalFiles = new ArrayList<>();
         Path relativeScriptPath = runContext.tempDir().relativize(runContext.tempFile(".js"));
         inputFiles.put(

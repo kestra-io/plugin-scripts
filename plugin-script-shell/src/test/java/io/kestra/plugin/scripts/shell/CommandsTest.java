@@ -3,7 +3,7 @@ package io.kestra.plugin.scripts.shell;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
 import io.kestra.core.models.executions.LogEntry;
-import io.kestra.core.models.script.ScriptException;
+import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
@@ -85,13 +85,13 @@ class CommandsTest {
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptException scriptException = assertThrows(ScriptException.class, () -> {
+        TaskException TaskException = assertThrows(TaskException.class, () -> {
             bash.run(runContext);
         });
 
-        assertThat(scriptException.getExitCode(), is(66));
-        assertThat(scriptException.getStdOutSize(), is(0));
-        assertThat(scriptException.getStdErrSize(), is(1));
+        assertThat(TaskException.getExitCode(), is(66));
+        assertThat(TaskException.getStdOutSize(), is(0));
+        assertThat(TaskException.getStdErrSize(), is(1));
     }
 
     @ParameterizedTest
@@ -107,13 +107,13 @@ class CommandsTest {
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptException scriptException = assertThrows(ScriptException.class, () -> {
+        TaskException TaskException = assertThrows(TaskException.class, () -> {
             bash.run(runContext);
         });
 
-        assertThat(scriptException.getExitCode(), is(127));
-        assertThat(scriptException.getStdOutSize(), is(0));
-        assertThat(scriptException.getStdErrSize(), is(1));
+        assertThat(TaskException.getExitCode(), is(127));
+        assertThat(TaskException.getStdOutSize(), is(0));
+        assertThat(TaskException.getStdErrSize(), is(1));
     }
 
     @ParameterizedTest

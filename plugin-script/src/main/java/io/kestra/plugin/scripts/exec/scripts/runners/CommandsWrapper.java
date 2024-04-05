@@ -1,9 +1,9 @@
 package io.kestra.plugin.scripts.exec.scripts.runners;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
-import io.kestra.core.models.script.DefaultLogConsumer;
-import io.kestra.core.models.script.*;
-import io.kestra.core.models.script.types.ProcessScriptRunner;
+import io.kestra.core.models.tasks.runners.DefaultLogConsumer;
+import io.kestra.core.models.tasks.runners.*;
+import io.kestra.core.models.tasks.runners.types.ProcessTaskRunner;
 import io.kestra.core.models.tasks.NamespaceFiles;
 import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.NamespaceFilesService;
@@ -12,7 +12,7 @@ import io.kestra.core.utils.IdUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.plugin.scripts.runner.docker.DockerScriptRunner;
+import io.kestra.plugin.scripts.runner.docker.DockerTaskRunner;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.With;
@@ -27,7 +27,7 @@ import java.util.Map;
 
 @AllArgsConstructor
 @Getter
-public class CommandsWrapper implements ScriptCommands {
+public class CommandsWrapper implements TaskCommands {
     private RunContext runContext;
 
     private Path workingDirectory;
@@ -42,7 +42,7 @@ public class CommandsWrapper implements ScriptCommands {
     private Map<String, String> env;
 
     @With
-    private io.kestra.core.models.script.AbstractLogConsumer logConsumer;
+    private io.kestra.core.models.tasks.runners.AbstractLogConsumer logConsumer;
 
     @With
     private RunnerType runnerType;
@@ -51,7 +51,7 @@ public class CommandsWrapper implements ScriptCommands {
     private String containerImage;
 
     @With
-    private ScriptRunner scriptRunner;
+    private TaskRunner taskRunner;
 
     @With
     private DockerOptions dockerOptions;
@@ -92,7 +92,7 @@ public class CommandsWrapper implements ScriptCommands {
             logConsumer,
             runnerType,
             containerImage,
-            scriptRunner,
+            taskRunner,
             dockerOptions,
             warningOnStdErr,
             namespaceFiles,
@@ -138,20 +138,20 @@ public class CommandsWrapper implements ScriptCommands {
         }
 
         if (this.inputFiles != null) {
-            Map<String, String> finalInputFiles = FilesService.inputFiles(runContext, this.getScriptRunner().additionalVars(runContext, this), this.inputFiles);
+            Map<String, String> finalInputFiles = FilesService.inputFiles(runContext, this.getTaskRunner().additionalVars(runContext, this), this.inputFiles);
             filesToUpload.addAll(finalInputFiles.keySet());
         }
 
-        RunContext scriptRunnerRunContext = runContext.forScriptRunner(this.getScriptRunner());
+        RunContext taskRunnerRunContext = runContext.forTaskRunner(this.getTaskRunner());
 
         this.commands = this.render(runContext, commands, filesToUpload);
 
-        RunnerResult runnerResult = this.getScriptRunner().run(scriptRunnerRunContext, this, filesToUpload, this.outputFiles);
+        RunnerResult runnerResult = this.getTaskRunner().run(taskRunnerRunContext, this, filesToUpload, this.outputFiles);
 
-        Map<String, URI> outputFiles = ScriptService.uploadOutputFiles(scriptRunnerRunContext, outputDirectory);
+        Map<String, URI> outputFiles = ScriptService.uploadOutputFiles(taskRunnerRunContext, outputDirectory);
 
         if (this.outputFiles != null) {
-            outputFiles.putAll(FilesService.outputFiles(scriptRunnerRunContext, this.outputFiles));
+            outputFiles.putAll(FilesService.outputFiles(taskRunnerRunContext, this.outputFiles));
         }
 
         return ScriptOutput.builder()
@@ -164,36 +164,36 @@ public class CommandsWrapper implements ScriptCommands {
             .build();
     }
 
-    public ScriptRunner getScriptRunner() {
-        if (scriptRunner == null) {
-            scriptRunner = switch (runnerType) {
-                case DOCKER -> DockerScriptRunner.from(this.dockerOptions);
-                case PROCESS -> new ProcessScriptRunner();
+    public TaskRunner getTaskRunner() {
+        if (taskRunner == null) {
+            taskRunner = switch (runnerType) {
+                case DOCKER -> DockerTaskRunner.from(this.dockerOptions);
+                case PROCESS -> new ProcessTaskRunner();
             };
         }
 
-        return scriptRunner;
+        return taskRunner;
     }
 
     public String render(RunContext runContext, String command, List<String> internalStorageLocalFiles) throws IllegalVariableEvaluationException, IOException {
-        ScriptRunner scriptRunner = this.getScriptRunner();
+        TaskRunner taskRunner = this.getTaskRunner();
         return ScriptService.replaceInternalStorage(
             this.runContext,
-            scriptRunner.additionalVars(runContext, this),
+            taskRunner.additionalVars(runContext, this),
             command,
             (ignored, localFilePath) -> internalStorageLocalFiles.add(localFilePath),
-            scriptRunner instanceof RemoteRunnerInterface
+            taskRunner instanceof RemoteRunnerInterface
         );
     }
 
     public List<String> render(RunContext runContext, List<String> commands, List<String> internalStorageLocalFiles) throws IllegalVariableEvaluationException, IOException {
-        ScriptRunner scriptRunner = this.getScriptRunner();
+        TaskRunner taskRunner = this.getTaskRunner();
         return ScriptService.replaceInternalStorage(
             this.runContext,
-            scriptRunner.additionalVars(runContext, this),
+            taskRunner.additionalVars(runContext, this),
             commands,
             (ignored, localFilePath) -> internalStorageLocalFiles.add(localFilePath),
-            scriptRunner instanceof RemoteRunnerInterface
+            taskRunner instanceof RemoteRunnerInterface
         );
     }
 }
