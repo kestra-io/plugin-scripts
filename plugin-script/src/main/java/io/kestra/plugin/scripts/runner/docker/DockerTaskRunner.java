@@ -13,7 +13,7 @@ import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.ConnectionC
 import com.google.common.annotations.Beta;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.PluginProperty;
-import io.kestra.core.models.script.*;
+import io.kestra.core.models.tasks.runners.*;
 import io.kestra.core.models.tasks.retrys.Exponential;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.utils.Await;
@@ -46,13 +46,13 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @NoArgsConstructor
 @Beta
 @Schema(
-    title = "A script runner that runs a script inside a container in a Docker compatible engine.",
+    title = "A task runner that runs a script inside a container in a Docker compatible engine.",
     description = """
-        This script runner is container-based so the `containerImage` property must be set.
+        This task runner is container-based so the `containerImage` property must be set.
         In case a Kestra Worker that runs this script is terminated, the container will still run until completion.
         This is not an issue when using Kestra itself in a container with Docker-In-Docker (dind) as both will be restarted."""
 )
-public class DockerScriptRunner extends ScriptRunner {
+public class DockerTaskRunner extends TaskRunner {
     private static final ReadableBytesTypeConverter READABLE_BYTES_TYPE_CONVERTER = new ReadableBytesTypeConverter();
     public static final Pattern NEWLINE_PATTERN = Pattern.compile("([^\\r\\n]+)[\\r\\n]+");
 
@@ -76,7 +76,7 @@ public class DockerScriptRunner extends ScriptRunner {
     @PluginProperty(dynamic = true)
     private Credentials credentials;
 
-    // used for backward compatibility with the old script runner facility
+    // used for backward compatibility with the old task runner facility
     @Schema(hidden = true)
     protected String image;
 
@@ -152,12 +152,12 @@ public class DockerScriptRunner extends ScriptRunner {
     @PluginProperty(dynamic = true)
     private String shmSize;
 
-    public static DockerScriptRunner from(DockerOptions dockerOptions) {
+    public static DockerTaskRunner from(DockerOptions dockerOptions) {
         if (dockerOptions == null) {
-            return DockerScriptRunner.builder().build();
+            return DockerTaskRunner.builder().build();
         }
 
-        return DockerScriptRunner.builder()
+        return DockerTaskRunner.builder()
             .host(dockerOptions.getHost())
             .config(dockerOptions.getConfig())
             .credentials(dockerOptions.getCredentials())
@@ -177,24 +177,24 @@ public class DockerScriptRunner extends ScriptRunner {
 
 
     @Override
-    public RunnerResult run(RunContext runContext, ScriptCommands scriptCommands, List<String> filesToUpload, List<String> filesToDownload) throws Exception {
-        if (scriptCommands.getContainerImage() == null && this.image == null) {
-            throw new IllegalArgumentException("This script runner needs the `containerImage` property to be set");
+    public RunnerResult run(RunContext runContext, TaskCommands taskCommands, List<String> filesToUpload, List<String> filesToDownload) throws Exception {
+        if (taskCommands.getContainerImage() == null && this.image == null) {
+            throw new IllegalArgumentException("This task runner needs the `containerImage` property to be set");
         }
         if (this.image == null) {
-            this.image = scriptCommands.getContainerImage();
+            this.image = taskCommands.getContainerImage();
         }
 
         Logger logger = runContext.logger();
-        AbstractLogConsumer defaultLogConsumer = scriptCommands.getLogConsumer();
+        AbstractLogConsumer defaultLogConsumer = taskCommands.getLogConsumer();
 
-        Map<String, Object> additionalVars = this.additionalVars(runContext, scriptCommands);
+        Map<String, Object> additionalVars = this.additionalVars(runContext, taskCommands);
 
         String image = runContext.render(this.image, additionalVars);
 
         try (DockerClient dockerClient = dockerClient(runContext, image)) {
             // create container
-            CreateContainerCmd container = configure(scriptCommands, dockerClient, runContext, additionalVars);
+            CreateContainerCmd container = configure(taskCommands, dockerClient, runContext, additionalVars);
 
             // pull image
             if (this.getPullPolicy() != PullPolicy.NEVER) {
@@ -207,7 +207,7 @@ public class DockerScriptRunner extends ScriptRunner {
             logger.debug(
                 "Starting command with container id {} [{}]",
                 exec.getId(),
-                String.join(" ", scriptCommands.getCommands())
+                String.join(" ", taskCommands.getCommands())
             );
 
             AtomicBoolean ended = new AtomicBoolean(false);
@@ -275,7 +275,7 @@ public class DockerScriptRunner extends ScriptRunner {
                 Await.until(ended::get);
 
                 if (exitCode != 0) {
-                    throw new ScriptException(exitCode, defaultLogConsumer.getStdOutCount(), defaultLogConsumer.getStdErrCount());
+                    throw new TaskException(exitCode, defaultLogConsumer.getStdOutCount(), defaultLogConsumer.getStdErrCount());
                 } else {
                     logger.debug("Command succeed with code " + exitCode);
                 }
@@ -302,10 +302,10 @@ public class DockerScriptRunner extends ScriptRunner {
     }
 
     @Override
-    public Map<String, Object> runnerAdditionalVars(RunContext runContext, ScriptCommands scriptCommands) {
+    public Map<String, Object> runnerAdditionalVars(RunContext runContext, TaskCommands taskCommands) {
         return Map.of(
-            ScriptService.VAR_WORKING_DIR, scriptCommands.getWorkingDirectory().toString(),
-            ScriptService.VAR_OUTPUT_DIR, scriptCommands.getOutputDirectory().toString()
+            ScriptService.VAR_WORKING_DIR, taskCommands.getWorkingDirectory().toString(),
+            ScriptService.VAR_OUTPUT_DIR, taskCommands.getOutputDirectory().toString()
         );
     }
 
@@ -329,7 +329,7 @@ public class DockerScriptRunner extends ScriptRunner {
         return DockerService.client(dockerClientConfig);
     }
 
-    private CreateContainerCmd configure(ScriptCommands scriptCommands, DockerClient dockerClient, RunContext runContext, Map<String, Object> additionalVars) throws IllegalVariableEvaluationException {
+    private CreateContainerCmd configure(TaskCommands taskCommands, DockerClient dockerClient, RunContext runContext, Map<String, Object> additionalVars) throws IllegalVariableEvaluationException {
         boolean volumesEnabled = runContext.<Boolean>pluginConfiguration("volume-enabled").orElse(Boolean.FALSE);
         if (!volumesEnabled) {
             // check the legacy property and emit a warning if used
@@ -343,7 +343,7 @@ public class DockerScriptRunner extends ScriptRunner {
             }
         }
 
-        Path workingDirectory = scriptCommands.getWorkingDirectory();
+        Path workingDirectory = taskCommands.getWorkingDirectory();
         String image = runContext.render(this.image, additionalVars);
 
 
@@ -352,7 +352,7 @@ public class DockerScriptRunner extends ScriptRunner {
 
         HostConfig hostConfig = new HostConfig();
 
-        container.withEnv(this.env(runContext, scriptCommands)
+        container.withEnv(this.env(runContext, taskCommands)
             .entrySet()
             .stream()
             .map(r -> r.getKey() + "=" + r.getValue())
@@ -455,7 +455,7 @@ public class DockerScriptRunner extends ScriptRunner {
 
         return container
             .withHostConfig(hostConfig)
-            .withCmd(scriptCommands.getCommands())
+            .withCmd(taskCommands.getCommands())
             .withAttachStderr(true)
             .withAttachStdout(true);
     }

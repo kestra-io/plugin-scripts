@@ -3,7 +3,7 @@ package io.kestra.core.tasks.scripts;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
 import io.kestra.core.models.executions.AbstractMetricEntry;
-import io.kestra.core.models.script.ScriptException;
+import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.serializers.JacksonMapper;
@@ -128,7 +128,7 @@ abstract class AbstractBashTest {
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptException bashException = assertThrows(ScriptException.class, () -> {
+        TaskException bashException = assertThrows(TaskException.class, () -> {
             bash.run(runContext);
         });
 
@@ -146,7 +146,7 @@ abstract class AbstractBashTest {
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptException bashException = assertThrows(ScriptException.class, () -> {
+        TaskException bashException = assertThrows(TaskException.class, () -> {
             bash.run(runContext);
         });
 
