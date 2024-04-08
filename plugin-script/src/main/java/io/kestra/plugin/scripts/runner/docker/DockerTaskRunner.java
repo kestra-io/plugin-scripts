@@ -12,6 +12,8 @@ import com.github.dockerjava.core.NameParser;
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.ConnectionClosedException;
 import com.google.common.annotations.Beta;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
+import io.kestra.core.models.annotations.Example;
+import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.tasks.runners.*;
 import io.kestra.core.models.tasks.retrys.Exponential;
@@ -44,13 +46,61 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@Beta
 @Schema(
-    title = "A task runner that runs a script inside a container in a Docker compatible engine.",
+    title = "Task runner that executes a task inside a container in a Docker compatible engine.",
     description = """
         This task runner is container-based so the `containerImage` property must be set.
-        In case a Kestra Worker that runs this script is terminated, the container will still run until completion.
-        This is not an issue when using Kestra itself in a container with Docker-In-Docker (dind) as both will be restarted."""
+        
+        To access the task's working directory, use the `{{workingDir}}` Pebble expression or the `WORKING_DIR` environment variable. Input files and namespace files will be available in this directory.
+
+        To generate output files you can either use the `outputFiles` task's property and create a file with the same name in the task's working directory, or create any file in the output directory which can be accessed by the `{{outputDir}}` Pebble expression or the `OUTPUT_DIR` environment variables.
+         
+        Note that when the Kestra Worker running this task is terminated, the container will still run until completion, except if Kestra itself is run inside a container and Docker-In-Docker (dind) is used as the dind engine will also be terminated."""
+)
+@Plugin(
+    examples = {
+        @Example(
+            title = "Execute a Shell command.",
+            code = """
+                id: new-shell
+                namespace: myteam
+                                
+                tasks:
+                  - id: shell
+                    type: io.kestra.plugin.scripts.shell.Commands
+                    containerImage: centos
+                    taskRunner:
+                      type: io.kestra.plugin.scripts.runner.docker.DockerTaskRunner
+                    commands:
+                    - echo "Hello World\"""",
+            full = true
+        ),
+        @Example(
+            title = "Pass input files to the task, execute a Shell command, then retrieve output files.",
+            code = """
+                id: new-shell-with-file
+                namespace: myteam
+                                
+                inputs:
+                  - id: file
+                    type: FILE
+                                
+                tasks:
+                  - id: shell
+                    type: io.kestra.plugin.scripts.shell.Commands
+                    inputFiles:
+                      data.txt: "{{inputs.file}}"
+                    outputFiles:
+                      - out.txt
+                    containerImage: centos
+                    taskRunner:
+                      type: io.kestra.plugin.scripts.runner.docker.DockerTaskRunner
+                    commands:
+                    - cp {{workingDir}}/data.txt {{workingDir}}/out.txt""",
+            full = true
+        )
+    },
+    beta = true // all task runners are beta for now, but this one is stable as it was the one used before
 )
 public class DockerTaskRunner extends TaskRunner {
     private static final ReadableBytesTypeConverter READABLE_BYTES_TYPE_CONVERTER = new ReadableBytesTypeConverter();
