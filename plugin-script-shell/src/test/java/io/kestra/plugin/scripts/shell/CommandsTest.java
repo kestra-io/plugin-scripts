@@ -102,7 +102,7 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .beforeCommands(List.of("set -e"))
+            .failFast(true)
             .commands(List.of("unknown", "echo 1"))
             .build();
 
@@ -124,6 +124,7 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
+            .failFast(false)
             .commands(List.of("unknown", "echo 1"))
             .build();
 

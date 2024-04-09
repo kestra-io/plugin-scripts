@@ -88,12 +88,17 @@ public class Commands extends AbstractExecScript {
     public ScriptOutput run(RunContext runContext) throws Exception {
         List<String> commandsArgs = ScriptService.scriptCommands(
             this.interpreter,
-            this.beforeCommands,
+            getBeforeCommandsWithOptions(),
             this.commands
         );
 
         return this.commands(runContext)
             .withCommands(commandsArgs)
             .run();
+    }
+
+    @Override
+    protected List<String> getExitOnErrorCommands() {
+        return List.of("$ErrorActionPreference = \"Stop\"");
     }
 }

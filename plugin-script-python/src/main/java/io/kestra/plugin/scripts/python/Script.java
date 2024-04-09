@@ -145,7 +145,7 @@ public class Script extends AbstractExecScript {
 
         List<String> commandsArgs  = ScriptService.scriptCommands(
             this.interpreter,
-            this.beforeCommands,
+            getBeforeCommandsWithOptions(),
             String.join(" ", "python", relativeScriptPath.toString())
         );
 

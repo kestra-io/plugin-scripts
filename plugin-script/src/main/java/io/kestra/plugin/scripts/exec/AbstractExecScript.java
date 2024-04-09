@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import jakarta.validation.constraints.NotEmpty;
@@ -76,6 +77,14 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
     @NotEmpty
     protected List<String> interpreter = List.of("/bin/sh", "-c");
 
+    @Builder.Default
+    @Schema(
+        title = "Fail the task on the first command with a non-zero status.",
+        description = "If set to `false` all commands will be executed one after the other. The final state of task execution is determined by the last command. Note that this property maybe be ignored if a non compatible interpreter is specified."
+    )
+    @PluginProperty
+    protected Boolean failFast = true;
+
     private NamespaceFiles namespaceFiles;
 
     private Object inputFiles;
@@ -127,5 +136,33 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
             .withInputFiles(this.inputFiles)
             .withOutputFiles(this.outputFiles)
             .withEnableOutputDirectory(this.getOutputDirectory());
+    }
+
+    protected List<String> getBeforeCommandsWithOptions() {
+        return mayAddExitOnErrorCommands(this.beforeCommands);
+    }
+
+    protected List<String> mayAddExitOnErrorCommands(List<String> commands) {
+        if (!failFast) {
+            return commands;
+        }
+
+        if (commands == null || commands.isEmpty()) {
+            return getExitOnErrorCommands();
+        }
+
+        ArrayList<String> newCommands = new ArrayList<>(commands.size() + 1);
+        newCommands.addAll(getExitOnErrorCommands());
+        newCommands.addAll(commands);
+        return newCommands;
+    }
+
+    /**
+     * Gets the list of additional commands to be used for defining interpreter errors handling.
+     * @return   list of commands;
+     */
+    protected List<String> getExitOnErrorCommands() {
+        // errexit option may be unsupported by non-shell interpreter.
+        return List.of("set -e");
     }
 }

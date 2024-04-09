@@ -88,7 +88,7 @@ public class Script extends AbstractExecScript {
     public ScriptOutput run(RunContext runContext) throws Exception {
         List<String> commandsArgs = ScriptService.scriptCommands(
             this.interpreter,
-            this.beforeCommands,
+            getBeforeCommandsWithOptions(),
             this.script
         );
 
