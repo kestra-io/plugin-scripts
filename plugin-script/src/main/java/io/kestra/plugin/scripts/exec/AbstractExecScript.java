@@ -82,7 +82,14 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
 
     private List<String> outputFiles;
 
-    public abstract DockerOptions getDocker();
+    @Schema(
+        title = "Whether to setup the output directory mechanism.",
+        description = "Required to use the {{ outputDir }} expression. Note that it could increase the starting time.",
+        defaultValue = "false"
+    )
+    private Boolean outputDirectory;
+
+    abstract public DockerOptions getDocker();
 
     @Schema(
         title = "The task runner container image, only used if the task runner is container-based."
@@ -112,12 +119,13 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
         return new CommandsWrapper(runContext)
             .withEnv(this.getEnv())
             .withWarningOnStdErr(this.getWarningOnStdErr())
-            .withRunnerType(this.getRunner())
+            .withRunnerType(this.taskRunner == null ? this.getRunner() : null)
             .withContainerImage(this.getContainerImage())
             .withTaskRunner(this.taskRunner)
             .withDockerOptions(this.injectDefaults(getDocker()))
             .withNamespaceFiles(this.namespaceFiles)
             .withInputFiles(this.inputFiles)
-            .withOutputFiles(this.outputFiles);
+            .withOutputFiles(this.outputFiles)
+            .withEnableOutputDirectory(this.getOutputDirectory());
     }
 }
