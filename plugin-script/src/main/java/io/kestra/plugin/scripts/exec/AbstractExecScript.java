@@ -36,12 +36,6 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
     protected RunnerType runner = RunnerType.DOCKER;
 
     @Schema(
-        title = "The task runner container image, only used if the task runner is container-based."
-    )
-    @PluginProperty
-    protected String containerImage;
-
-    @Schema(
         title = "The task runner to use.",
         description = "Task runners are provided by plugins, each have their own properties."
     )
@@ -88,11 +82,17 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
 
     private List<String> outputFiles;
 
-    abstract public DockerOptions getDocker();
+    public abstract DockerOptions getDocker();
+
+    @Schema(
+        title = "The task runner container image, only used if the task runner is container-based."
+    )
+    @PluginProperty(dynamic = true)
+    public abstract String getContainerImage();
 
     /**
-     * Allow to set Docker options defaults values.
-     * To make it works, it is advised to set the 'docker' field like:
+     * Allow setting Docker options defaults values.
+     * To make it work, it is advised to set the 'docker' field like:
      *
      * <pre>{@code
      *     @Schema(
@@ -113,7 +113,7 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
             .withEnv(this.getEnv())
             .withWarningOnStdErr(this.getWarningOnStdErr())
             .withRunnerType(this.getRunner())
-            .withContainerImage(this.containerImage)
+            .withContainerImage(this.getContainerImage())
             .withTaskRunner(this.taskRunner)
             .withDockerOptions(this.injectDefaults(getDocker()))
             .withNamespaceFiles(this.namespaceFiles)
