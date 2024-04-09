@@ -109,12 +109,17 @@ public class Script extends AbstractExecScript {
 
         List<String> commandsArgs = ScriptService.scriptCommands(
             this.interpreter,
-            this.beforeCommands,
+            getBeforeCommandsWithOptions(),
             ".\\" + relativeScriptPath
         );
 
         return commands
             .withCommands(commandsArgs)
             .run();
+    }
+
+    @Override
+    protected List<String> getExitOnErrorCommands() {
+        return List.of("$ErrorActionPreference = \"Stop\"");
     }
 }
