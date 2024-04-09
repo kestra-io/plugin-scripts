@@ -113,6 +113,9 @@ public class Script extends AbstractExecScript {
     @Builder.Default
     protected DockerOptions docker = DockerOptions.builder().build();
 
+    @Builder.Default
+    protected String containerImage = DEFAULT_IMAGE;
+
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `Rscript main.R` or `python main.py`, use the corresponding `Commands` task for a given language instead."
     )

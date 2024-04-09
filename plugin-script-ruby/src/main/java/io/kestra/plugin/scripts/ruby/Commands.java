@@ -92,6 +92,9 @@ public class Commands extends AbstractExecScript {
     @Builder.Default
     protected DockerOptions docker = DockerOptions.builder().build();
 
+    @Builder.Default
+    protected String containerImage = DEFAULT_IMAGE;
+
     @Schema(
         title = "The commands to run"
     )
