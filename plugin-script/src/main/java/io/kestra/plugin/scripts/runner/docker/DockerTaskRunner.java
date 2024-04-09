@@ -10,13 +10,12 @@ import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.NameParser;
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.ConnectionClosedException;
-import com.google.common.annotations.Beta;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
-import io.kestra.core.models.tasks.runners.*;
 import io.kestra.core.models.tasks.retrys.Exponential;
+import io.kestra.core.models.tasks.runners.*;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.utils.Await;
 import io.kestra.core.utils.RetryUtils;
@@ -352,10 +351,14 @@ public class DockerTaskRunner extends TaskRunner {
 
     @Override
     public Map<String, Object> runnerAdditionalVars(RunContext runContext, TaskCommands taskCommands) {
-        return Map.of(
-            ScriptService.VAR_WORKING_DIR, taskCommands.getWorkingDirectory().toString(),
-            ScriptService.VAR_OUTPUT_DIR, taskCommands.getOutputDirectory().toString()
-        );
+        Map<String, Object> vars = new HashMap<>();
+        vars.put(ScriptService.VAR_WORKING_DIR, taskCommands.getWorkingDirectory().toString());
+
+        if (taskCommands.outputDirectoryEnabled()) {
+            vars.put(ScriptService.VAR_OUTPUT_DIR, taskCommands.getOutputDirectory().toString());
+        }
+
+        return vars;
     }
 
     private DockerClient dockerClient(RunContext runContext, String image) throws IOException, IllegalVariableEvaluationException {

@@ -68,14 +68,12 @@ public class CommandsWrapper implements TaskCommands {
     @With
     private List<String> outputFiles;
 
+    @With
+    private Boolean enableOutputDirectory;
+
     public CommandsWrapper(RunContext runContext) {
         this.runContext = runContext;
         this.workingDirectory = runContext.tempDir();
-        this.outputDirectory = this.workingDirectory.resolve(IdUtils.create());
-        if (!this.outputDirectory.toFile().mkdirs()) {
-            throw new RuntimeException("Unable to create the output directory " + this.outputDirectory);
-        }
-
         this.logConsumer = new DefaultLogConsumer(runContext);
         this.additionalVars = new HashMap<>();
         this.env = new HashMap<>();
@@ -85,7 +83,7 @@ public class CommandsWrapper implements TaskCommands {
         return new CommandsWrapper(
             runContext,
             workingDirectory,
-            outputDirectory,
+            getOutputDirectory(),
             additionalVars,
             commands,
             envs,
@@ -97,7 +95,8 @@ public class CommandsWrapper implements TaskCommands {
             warningOnStdErr,
             namespaceFiles,
             inputFiles,
-            outputFiles
+            outputFiles,
+            enableOutputDirectory
         );
     }
 
@@ -137,18 +136,22 @@ public class CommandsWrapper implements TaskCommands {
             injectedFiles.forEach(uri -> filesToUpload.add(uri.toString().substring(1))); // we need to remove the leading '/'
         }
 
+        TaskRunner realTaskRunner = this.getTaskRunner();
         if (this.inputFiles != null) {
-            Map<String, String> finalInputFiles = FilesService.inputFiles(runContext, this.getTaskRunner().additionalVars(runContext, this), this.inputFiles);
+            Map<String, String> finalInputFiles = FilesService.inputFiles(runContext, realTaskRunner.additionalVars(runContext, this), this.inputFiles);
             filesToUpload.addAll(finalInputFiles.keySet());
         }
 
-        RunContext taskRunnerRunContext = runContext.forTaskRunner(this.getTaskRunner());
+        RunContext taskRunnerRunContext = runContext.forTaskRunner(realTaskRunner);
 
         this.commands = this.render(runContext, commands, filesToUpload);
 
-        RunnerResult runnerResult = this.getTaskRunner().run(taskRunnerRunContext, this, filesToUpload, this.outputFiles);
+        RunnerResult runnerResult = realTaskRunner.run(taskRunnerRunContext, this, filesToUpload, this.outputFiles);
 
-        Map<String, URI> outputFiles = ScriptService.uploadOutputFiles(taskRunnerRunContext, outputDirectory);
+        Map<String, URI> outputFiles = new HashMap<>();
+        if (this.outputDirectoryEnabled()) {
+            outputFiles.putAll(ScriptService.uploadOutputFiles(taskRunnerRunContext, this.getOutputDirectory()));
+        }
 
         if (this.outputFiles != null) {
             outputFiles.putAll(FilesService.outputFiles(taskRunnerRunContext, this.outputFiles));
@@ -173,6 +176,26 @@ public class CommandsWrapper implements TaskCommands {
         }
 
         return taskRunner;
+    }
+
+    public Boolean getEnableOutputDirectory() {
+        if (this.enableOutputDirectory == null) {
+            // For compatibility reasons, if legacy runnerType property is used, we enable the output directory
+            return this.runnerType != null;
+        }
+
+        return this.enableOutputDirectory;
+    }
+
+    public Path getOutputDirectory() {
+        if (this.outputDirectory == null) {
+            this.outputDirectory = this.workingDirectory.resolve(IdUtils.create());
+            if (!this.outputDirectory.toFile().mkdirs()) {
+                throw new RuntimeException("Unable to create the output directory " + this.outputDirectory);
+            }
+        }
+
+        return this.outputDirectory;
     }
 
     public String render(RunContext runContext, String command, List<String> internalStorageLocalFiles) throws IllegalVariableEvaluationException, IOException {
