@@ -64,11 +64,10 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
             code = """
                 id: new-shell
                 namespace: myteam
-                                
+                
                 tasks:
                   - id: shell
                     type: io.kestra.plugin.scripts.shell.Commands
-                    containerImage: centos
                     taskRunner:
                       type: io.kestra.plugin.scripts.runner.docker.DockerTaskRunner
                     commands:
@@ -80,11 +79,11 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
             code = """
                 id: new-shell-with-file
                 namespace: myteam
-                                
+                
                 inputs:
                   - id: file
                     type: FILE
-                                
+                
                 tasks:
                   - id: shell
                     type: io.kestra.plugin.scripts.shell.Commands
