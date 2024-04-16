@@ -20,6 +20,7 @@ import lombok.With;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -71,6 +72,9 @@ public class CommandsWrapper implements TaskCommands {
     @With
     private Boolean enableOutputDirectory;
 
+    @With
+    private Duration timeout;
+
     public CommandsWrapper(RunContext runContext) {
         this.runContext = runContext;
         this.workingDirectory = runContext.tempDir();
@@ -96,7 +100,8 @@ public class CommandsWrapper implements TaskCommands {
             namespaceFiles,
             inputFiles,
             outputFiles,
-            enableOutputDirectory
+            enableOutputDirectory,
+            timeout
         );
     }
 

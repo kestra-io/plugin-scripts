@@ -135,7 +135,8 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
             .withNamespaceFiles(this.namespaceFiles)
             .withInputFiles(this.inputFiles)
             .withOutputFiles(this.outputFiles)
-            .withEnableOutputDirectory(this.getOutputDirectory());
+            .withEnableOutputDirectory(this.getOutputDirectory())
+            .withTimeout(this.getTimeout());
     }
 
     protected List<String> getBeforeCommandsWithOptions() {
