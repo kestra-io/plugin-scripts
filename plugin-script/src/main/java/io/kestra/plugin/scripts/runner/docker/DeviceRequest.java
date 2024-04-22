@@ -1,7 +1,6 @@
 package io.kestra.plugin.scripts.runner.docker;
 
 import io.kestra.core.models.annotations.PluginProperty;
-import io.micronaut.core.annotation.Introspected;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +12,6 @@ import java.util.Map;
 @SuperBuilder
 @NoArgsConstructor
 @Getter
-@Introspected
 @Schema(
     title = "A request for devices to be sent to device drivers."
 )

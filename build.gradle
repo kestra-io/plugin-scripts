@@ -25,8 +25,8 @@ subprojects {
 
     apply plugin: "java-library"
 
-    sourceCompatibility = 17
-    targetCompatibility = 17
+    sourceCompatibility = 21
+    targetCompatibility = 21
 
     repositories {
         mavenLocal()
@@ -48,18 +48,17 @@ subprojects {
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
 
-        // micronaut
-        annotationProcessor platform("io.micronaut.platform:micronaut-platform:$micronautVersion")
-        annotationProcessor "io.micronaut:micronaut-inject-java"
-        annotationProcessor "io.micronaut.validation:micronaut-validation-processor"
-
         compileOnly platform("io.micronaut.platform:micronaut-platform:$micronautVersion")
-        compileOnly "io.micronaut:micronaut-inject"
-        compileOnly "io.micronaut.validation:micronaut-validation"
+        compileOnly 'io.micronaut:micronaut-context'
         compileOnly "io.micronaut.reactor:micronaut-reactor"
 
-        // kestra
+        // Kestra
         compileOnly group: "io.kestra", name: "core", version: kestraVersion
+        annotationProcessor group: "io.kestra", name: "processor", version: kestraVersion
+
+        // Logs
+        compileOnly'org.slf4j:slf4j-api:2.0.13'
+        compileOnly 'ch.qos.logback:logback-classic:1.5.5'
     }
 }
 
@@ -83,6 +82,10 @@ subprojects {
     }
 
     dependencies {
+
+        // Kestra
+        testAnnotationProcessor group: "io.kestra", name: "processor", version: kestraVersion
+
         // lombok
         testAnnotationProcessor "org.projectlombok:lombok:" + lombokVersion
         testCompileOnly 'org.projectlombok:lombok:' + lombokVersion
