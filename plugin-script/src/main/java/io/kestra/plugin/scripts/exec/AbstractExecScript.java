@@ -33,7 +33,7 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
         description = "Only used if the `taskRunner` property is not set"
     )
     @PluginProperty
-    @NotEmpty
+    @NotNull
     protected RunnerType runner = RunnerType.DOCKER;
 
     @Schema(
@@ -41,8 +41,8 @@ public abstract class AbstractExecScript extends Task implements RunnableTask<Sc
         description = "Task runners are provided by plugins, each have their own properties."
     )
     @PluginProperty
-    @Valid
     @Beta
+    @Valid
     protected TaskRunner taskRunner;
 
     @Schema(

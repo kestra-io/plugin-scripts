@@ -20,7 +20,6 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.core.utils.Await;
 import io.kestra.core.utils.RetryUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
-import io.micronaut.core.annotation.Introspected;
 import io.micronaut.core.convert.format.ReadableBytesTypeConverter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
@@ -39,7 +38,6 @@ import java.util.stream.Collectors;
 import static io.kestra.core.utils.Rethrow.throwConsumer;
 import static io.kestra.core.utils.Rethrow.throwFunction;
 
-@Introspected
 @SuperBuilder
 @ToString
 @EqualsAndHashCode
