@@ -350,10 +350,10 @@ public class DockerTaskRunner extends TaskRunner {
     @Override
     public Map<String, Object> runnerAdditionalVars(RunContext runContext, TaskCommands taskCommands) {
         Map<String, Object> vars = new HashMap<>();
-        vars.put(ScriptService.VAR_WORKING_DIR, taskCommands.getWorkingDirectory().toString());
+        vars.put(ScriptService.VAR_WORKING_DIR, taskCommands.getWorkingDirectory());
 
         if (taskCommands.outputDirectoryEnabled()) {
-            vars.put(ScriptService.VAR_OUTPUT_DIR, taskCommands.getOutputDirectory().toString());
+            vars.put(ScriptService.VAR_OUTPUT_DIR, taskCommands.getOutputDirectory());
         }
 
         return vars;
