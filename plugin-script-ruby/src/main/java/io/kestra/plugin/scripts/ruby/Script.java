@@ -134,7 +134,7 @@ public class Script extends AbstractExecScript {
         List<String> commandsArgs = ScriptService.scriptCommands(
             this.interpreter,
             getBeforeCommandsWithOptions(),
-            String.join(" ", "ruby", relativeScriptPath.toString())
+            String.join(" ", "ruby", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString()))
         );
 
         return commands

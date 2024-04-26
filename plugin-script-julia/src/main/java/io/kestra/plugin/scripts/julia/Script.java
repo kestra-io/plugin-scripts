@@ -99,7 +99,7 @@ public class Script extends AbstractExecScript {
         List<String> commandsArgs  = ScriptService.scriptCommands(
             this.interpreter,
             getBeforeCommandsWithOptions(),
-            String.join(" ", "julia", relativeScriptPath.toString())
+            String.join(" ", "julia", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString()))
         );
 
         return commands
