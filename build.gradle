@@ -58,7 +58,7 @@ subprojects {
 
         // Logs
         compileOnly'org.slf4j:slf4j-api:2.0.13'
-        compileOnly 'ch.qos.logback:logback-classic:1.5.5'
+        compileOnly 'ch.qos.logback:logback-classic:1.5.6'
     }
 }
 
