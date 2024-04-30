@@ -54,6 +54,7 @@ subprojects {
 
         // Kestra
         compileOnly group: "io.kestra", name: "core", version: kestraVersion
+        compileOnly group: "io.kestra", name: "script", version: kestraVersion
         annotationProcessor group: "io.kestra", name: "processor", version: kestraVersion
 
         // Logs
@@ -101,6 +102,7 @@ subprojects {
 
         // test deps needed only for to have a runner
         testImplementation group: "io.kestra", name: "core", version: kestraVersion
+        testImplementation group: "io.kestra", name: "script", version: kestraVersion
         testImplementation group: "io.kestra", name: "repository-memory", version: kestraVersion
         testImplementation group: "io.kestra", name: "runner-memory", version: kestraVersion
         testImplementation group: "io.kestra", name: "storage-local", version: kestraVersion
