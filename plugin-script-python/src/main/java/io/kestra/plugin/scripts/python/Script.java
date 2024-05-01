@@ -78,7 +78,7 @@ tasks:
       image: ghcr.io/kestra-io/pydata:latest
     script: |
       import pandas as pd
-      df = pd.read_csv("https://raw.githubusercontent.com/kestra-io/datasets/main/csv/messy_dataset.csv")
+      df = pd.read_csv("https://huggingface.co/datasets/kestra/datasets/raw/main/csv/messy_dataset.csv")
       
       # Replace non-numeric age values with NaN
       df["Age"] = pd.to_numeric(df["Age"], errors="coerce")
