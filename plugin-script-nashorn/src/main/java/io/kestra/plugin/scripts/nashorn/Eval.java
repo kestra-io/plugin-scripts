@@ -35,7 +35,7 @@ import io.kestra.core.runners.RunContext;
                 "  var output = new FileOutputStream(tempFile)",
                 "  output.write('555\\n666\\n'.getBytes())",
                 "  ",
-                "  out = runContext.putTempFile(tempFile)"
+                "  out = runContext.storage().putFile(tempFile)"
             }
         )
     }
