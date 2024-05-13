@@ -25,7 +25,7 @@ class EvalTest extends io.kestra.plugin.scripts.jvm.EvalTest {
                 "var output = new FileOutputStream(tempFile)\n" +
                 "output.write('555\\n666\\n'.getBytes())\n" +
                 "\n" +
-                "out = runContext.putTempFile(tempFile)"
+                "out = runContext.storage().putFile(tempFile)"
             )
             .build();
     }

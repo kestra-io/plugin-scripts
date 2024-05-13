@@ -43,7 +43,7 @@ import io.kestra.core.runners.RunContext;
         script: |
           // logger.info('Vars: {}', runContext.getVariables())
           URI uri = new URI(runContext.variables.outputs.download.uri)
-          InputStream istream = runContext.uriToInputStream(uri)
+          InputStream istream = runContext.storage().getFile(uri)
           logger.info('Content: {}', istream.text)
                     """
             ),        
@@ -63,7 +63,7 @@ import io.kestra.core.runners.RunContext;
                 "  var output = new FileOutputStream(tempFile)",
                 "  output.write('555\\n666\\n'.getBytes())",
                 "  ",
-                "  out = runContext.putTempFile(tempFile)"
+                "  out = runContext.storage().putFile(tempFile)"
             }
         )
     }

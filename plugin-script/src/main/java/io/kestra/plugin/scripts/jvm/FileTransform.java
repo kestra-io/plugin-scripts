@@ -77,7 +77,7 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
             OutputStream output = new FileOutputStream(tempFile);
         ) {
             if (from.startsWith("kestra://")) {
-                try (BufferedReader inputStream = new BufferedReader(new InputStreamReader(runContext.uriToInputStream(URI.create(from))))) {
+                try (BufferedReader inputStream = new BufferedReader(new InputStreamReader(runContext.storage().getFile(URI.create(from))))) {
                     this.finalize(
                         runContext,
                         Flux.create(FileSerde.reader(inputStream), FluxSink.OverflowStrategy.BUFFER),
@@ -109,7 +109,7 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
 
         return Output
             .builder()
-            .uri(runContext.putTempFile(tempFile))
+            .uri(runContext.storage().putFile(tempFile))
             .build();
     }
 
