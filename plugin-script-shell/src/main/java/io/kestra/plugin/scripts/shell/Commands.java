@@ -67,11 +67,11 @@ import jakarta.validation.constraints.NotEmpty;
         @Example(
             title = "Run a PHP Docker container and execute a command.",
             code = {
-                "runner: DOCKER",
-                "docker:",
-                "  image: php",
+                "taskRunner:",
+                "  type: io.kestra.plugin.scripts.runner.docker.DockerTaskRunner",
+                "containerImage: php",
                 "commands:",
-                "  - php -r 'print(phpversion() . \"\\n\");'",
+                "  - php -r 'print(phpversion());'",
             }
         ),
         @Example(

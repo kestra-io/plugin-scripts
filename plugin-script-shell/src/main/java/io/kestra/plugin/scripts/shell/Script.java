@@ -46,7 +46,8 @@ import jakarta.validation.constraints.NotNull;
                 tasks:
                   - id: hello
                     type: io.kestra.plugin.scripts.shell.Script
-                    runner: PROCESS
+                    taskRunner:
+                      type: io.kestra.core.models.tasks.runners.types.ProcessTaskRunner
                     script: |
                       echo "Hello world!" > {{ outputDir }}/hello.txt"""
         )        
