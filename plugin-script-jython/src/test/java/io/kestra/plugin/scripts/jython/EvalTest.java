@@ -23,7 +23,7 @@ class EvalTest extends io.kestra.plugin.scripts.jvm.EvalTest {
                 "tempFile = tempfile.NamedTemporaryFile()\n" +
                 "tempFile.write('555\\n666\\n')\n" +
                 "\n" +
-                "out = runContext.putTempFile(File(tempFile.name))"
+                "out = runContext.storage().putFile(File(tempFile.name))"
             )
             .build();
     }

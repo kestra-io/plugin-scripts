@@ -24,8 +24,8 @@ import javax.script.*;
         "- `logger`: use as the standard Java logger (`logger.info('my message')`)\n" +
         "- `runContext` that allows you to:\n" +
         "  - `runContext.metric(Counter.of(\"file.size\", response.contentLength()))`: send metrics\n" +
-        "  - `runContext.uriToInputStream(URI uri)`: get a file from Kestra's internal storage\n" +
-        "  - `runContext.putTempFile(File file)`: store a file in Kestra's internal storage\n" +
+        "  - `runContext.storage().getFile(URI uri)`: get a file from Kestra's internal storage\n" +
+        "  - `runContext.storage().putFile(File file)`: store a file in Kestra's internal storage\n" +
         "\n" +
         "The stdOut & stdErr is not captured, so you must use `logger`.\n"
 )

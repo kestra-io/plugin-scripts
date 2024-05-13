@@ -237,7 +237,7 @@ abstract public class AbstractBash extends Task {
 
         // outputFiles
         outputFiles
-            .forEach(throwBiConsumer((k, v) -> uploaded.put(k, runContext.putTempFile(new File(runContext.render(v, additionalVars))))));
+            .forEach(throwBiConsumer((k, v) -> uploaded.put(k, runContext.storage().putFile(new File(runContext.render(v, additionalVars))))));
 
         // outputDirs
         outputDirs
@@ -253,7 +253,7 @@ abstract public class AbstractBash extends Task {
 
                             uploaded.put(
                                 filename,
-                                runContext.putTempFile(path.toFile(), filename)
+                                runContext.storage().putFile(path.toFile(), filename)
                             );
                         }));
                 }

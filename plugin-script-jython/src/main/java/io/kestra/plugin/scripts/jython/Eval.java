@@ -34,7 +34,7 @@ import io.kestra.core.runners.RunContext;
                 "  tempFile = tempfile.NamedTemporaryFile()",
                 "  tempFile.write('555\\n666\\n')",
                 "  ",
-                "  out = runContext.putTempFile(File(tempFile.name))"
+                "  out = runContext.storage().putFile(File(tempFile.name))"
             }
         )
     }
