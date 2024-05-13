@@ -36,8 +36,7 @@ import jakarta.validation.constraints.NotEmpty;
                 type: io.kestra.plugin.scripts.shell.Commands
                 commands:
                   - etl
-                docker:
-                  image: ghcr.io/kestra-io/rust:latest
+                containerImage: ghcr.io/kestra-io/rust:latest
                 outputFiles:
                   - "*.csv"
             """

@@ -82,8 +82,7 @@ tasks:
       - id: gitPythonScripts
         type: io.kestra.plugin.scripts.python.Commands
         warningOnStdErr: false
-        docker:
-          image: ghcr.io/kestra-io/pydata:latest
+        containerImage: ghcr.io/kestra-io/pydata:latest
         beforeCommands:
           - pip install faker > /dev/null
         commands:
@@ -142,8 +141,7 @@ tasks:
         inputFiles:
           data.csv: "{{ trigger.objects | jq('.[].uri') | first }}"
         description: this script reads a file `data.csv` from S3 trigger
-        docker:
-          image: ghcr.io/kestra-io/pydata:latest
+        containerImage: ghcr.io/kestra-io/pydata:latest
         warningOnStdErr: false
         commands:
           - python examples/scripts/clean_messy_dataset.py
