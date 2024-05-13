@@ -188,10 +188,9 @@ tasks:
         warningOnStdErr: false
         commands:
           - python examples/scripts/etl_script.py
+        containerImage: annageller/kestra:latest
         taskRunner:
           type: io.kestra.plugin.scripts.runner.docker.DockerTaskRunner
-        docker:
-          image: annageller/kestra:latest
           config: |
             {
               "auths": {
