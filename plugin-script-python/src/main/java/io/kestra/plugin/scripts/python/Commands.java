@@ -55,7 +55,8 @@ tasks:
     type: io.kestra.plugin.scripts.python.Commands
     namespaceFiles:
       enabled: true
-    runner: PROCESS
+    taskRunner:
+      type: io.kestra.core.models.tasks.runners.types.ProcessTaskRunner
     beforeCommands:
       - conda activate myCondaEnv
     commands:
@@ -81,8 +82,7 @@ tasks:
       - id: gitPythonScripts
         type: io.kestra.plugin.scripts.python.Commands
         warningOnStdErr: false
-        docker:
-          image: ghcr.io/kestra-io/pydata:latest
+        containerImage: ghcr.io/kestra-io/pydata:latest
         beforeCommands:
           - pip install faker > /dev/null
         commands:
@@ -111,7 +111,8 @@ namespace: dev
 tasks:
   - id: hello
     type: io.kestra.plugin.scripts.python.Commands
-    runner: PROCESS
+    taskRunner:
+      type: io.kestra.core.models.tasks.runners.types.ProcessTaskRunner
     commands:
       - python ml_on_gpu.py
     workerGroup:
@@ -140,8 +141,7 @@ tasks:
         inputFiles:
           data.csv: "{{ trigger.objects | jq('.[].uri') | first }}"
         description: this script reads a file `data.csv` from S3 trigger
-        docker:
-          image: ghcr.io/kestra-io/pydata:latest
+        containerImage: ghcr.io/kestra-io/pydata:latest
         warningOnStdErr: false
         commands:
           - python examples/scripts/clean_messy_dataset.py
@@ -186,9 +186,9 @@ tasks:
         warningOnStdErr: false
         commands:
           - python examples/scripts/etl_script.py
-        runner: DOCKER
-        docker:
-          image: annageller/kestra:latest
+        containerImage: annageller/kestra:latest
+        taskRunner:
+          type: io.kestra.plugin.scripts.runner.docker.DockerTaskRunner
           config: |
             {
               "auths": {

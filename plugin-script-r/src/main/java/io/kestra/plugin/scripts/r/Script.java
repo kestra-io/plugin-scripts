@@ -92,8 +92,7 @@ import java.util.Map;
                   - id: r
                     type: io.kestra.plugin.scripts.r.Script
                     warningOnStdErr: false
-                    docker:
-                      image: ghcr.io/kestra-io/rdata:latest
+                    containerImage: ghcr.io/kestra-io/rdata:latest
                     script: "{{ read('main.R') }}
                     outputFiles:
                       - "*.csv"

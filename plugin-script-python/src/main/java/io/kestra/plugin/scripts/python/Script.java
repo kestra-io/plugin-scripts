@@ -74,8 +74,7 @@ namespace: dev
 tasks:
   - id: cleanDataset
     type: io.kestra.plugin.scripts.python.Script
-    docker:
-      image: ghcr.io/kestra-io/pydata:latest
+    containerImage: ghcr.io/kestra-io/pydata:latest
     script: |
       import pandas as pd
       df = pd.read_csv("https://huggingface.co/datasets/kestra/datasets/raw/main/csv/messy_dataset.csv")
@@ -91,7 +90,8 @@ tasks:
 
   - id: readFileFromPython
     type: io.kestra.plugin.scripts.shell.Commands
-    runner: PROCESS
+    taskRunner:
+      type: io.kestra.core.models.tasks.runners.types.ProcessTaskRunner
     commands:
       - head -n 10 {{outputs.cleanDataset.outputFiles['clean_dataset.csv']}}
                 """
