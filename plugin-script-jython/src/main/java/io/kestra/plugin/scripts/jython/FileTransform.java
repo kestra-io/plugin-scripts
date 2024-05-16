@@ -29,12 +29,12 @@ tasks:
     uri: https://gorest.co.in/public/v2/users
 
   - id: ionToJSON
-    type: "io.kestra.plugin.serdes.json.JsonReader"
+    type: io.kestra.plugin.serdes.json.JsonToIon
     from: "{{outputs.download.uri}}"
     newLine: false
 
   - id: writeJSON
-    type: io.kestra.plugin.serdes.json.JsonWriter
+    type: io.kestra.plugin.serdes.json.IonToJson
     from: "{{outputs.ionToJSON.uri}}"
 
   - id: addColumn
@@ -46,7 +46,7 @@ tasks:
       row['inserted_at'] = datetime.utcnow()
 
   - id: csv
-    type: io.kestra.plugin.serdes.csv.CsvWriter
+    type: io.kestra.plugin.serdes.csv.IonToCsv
     from: "{{outputs.addColumn.uri}}"
 """
         ),           
