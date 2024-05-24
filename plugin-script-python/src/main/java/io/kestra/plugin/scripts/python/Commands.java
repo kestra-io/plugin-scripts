@@ -72,7 +72,7 @@ namespace: dev
 
 tasks:
   - id: wdir
-    type: io.kestra.core.tasks.flows.WorkingDirectory
+    type: io.kestra.plugin.core.flow.WorkingDirectory
     tasks:
       - id: cloneRepository
         type: io.kestra.plugin.git.Clone
@@ -129,7 +129,7 @@ description: process CSV file from S3 trigger
 
 tasks:
   - id: wdir
-    type: io.kestra.core.tasks.flows.WorkingDirectory
+    type: io.kestra.plugin.core.flow.WorkingDirectory
     tasks:
       - id: cloneRepo
         type: io.kestra.plugin.git.Clone
@@ -174,7 +174,7 @@ namespace: dev
 
 tasks:
   - id: wdir
-    type: io.kestra.core.tasks.flows.WorkingDirectory
+    type: io.kestra.plugin.core.flow.WorkingDirectory
     tasks:
       - id: cloneRepository
         type: io.kestra.plugin.git.Clone
