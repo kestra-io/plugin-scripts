@@ -26,7 +26,7 @@ import io.kestra.core.runners.RunContext;
 
     tasks:
       - id: request
-        type: io.kestra.plugin.fs.http.Request
+        type: io.kestra.plugin.core.http.Request
         uri: "https://dummyjson.com/products/1"
 
       - id: groovy
@@ -35,7 +35,7 @@ import io.kestra.core.runners.RunContext;
           logger.info('{{ outputs.request.body }}')
 
       - id: download
-        type: io.kestra.plugin.fs.http.Download
+        type: io.kestra.plugin.core.http.Download
         uri: "https://dummyjson.com/products/1"
 
       - id: runContextGroovy
