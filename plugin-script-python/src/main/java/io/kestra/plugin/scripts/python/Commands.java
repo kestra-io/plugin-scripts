@@ -56,7 +56,7 @@ tasks:
     namespaceFiles:
       enabled: true
     taskRunner:
-      type: io.kestra.core.models.tasks.runners.types.ProcessTaskRunner
+      type: io.kestra.plugin.core.runner.Process
     beforeCommands:
       - conda activate myCondaEnv
     commands:
@@ -112,7 +112,7 @@ tasks:
   - id: hello
     type: io.kestra.plugin.scripts.python.Commands
     taskRunner:
-      type: io.kestra.core.models.tasks.runners.types.ProcessTaskRunner
+      type: io.kestra.plugin.core.runner.Process
     commands:
       - python ml_on_gpu.py
     workerGroup:
@@ -188,7 +188,7 @@ tasks:
           - python examples/scripts/etl_script.py
         containerImage: annageller/kestra:latest
         taskRunner:
-          type: io.kestra.plugin.scripts.runner.docker.DockerTaskRunner
+          type: io.kestra.plugin.scripts.runner.docker.Docker
           config: |
             {
               "auths": {

@@ -67,7 +67,7 @@ import jakarta.validation.constraints.NotEmpty;
             title = "Run a PHP Docker container and execute a command.",
             code = {
                 "taskRunner:",
-                "  type: io.kestra.plugin.scripts.runner.docker.DockerTaskRunner",
+                "  type: io.kestra.plugin.scripts.runner.docker.Docker",
                 "containerImage: php",
                 "commands:",
                 "  - php -r 'print(phpversion());'",
