@@ -91,7 +91,7 @@ tasks:
   - id: readFileFromPython
     type: io.kestra.plugin.scripts.shell.Commands
     taskRunner:
-      type: io.kestra.core.models.tasks.runners.types.ProcessTaskRunner
+      type: io.kestra.plugin.core.runner.Process
     commands:
       - head -n 10 {{outputs.cleanDataset.outputFiles['clean_dataset.csv']}}
                 """
