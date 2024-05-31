@@ -84,7 +84,8 @@ public class Commands extends AbstractExecScript {
         List<String> commandsArgs = ScriptService.scriptCommands(
             this.interpreter,
             getBeforeCommandsWithOptions(),
-            this.commands
+            this.commands,
+            this.targetOS
         );
 
         return this.commands(runContext)

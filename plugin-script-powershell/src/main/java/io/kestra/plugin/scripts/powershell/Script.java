@@ -110,7 +110,8 @@ public class Script extends AbstractExecScript {
         List<String> commandsArgs = ScriptService.scriptCommands(
             this.interpreter,
             getBeforeCommandsWithOptions(),
-            commands.getTaskRunner().toAbsolutePath(runContext, commands, ".\\" + relativeScriptPath)
+            commands.getTaskRunner().toAbsolutePath(runContext, commands, ".\\" + relativeScriptPath, this.targetOS),
+            this.targetOS
         );
 
         return commands
