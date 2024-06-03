@@ -134,6 +134,18 @@ public class Node extends AbstractBash implements RunnableTask<io.kestra.core.ta
     }
 
     @Override
+    protected Map<String, String> finalInputFiles(RunContext runContext, Map<String, Object> additionalVar) throws IOException, IllegalVariableEvaluationException {
+        Map<String, String> map = super.finalInputFiles(runContext, additionalVar);
+
+        map.put("kestra.js", IOUtils.toString(
+            Objects.requireNonNull(Node.class.getClassLoader().getResourceAsStream("kestra.js")),
+            Charsets.UTF_8
+        ));
+
+        return map;
+    }
+
+    @Override
     public io.kestra.core.tasks.scripts.ScriptOutput run(RunContext runContext) throws Exception {
         Map<String, String> finalInputFiles = this.finalInputFiles(runContext);
 

@@ -2,21 +2,21 @@ package io.kestra.core.tasks.scripts;
 
 import com.google.common.base.Charsets;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.util.*;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 
 import static io.kestra.core.utils.Rethrow.throwSupplier;
 
@@ -162,6 +162,19 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
     @Override
     protected Map<String, String> finalInputFiles(RunContext runContext) throws IOException, IllegalVariableEvaluationException {
         Map<String, String> map = super.finalInputFiles(runContext);
+
+        map.put("kestra.py", IOUtils.toString(
+            Objects.requireNonNull(Python.class.getClassLoader().getResourceAsStream(
+                "kestra.py")),
+            Charsets.UTF_8
+        ));
+
+        return map;
+    }
+
+    @Override
+    protected Map<String, String> finalInputFiles(RunContext runContext, Map<String, Object> additionalVar) throws IOException, IllegalVariableEvaluationException {
+        Map<String, String> map = super.finalInputFiles(runContext, additionalVar);
 
         map.put("kestra.py", IOUtils.toString(
             Objects.requireNonNull(Python.class.getClassLoader().getResourceAsStream(
