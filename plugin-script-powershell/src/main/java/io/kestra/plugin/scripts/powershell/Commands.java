@@ -43,7 +43,7 @@ import jakarta.validation.constraints.NotEmpty;
     )
 })
 public class Commands extends AbstractExecScript {
-    private static final String DEFAULT_IMAGE = "mcr.microsoft.com/powershell";
+    private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/powershell:latest";
 
     @Schema(
         title = "Docker options when using the `DOCKER` runner.",
