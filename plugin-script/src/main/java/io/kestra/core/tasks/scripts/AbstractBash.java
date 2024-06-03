@@ -11,6 +11,8 @@ import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -22,8 +24,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 
 import static io.kestra.core.utils.Rethrow.throwBiConsumer;
 import static io.kestra.core.utils.Rethrow.throwConsumer;
@@ -165,6 +165,10 @@ abstract public class AbstractBash extends Task {
         return this.inputFiles != null ? new HashMap<>(PluginUtilsService.transformInputFiles(runContext, this.inputFiles)) : new HashMap<>();
     }
 
+    protected Map<String, String> finalInputFiles(RunContext runContext, Map<String, Object> additionalVars) throws IOException, IllegalVariableEvaluationException {
+        return this.inputFiles != null ? new HashMap<>(PluginUtilsService.transformInputFiles(runContext, additionalVars, this.inputFiles)) : new HashMap<>();
+    }
+
     protected Map<String, String> finalEnv() throws IOException {
         return this.env != null ? new HashMap<>(this.env) : new HashMap<>();
     }
@@ -200,7 +204,7 @@ abstract public class AbstractBash extends Task {
         PluginUtilsService.createInputFiles(
             runContext,
             workingDirectory,
-            this.finalInputFiles(runContext),
+            this.finalInputFiles(runContext, additionalVars),
             additionalVars
         );
 

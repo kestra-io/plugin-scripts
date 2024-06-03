@@ -258,4 +258,21 @@ class CommandsTest {
 
         assertThat(exception.getMessage(), containsString("manifest for alpine:999.15.6 not found"));
     }
+
+    @ParameterizedTest
+    @MethodSource("source")
+    void workingDir(RunnerType runner, DockerOptions dockerOptions) throws Exception {
+        Commands bash = Commands.builder()
+            .id("unit-test")
+            .type(Commands.class.getName())
+            .docker(dockerOptions)
+            .runner(runner)
+            .commands(List.of("echo {{ workingDir }}"))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
+        ScriptOutput run = bash.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+    }
 }
