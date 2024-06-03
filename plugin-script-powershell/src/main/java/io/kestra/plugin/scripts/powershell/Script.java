@@ -55,7 +55,7 @@ import java.util.Map;
     }
 )
 public class Script extends AbstractExecScript {
-    private static final String DEFAULT_IMAGE = "mcr.microsoft.com/powershell";
+    private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/powershell:latest";
 
     @Schema(
         title = "Docker options when using the `DOCKER` runner.",
