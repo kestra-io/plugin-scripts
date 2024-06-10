@@ -61,8 +61,8 @@ id: json_transform_using_jackson
 namespace: dev
 
 tasks:
-  - id: "file_transform"
-    type: "io.kestra.plugin.scripts.groovy.FileTransform"
+  - id: file_transform
+    type: io.kestra.plugin.scripts.groovy.FileTransform
     from: "[{\"name\":\"John Doe\", \"age\":99, \"embedded\":{\"foo\":\"bar\"}}]"
     script: |
       import com.fasterxml.jackson.*
