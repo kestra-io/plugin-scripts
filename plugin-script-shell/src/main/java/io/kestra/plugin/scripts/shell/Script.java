@@ -56,14 +56,6 @@ import jakarta.validation.constraints.NotNull;
 public class Script extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "ubuntu";
 
-    @Schema(
-        title = "Docker options when using the `DOCKER` runner.",
-        defaultValue = "{image=" + DEFAULT_IMAGE + ", pullPolicy=ALWAYS}"
-    )
-    @PluginProperty
-    @Builder.Default
-    protected DockerOptions docker = DockerOptions.builder().build();
-
     @Builder.Default
     protected String containerImage = DEFAULT_IMAGE;
 
