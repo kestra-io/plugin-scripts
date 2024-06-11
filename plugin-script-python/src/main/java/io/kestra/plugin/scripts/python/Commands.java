@@ -186,6 +186,9 @@ tasks:
         warningOnStdErr: false
         commands:
           - python examples/scripts/etl_script.py
+        outputFiles:
+          - "*.csv"
+          - "*.parquet"
         containerImage: annageller/kestra:latest
         taskRunner:
           type: io.kestra.plugin.scripts.runner.docker.Docker
@@ -197,14 +200,7 @@ tasks:
                       "password": "{{ secret('DOCKER_PAT') }}"
                   }
               }
-            }
-
-      - id: output
-        type: io.kestra.core.tasks.storages.LocalFiles
-        outputs:
-          - "*.csv"
-          - "*.parquet"
-                """
+            }"""
         ),
     @Example(
         full = true,
