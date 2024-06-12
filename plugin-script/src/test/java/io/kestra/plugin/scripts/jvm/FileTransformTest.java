@@ -3,7 +3,7 @@ package io.kestra.plugin.scripts.jvm;
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.plugin.scripts.jvm.FileTransform;
-import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import io.kestra.core.junit.annotations.KestraTest;
 import org.junit.jupiter.api.Test;
 import io.kestra.core.models.executions.AbstractMetricEntry;
 import io.kestra.core.runners.RunContext;
@@ -24,7 +24,7 @@ import jakarta.inject.Inject;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-@MicronautTest
+@KestraTest
 public abstract class FileTransformTest {
     @Inject
     protected RunContextFactory runContextFactory;

@@ -2,7 +2,7 @@ package io.kestra.plugin.scripts.jvm;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.plugin.scripts.jvm.Eval;
-import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import io.kestra.core.junit.annotations.KestraTest;
 import org.junit.jupiter.api.Test;
 import io.kestra.core.models.executions.AbstractMetricEntry;
 import io.kestra.core.models.executions.LogEntry;
@@ -24,7 +24,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 
-@MicronautTest
+@KestraTest
 abstract public class EvalTest {
     @Inject
     private RunContextFactory runContextFactory;

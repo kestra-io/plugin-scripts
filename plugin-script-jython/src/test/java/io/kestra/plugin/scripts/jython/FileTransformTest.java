@@ -1,9 +1,9 @@
 package io.kestra.plugin.scripts.jython;
 
-import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.plugin.scripts.jvm.FileTransform;
 
-@MicronautTest
+@KestraTest
 class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
     @Override
     protected FileTransform task(String source) {
