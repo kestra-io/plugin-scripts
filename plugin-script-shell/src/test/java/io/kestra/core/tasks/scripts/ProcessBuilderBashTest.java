@@ -1,8 +1,8 @@
 package io.kestra.core.tasks.scripts;
 
-import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import io.kestra.core.junit.annotations.KestraTest;
 
-@MicronautTest
+@KestraTest
 class ProcessBuilderBashTest extends AbstractBashTest {
     @Override
     protected Bash.BashBuilder<?, ?> configure(Bash.BashBuilder<?, ?> builder) {

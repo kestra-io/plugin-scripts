@@ -1,10 +1,10 @@
 package io.kestra.plugin.scripts.jython;
 
-import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import io.kestra.core.junit.annotations.KestraTest;
 
 import java.util.Arrays;
 
-@MicronautTest
+@KestraTest
 class EvalTest extends io.kestra.plugin.scripts.jvm.EvalTest {
     @Override
     protected io.kestra.plugin.scripts.jvm.Eval task() {
