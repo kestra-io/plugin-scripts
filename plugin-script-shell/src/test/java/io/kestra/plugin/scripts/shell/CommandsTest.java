@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import reactor.core.publisher.Flux;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -212,7 +213,7 @@ class CommandsTest {
     @Test
     void pull() throws Exception {
         List<LogEntry> logs = new ArrayList<>();
-        logQueue.receive(l -> logs.add(l.getLeft()));
+        Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         Commands bash = Commands.builder()
             .id("unit-test")
@@ -235,6 +236,7 @@ class CommandsTest {
         assertThat(run.getExitCode(), is(0));
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("Image pulled"));
+        receive.blockLast();
 
         assertThat(logs.stream().filter(m -> m.getMessage().contains("pulled")).count(), is(1L));
     }

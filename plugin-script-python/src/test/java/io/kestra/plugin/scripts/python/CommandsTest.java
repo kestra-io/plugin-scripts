@@ -14,6 +14,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Flux;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -22,7 +23,6 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @KestraTest
 class CommandsTest {
@@ -39,7 +39,7 @@ class CommandsTest {
     @Test
     void task() throws Exception {
         List<LogEntry> logs = new ArrayList<>();
-        logQueue.receive(l -> logs.add(l.getLeft()));
+        Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         URI put = storageInterface.put(
             null,
@@ -64,6 +64,7 @@ class CommandsTest {
         assertThat(run.getStdErrLineCount(), is(0));
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("hello there!"));
+        receive.blockLast();
         assertThat(logs.stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("hello there!")).count(), is(1L));
     }
 }

@@ -12,6 +12,7 @@ import io.kestra.core.junit.annotations.KestraTest;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +32,7 @@ class ScriptTest {
     @Test
     void script() throws Exception {
         List<LogEntry> logs = new ArrayList<>();
-        logQueue.receive(l -> logs.add(l.getLeft()));
+        Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         Script bash = Script.builder()
             .id("unit-test")
@@ -47,6 +48,7 @@ class ScriptTest {
         assertThat(run.getStdErrLineCount(), is(0));
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("Hello World"));
+        receive.blockLast();
         assertThat(logs.stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("World!")).count(), is(1L));
     }
 }
