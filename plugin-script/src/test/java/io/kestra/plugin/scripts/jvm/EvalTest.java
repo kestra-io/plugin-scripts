@@ -1,7 +1,6 @@
 package io.kestra.plugin.scripts.jvm;
 
 import com.google.common.collect.ImmutableMap;
-import io.kestra.plugin.scripts.jvm.Eval;
 import io.kestra.core.junit.annotations.KestraTest;
 import org.junit.jupiter.api.Test;
 import io.kestra.core.models.executions.AbstractMetricEntry;
@@ -14,11 +13,10 @@ import io.kestra.core.utils.TestsUtils;
 import org.slf4j.event.Level;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import reactor.core.publisher.Flux;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -38,8 +36,7 @@ abstract public class EvalTest {
     @SuppressWarnings("unchecked")
     @Test
     void run() throws Exception {
-        List<LogEntry> logs = new ArrayList<>();
-        workerTaskLogQueue.receive(l -> logs.add(l.getLeft()));
+        Flux<LogEntry> receive = TestsUtils.receive(workerTaskLogQueue);
 
         Eval task = this.task();
 
@@ -48,8 +45,9 @@ abstract public class EvalTest {
         Eval.Output runOutput = task.run(runContext);
         Thread.sleep(100);
 
-        assertThat(logs.get(0).getLevel(), is(Level.INFO));
-        assertThat(logs.get(0).getMessage(), is("executionId: " + ((Map<String, String>) runContext.getVariables().get("execution")).get("id")));
+        LogEntry firstLog = receive.blockFirst();
+        assertThat(firstLog.getLevel(), is(Level.INFO));
+        assertThat(firstLog.getMessage(), is("executionId: " + ((Map<String, String>) runContext.getVariables().get("execution")).get("id")));
 
         AbstractMetricEntry<?> metric = runContext.metrics().get(0);
         assertThat(metric.getValue(), is(666D));

@@ -26,13 +26,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import static io.kestra.core.utils.Rethrow.throwFunction;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -82,9 +80,6 @@ class ScriptTest {
     @ParameterizedTest
     @MethodSource("source")
     void massLog(RunnerType runner, DockerOptions dockerOptions) throws Exception {
-        List<LogEntry> logs = new ArrayList<>();
-        logQueue.receive(l -> logs.add(l.getLeft()));
-
         Script bash = Script.builder()
             .id("unit-test")
             .type(Script.class.getName())
