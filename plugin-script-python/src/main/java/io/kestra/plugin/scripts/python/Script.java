@@ -70,7 +70,7 @@ import java.util.Map;
             """,
             code = """     
 id: outputsPython
-namespace: dev
+namespace: company.team
 tasks:
   - id: cleanDataset
     type: io.kestra.plugin.scripts.python.Script

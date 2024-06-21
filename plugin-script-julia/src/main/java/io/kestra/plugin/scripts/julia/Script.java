@@ -34,8 +34,8 @@ import java.util.Map;
         full = true,
         title = "Create a Julia script, install required packages and execute it. Note that instead of defining the script inline, you could create the Julia script in the embedded VS Code editor and read its content using the `{{ read('your_script.jl') }}` function.",
         code = """
-            id: "script"
-            namespace: "dev"
+            id: script
+            namespace: company.team
             tasks:
               - id: bash
                 type: io.kestra.plugin.scripts.julia.Script

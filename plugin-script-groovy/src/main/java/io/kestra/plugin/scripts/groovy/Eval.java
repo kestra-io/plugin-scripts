@@ -22,7 +22,7 @@ import io.kestra.core.runners.RunContext;
             title = "Make an API call and pass request body to a Groovy script.",
             code = """     
     id: api-request-to-groovy
-    namespace: dev
+    namespace: company.team
 
     tasks:
       - id: request

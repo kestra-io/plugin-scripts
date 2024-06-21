@@ -44,7 +44,7 @@ import java.util.Map;
             """,
             code = """
                 id: powershell
-                namespace: dev
+                namespace: company.team
                 tasks:
                   - id: hello
                     type: io.kestra.plugin.scripts.powershell.Script

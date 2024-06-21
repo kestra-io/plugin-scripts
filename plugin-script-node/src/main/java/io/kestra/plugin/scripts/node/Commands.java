@@ -29,7 +29,7 @@ import jakarta.validation.constraints.NotEmpty;
         title = "Install required npm packages, create a Node.js script and execute it.",
         code = """
             id: node
-            namespace: dev
+            namespace: company.team
             tasks:
               - id: node_script
                 type: io.kestra.plugin.scripts.node.Commands
