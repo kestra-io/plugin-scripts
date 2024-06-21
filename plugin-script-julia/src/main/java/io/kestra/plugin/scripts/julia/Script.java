@@ -81,7 +81,7 @@ public class Script extends AbstractExecScript {
 
         Map<String, String> inputFiles = FilesService.inputFiles(runContext, commands.getTaskRunner().additionalVars(runContext, commands), this.getInputFiles());
         List<String> internalToLocalFiles = new ArrayList<>();
-        Path relativeScriptPath = runContext.tempDir().relativize(runContext.tempFile(".jl"));
+        Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(".jl"));
         inputFiles.put(
             relativeScriptPath.toString(),
             commands.render(runContext, this.script, internalToLocalFiles)

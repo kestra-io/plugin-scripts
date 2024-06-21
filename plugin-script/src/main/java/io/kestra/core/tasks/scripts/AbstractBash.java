@@ -176,7 +176,7 @@ abstract public class AbstractBash extends Task {
         List<String> allOutputs = new ArrayList<>();
 
         if (this.workingDirectory == null) {
-            this.workingDirectory = runContext.tempDir();
+            this.workingDirectory = runContext.workingDir().path();
         }
 
         additionalVars.put("workingDir", workingDirectory.toAbsolutePath().toString());

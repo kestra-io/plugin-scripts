@@ -18,7 +18,7 @@ class EvalTest extends io.kestra.plugin.scripts.jvm.EvalTest {
                 "runContext.metric(Counter.of('total', 666, 'name', 'bla'))\n" +
                 "\n" +
                 "map = Map.of('test', 'here')\n" +
-                "File tempFile = runContext.tempFile().toFile()\n" +
+                "File tempFile = runContext.workingDir().createTempFile().toFile()\n" +
                 "var output = new FileOutputStream(tempFile)\n" +
                 "output.write('555\\n666\\n'.getBytes())\n" +
                 "\n" +
