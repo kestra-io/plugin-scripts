@@ -5,3 +5,5 @@ kestra:
       base-path: /tmp/unittest
   queue:
     type: memory
+  repository:
+    type: memory
