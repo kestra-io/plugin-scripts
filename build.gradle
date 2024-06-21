@@ -187,11 +187,6 @@ nexusPublishing {
     }
 }
 
-tasks.withType(GenerateModuleMetadata).configureEach {
-    // Suppression this validation error as we want to enforce the Kestra platform
-    suppressedValidationErrors.add('enforced-platform')
-}
-
 subprojects { Project subproject ->
     apply plugin: "com.adarshr.test-logger"
     apply plugin: "maven-publish"
@@ -226,6 +221,11 @@ subprojects { Project subproject ->
                 name = "Ludovic Dehon"
             }
         }
+    }
+
+    tasks.withType(GenerateModuleMetadata).configureEach {
+        // Suppression this validation error as we want to enforce the Kestra platform
+        suppressedValidationErrors.add('enforced-platform')
     }
 }
 
