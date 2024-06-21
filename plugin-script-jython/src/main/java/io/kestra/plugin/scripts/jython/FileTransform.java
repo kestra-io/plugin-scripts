@@ -21,7 +21,7 @@ import io.kestra.core.runners.RunContext;
             title = "Extract data from an API, add a column, and store it as a downloadable CSV file.",
             code = """     
 id: etl-api-to-csv
-namespace: dev
+namespace: company.team
 
 tasks:
   - id: download

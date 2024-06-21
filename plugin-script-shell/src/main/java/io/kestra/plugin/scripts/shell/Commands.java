@@ -30,7 +30,7 @@ import jakarta.validation.constraints.NotEmpty;
             title = "Execute ETL in Rust in a Docker container and output CSV files generated as a result of the script.",
             code = """
             id: rust_flow
-            namespace: dev
+            namespace: company.team
             tasks:
               - id: rust
                 type: io.kestra.plugin.scripts.shell.Commands
