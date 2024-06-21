@@ -87,7 +87,7 @@ import java.util.Map;
             """,
             code = """
                 id: rCars
-                namespace: dev
+                namespace: company.team
                 tasks:
                   - id: r
                     type: io.kestra.plugin.scripts.r.Script

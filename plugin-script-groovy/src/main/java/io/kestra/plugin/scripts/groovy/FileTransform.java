@@ -58,7 +58,7 @@ import io.kestra.core.runners.RunContext;
             full = true,
             code = """
 id: json_transform_using_jackson
-namespace: dev
+namespace: company.team
 
 tasks:
   - id: file_transform

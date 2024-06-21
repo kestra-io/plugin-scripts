@@ -50,7 +50,7 @@ import java.util.Map;
         """,
         code = """
             id: nodeJS
-            namespace: dev
+            namespace: company.team
             tasks:
               - id: node
                 type: io.kestra.plugin.scripts.node.Script
