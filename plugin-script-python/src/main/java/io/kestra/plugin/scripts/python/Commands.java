@@ -48,7 +48,7 @@ import jakarta.validation.constraints.NotEmpty;
         """,
         code = """
 id: python_venv
-namespace: dev
+namespace: company.team
 
 tasks:
   - id: hello
@@ -68,7 +68,7 @@ tasks:
         title = "Execute a Python script from Git in a Docker container and output a file",
         code = """     
 id: pythonCommandsExample
-namespace: dev
+namespace: company.team
 
 tasks:
   - id: wdir
@@ -106,7 +106,7 @@ tasks:
         title = "Execute a Python script on a remote worker with a GPU",
         code = """     
 id: gpuTask
-namespace: dev
+namespace: company.team
 
 tasks:
   - id: hello
@@ -124,7 +124,7 @@ tasks:
         title = "Pass detected S3 objects from the event trigger to a Python script",
         code = """     
 id: s3TriggerCommands
-namespace: blueprint
+namespace: company.team
 description: process CSV file from S3 trigger
 
 tasks:
@@ -170,7 +170,7 @@ triggers:
         title = "Execute a Python script from Git using a private Docker container image",
         code = """     
 id: pythonInContainer
-namespace: dev
+namespace: company.team
 
 tasks:
   - id: wdir
@@ -206,8 +206,8 @@ tasks:
         full = true,
         title = "Create a python script and execute it in a virtual environment",
         code = """
-            id: "script_in_venv"
-            namespace: "dev"
+            id: script_in_venv
+            namespace: company.team
             tasks:
               - id: bash
                 type: io.kestra.plugin.scripts.python.Commands

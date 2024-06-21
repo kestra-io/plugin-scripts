@@ -30,7 +30,7 @@ import jakarta.validation.constraints.NotEmpty;
         title = "Create a PowerShell script and execute it.",
         code = """
             id: powershell
-            namespace: dev
+            namespace: company.team
             tasks:
               - id: powershell_script
                 type: io.kestra.plugin.scripts.powershell.Commands

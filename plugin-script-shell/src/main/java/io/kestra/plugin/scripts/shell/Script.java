@@ -42,7 +42,7 @@ import jakarta.validation.constraints.NotNull;
             """,
             code = """
                 id: shell
-                namespace: dev
+                namespace: company.team
                 tasks:
                   - id: hello
                     type: io.kestra.plugin.scripts.shell.Script

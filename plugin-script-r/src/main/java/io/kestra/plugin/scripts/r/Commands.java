@@ -28,8 +28,8 @@ import jakarta.validation.constraints.NotEmpty;
         full = true,
         title = "Create an R script, install required packages and execute it. Note that instead of defining the script inline, you could create the script as a dedicated R script in the embedded VS Code editor and point to its location by path. If you do so, make sure to enable namespace files by setting the `enabled` flag of the `namespaceFiles` property to `true`.",
         code = """
-            id: "script"
-            namespace: "dev"
+            id: script
+            namespace: company.team
             tasks:
               - id: bash
                 type: io.kestra.plugin.scripts.r.Commands
