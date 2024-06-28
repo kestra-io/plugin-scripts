@@ -93,7 +93,7 @@ import java.util.Map;
                     type: io.kestra.plugin.scripts.r.Script
                     warningOnStdErr: false
                     containerImage: ghcr.io/kestra-io/rdata:latest
-                    script: "{{ read('main.R') }}
+                    script: "{{ read('main.R') }}"
                     outputFiles:
                       - "*.csv"
                       - "*.parquet"
