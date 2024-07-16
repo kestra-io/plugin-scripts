@@ -51,9 +51,12 @@ import jakarta.validation.constraints.NotEmpty;
         @Example(
             title = "Execute Shell commands that generate files accessible by other tasks and available for download in the UI's Output tab.",
             code = {
+                "outputFiles:",
+                "  - first.txt",
+                "  - second.txt",
                 "commands:",
-                "  - echo \"1\" >> {{ outputDir }}/first.txt",
-                "  - echo \"2\" >> {{ outputDir }}/second.txt"
+                "  - echo \"1\" >> first.txt",
+                "  - echo \"2\" >> second.txt"
             }
         ),
         @Example(
