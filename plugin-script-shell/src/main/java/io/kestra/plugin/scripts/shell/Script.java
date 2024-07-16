@@ -28,12 +28,22 @@ import jakarta.validation.constraints.NotNull;
     examples = {
         @Example(
             title = "Create an inline Shell script and execute it.",
-            code = {
-                "script: |",
-                "  echo \"The current execution is : {{ execution.id }}\"",
-                "  echo \"1\" >> {{ outputDir }}/first.txt",
-                "  cat {{ outputs.previousTaskId.uri }}"
-            }
+            full = true,
+            code = """
+                id: shell_script_example
+                namespace: company.team
+                tasks:
+                  - id: http_download
+                    type: io.kestra.plugin.core.http.Download
+                    uri: https://huggingface.co/datasets/kestra/datasets/raw/main/csv/orders.csv
+                  - id: shell_script_task
+                    type: io.kestra.plugin.scripts.shell.Script
+                    outputFiles:
+                      - first.txt
+                    script: |
+                      echo "The current execution is : {{ execution.id }}"
+                      echo "1" >> first.txt
+                      cat {{ outputs.http_download.uri }}"""
         ),
         @Example(
             full = true,
@@ -41,15 +51,17 @@ import jakarta.validation.constraints.NotNull;
             If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{ outputDir }}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{ outputs.yourTaskId.outputFiles['yourFileName.fileExtension'] }}`.
             """,
             code = """
-                id: shell
+                id: shell_script_example
                 namespace: company.team
                 tasks:
                   - id: hello
                     type: io.kestra.plugin.scripts.shell.Script
                     taskRunner:
                       type: io.kestra.plugin.core.runner.Process
+                    outputFiles:
+                      - hello.txt
                     script: |
-                      echo "Hello world!" > {{ outputDir }}/hello.txt"""
+                      echo "Hello world!" > hello.txt"""
         )        
     }
 )
