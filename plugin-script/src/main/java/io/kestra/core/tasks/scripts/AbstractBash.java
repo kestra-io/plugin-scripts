@@ -6,10 +6,12 @@ import io.kestra.core.models.tasks.Task;
 import io.kestra.core.models.tasks.runners.PluginUtilsService;
 import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.core.runner.Process;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
+import io.kestra.plugin.scripts.runner.docker.Docker;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -226,11 +228,15 @@ abstract public class AbstractBash extends Task {
             commandsSupplier.get()
         );
 
+        var taskRunner = switch (this.runner) {
+            case DOCKER -> Docker.from(this.getDockerOptions()).toBuilder().fileHandlingStrategy(Docker.FileHandlingStrategy.MOUNT).build();
+            case PROCESS -> Process.INSTANCE;
+        };
+
         ScriptOutput run = new CommandsWrapper(runContext)
             .withEnv(this.finalEnv())
             .withWarningOnStdErr(this.warningOnStdErr)
-            .withRunnerType(this.runner)
-            .withDockerOptions(this.getDockerOptions())
+            .withTaskRunner(taskRunner)
             .withCommands(commandsArgs)
             .addAdditionalVars(this.additionalVars)
             .run();
