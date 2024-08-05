@@ -230,7 +230,7 @@ abstract public class AbstractBash extends Task {
 
         var taskRunner = switch (this.runner) {
             case DOCKER -> Docker.from(this.getDockerOptions()).toBuilder().fileHandlingStrategy(Docker.FileHandlingStrategy.MOUNT).build();
-            case PROCESS -> Process.INSTANCE;
+            case PROCESS -> Process.instance();
         };
 
         ScriptOutput run = new CommandsWrapper(runContext)
