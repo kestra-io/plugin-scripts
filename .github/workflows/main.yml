@@ -55,7 +55,7 @@ jobs:
       # Gradle check
       - name: Build with Gradle
         if: ${{ github.event.inputs.skip-test == 'false' || github.event.inputs.skip-test == '' }}
-        run: ./gradlew check -refresh-dependencies --parallel
+        run: ./gradlew check --refresh-dependencies --parallel
 
       # Allure check
       - name: Auth to Google Cloud
