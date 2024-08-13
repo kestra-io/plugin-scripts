@@ -74,7 +74,7 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
         );
 
         try (
-            OutputStream output = new FileOutputStream(tempFile);
+            var output = new BufferedWriter(new FileWriter(tempFile), FileSerde.BUFFER_SIZE)
         ) {
             if (from.startsWith("kestra://")) {
                 try (BufferedReader inputStream = new BufferedReader(new InputStreamReader(runContext.storage().getFile(URI.create(from))), FileSerde.BUFFER_SIZE)) {
@@ -117,7 +117,7 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
         RunContext runContext,
         Flux<Object> flowable,
         ScriptEngineService.CompiledScript scripts,
-        OutputStream output
+        Writer output
     ) throws IOException, ScriptException {
         Flux<Object> sequential;
 
@@ -132,9 +132,7 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
                 .flatMap(this.convert(scripts));
         }
 
-        Mono<Long> count = sequential
-            .doOnNext(throwConsumer(row -> FileSerde.write(output, row)))
-            .count();
+        Mono<Long> count = FileSerde.writeAll(output, sequential);
 
         // metrics & finalize
         Long lineCount = count.block();
