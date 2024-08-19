@@ -1,0 +1,19 @@
+project.description = 'Execute a Java, JShell, Kotlin, Groovy or Markdown script with JBang as part of Kestra data workflows.'
+
+jar {
+    manifest {
+        attributes(
+                "X-Kestra-Name": project.name,
+                "X-Kestra-Title": "JBang",
+                "X-Kestra-Group": project.group + ".scripts.jbang",
+                "X-Kestra-Description": project.description,
+                "X-Kestra-Version": project.version
+        )
+    }
+}
+
+dependencies {
+    implementation project(':plugin-script')
+
+    testImplementation project(':plugin-script').sourceSets.test.output
+}

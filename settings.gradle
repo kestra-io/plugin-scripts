@@ -2,6 +2,7 @@ rootProject.name = 'plugin-scripts'
 
 include 'plugin-script'
 include 'plugin-script-groovy'
+include 'plugin-script-jbang'
 include 'plugin-script-julia'
 include 'plugin-script-jython'
 include 'plugin-script-nashorn'
