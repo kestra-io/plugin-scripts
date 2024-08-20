@@ -28,37 +28,51 @@ import jakarta.validation.constraints.NotNull;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Java, JShell, Kotlin, Groovy or Markdown script with JBang."
+    title = "Execute a script written in Java, JShell, Kotlin, Groovy or Markdown with JBang."
 )
 @Plugin(
     examples = {
         @Example(
-            title = "Execute a Java script",
+            title = "Execute a script written in Java",
+            full = true,
             code = """
-                script: |
-                  class helloworld {
-                      public static void main(String[] args) {
-                          if(args.length==0) {
-                              System.out.println("Hello World!");
-                          } else {
-                              System.out.println("Hello " + args[0]);
+                id: jbang
+                namespace: company.team
+                
+                tasks:
+                  - id: hello-java
+                    type: io.kestra.plugin.scripts.jbang.Script
+                    script: |
+                      class helloworld {
+                          public static void main(String[] args) {
+                              if(args.length==0) {
+                                  System.out.println("Hello World!");
+                              } else {
+                                  System.out.println("Hello " + args[0]);
+                              }
                           }
-                      }
-                  }"""
+                      }"""
         ),
         @Example(
-            title = "Execute a Java script with dependencies",
+            title = "Execute a script written in Java with dependencies",
+            full = true,
             code = """
+                id: jbang
+                namespace: company.team
+                
+                tasks:
+                - id: hello-dependency
+                  type: io.kestra.plugin.scripts.jbang.Script
                   script: |
                     //DEPS ch.qos.reload4j:reload4j:1.2.19
-                
+            
                     import org.apache.log4j.Logger;
                     import org.apache.log4j.BasicConfigurator;
-                
+            
                     class classpath_example {
-                
+            
                       static final Logger logger = Logger.getLogger(classpath_example.class);
-                
+            
                       public static void main(String[] args) {
                         BasicConfigurator.configure();\s
                         logger.info("Hello World");
@@ -66,12 +80,20 @@ import jakarta.validation.constraints.NotNull;
                     }"""
         ),
         @Example(
-            title = "Execute a Kotlin script",
+            title = "Execute a script written in Kotlin",
+            full = true,
             code = """
-                script: |
-                  public fun main() {
-                      println("Hello World");
-                  }"""
+                id: jbang
+                namespace: company.team
+                
+                tasks:
+                 - id: hello-kotlin
+                    type: io.kestra.plugin.scripts.jbang.Script
+                    extension: .kt
+                    script: |
+                      public fun main() {
+                          println("Hello World");
+                      }"""
         )
     }
 )
