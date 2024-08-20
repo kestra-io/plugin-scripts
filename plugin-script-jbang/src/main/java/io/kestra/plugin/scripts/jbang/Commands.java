@@ -26,10 +26,18 @@ import jakarta.validation.constraints.NotEmpty;
 @Plugin(
     examples = {
         @Example(
-            title = "Execute a single JBang command to execute a JAR file.",
+            title = "Execute JBang command to execute a JAR file.",
+            full = true,
             code = {
-                "commands:",
-                "  - jbang --quiet --main picocli.codegen.aot.graalvm.ReflectionConfigGenerator info.picocli:picocli-codegen:4.6.3"
+                """
+                    id: jbang
+                    namespace: company.team
+                    
+                    tasks:
+                    - id: hello-jar
+                       type: io.kestra.plugin.scripts.jbang.Commands
+                       commands:
+                         - jbang --quiet --main picocli.codegen.aot.graalvm.ReflectionConfigGenerator info.picocli:picocli-codegen:4.6.3"""
             }
         )
     }

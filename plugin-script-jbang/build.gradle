@@ -1,4 +1,4 @@
-project.description = 'Execute a Java, JShell, Kotlin, Groovy or Markdown script with JBang as part of Kestra data workflows.'
+project.description = 'Execute a script written in Java, JShell, Kotlin, Groovy or Markdown with JBang as part of Kestra data workflows.'
 
 jar {
     manifest {
