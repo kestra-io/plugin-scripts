@@ -33,35 +33,56 @@ import java.util.Map;
     examples = {
         @Example(
             title = "Execute a Python script.",
-            code = {
-                "script: |",
-                "  from kestra import Kestra",
-                "  import requests",
-                "",
-                "  response = requests.get('https://google.com')",
-                "  print(response.status_code)",
-                "",
-                "  Kestra.outputs({'status': response.status_code, 'text': response.text})",
-                "beforeCommands:",
-                "  - pip install requests kestra"
-            }
+            full = true,
+            code = """
+                id: python_use_input_file
+                namespace: company.team
+                
+                tasks:
+                  - id: python
+                    task: io.kestra.plugin.scripts.python.Script
+                    script: |
+                      from kestra import Kestra
+                      import requests
+                        
+                      response = requests.get('https://google.com')
+                      print(response.status_code)
+                      
+                      Kestra.outputs({'status': response.status_code, 'text': response.text})
+                    beforeCommands:
+                      - pip install requests kestra
+                """
         ),
         @Example(
             title = "Execute a Python script with an input file from Kestra's local storage created by a previous task.",
-            code = {
-                "script: |",
-                "  with open('{{ outputs.previousTaskId.uri }}', 'r') as f:",
-                "    print(f.read())"
-            }
+            full = true,
+            code = """
+                id: python_use_input_file
+                namespace: company.team
+                
+                tasks:
+                  - id: python
+                    task: io.kestra.plugin.scripts.python.Script
+                    script: |
+                      with open('{{ outputs.previousTaskId.uri }}', 'r') as f:
+                        print(f.read())
+                """
         ),
         @Example(
             title = "Execute a Python script that outputs a file.",
-            code = {
-                "script: |",
-                "   f = open(\"{{outputDir}}/myfile.txt\", \"a\")",
-                "   f.write(\"Hello from a Kestra task!\")",
-                "   f.close()"
-            }
+            full = true,
+            code = """
+                id: python_output_file
+                namespace: company.team
+
+                tasks:
+                  - id: python
+                    type: io.kestra.plugin.scripts.python.Script
+                    script: |
+                       f = open("{{ outputDir }}/myfile.txt", "a")
+                       f.write("Hello from a Kestra task!")
+                       f.close()   
+                """
         ),
         @Example(
             full = true,
@@ -69,31 +90,32 @@ import java.util.Map;
             If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{outputDir}}` expression. Files stored in that directory will be persisted in Kestra's internal storage. The first task in this example creates a file `'myfile.txt'` and the next task can access it by leveraging the syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`.
             """,
             code = """     
-id: outputsPython
-namespace: company.team
-tasks:
-  - id: cleanDataset
-    type: io.kestra.plugin.scripts.python.Script
-    containerImage: ghcr.io/kestra-io/pydata:latest
-    script: |
-      import pandas as pd
-      df = pd.read_csv("https://huggingface.co/datasets/kestra/datasets/raw/main/csv/messy_dataset.csv")
-      
-      # Replace non-numeric age values with NaN
-      df["Age"] = pd.to_numeric(df["Age"], errors="coerce")
+                id: python_outputs
+                namespace: company.team
 
-      # mean imputation: fill NaN values with the mean age
-      mean_age = int(df["Age"].mean())
-      print(f"Filling NULL values with mean: {mean_age}")
-      df["Age"] = df["Age"].fillna(mean_age)
-      df.to_csv("{{outputDir}}/clean_dataset.csv", index=False)
-
-  - id: readFileFromPython
-    type: io.kestra.plugin.scripts.shell.Commands
-    taskRunner:
-      type: io.kestra.plugin.core.runner.Process
-    commands:
-      - head -n 10 {{outputs.cleanDataset.outputFiles['clean_dataset.csv']}}
+                tasks:
+                  - id: clean_dataset
+                    type: io.kestra.plugin.scripts.python.Script
+                    containerImage: ghcr.io/kestra-io/pydata:latest
+                    script: |
+                      import pandas as pd
+                      df = pd.read_csv("https://huggingface.co/datasets/kestra/datasets/raw/main/csv/messy_dataset.csv")
+                      
+                      # Replace non-numeric age values with NaN
+                      df["Age"] = pd.to_numeric(df["Age"], errors="coerce")
+                
+                      # mean imputation: fill NaN values with the mean age
+                      mean_age = int(df["Age"].mean())
+                      print(f"Filling NULL values with mean: {mean_age}")
+                      df["Age"] = df["Age"].fillna(mean_age)
+                      df.to_csv("{{ outputDir }}/clean_dataset.csv", index=False)
+                
+                  - id: readFileFromPython
+                    type: io.kestra.plugin.scripts.shell.Commands
+                    taskRunner:
+                      type: io.kestra.plugin.core.runner.Process
+                    commands:
+                      - head -n 10 {{ outputs.clean_dataset.outputFiles['clean_dataset.csv'] }}
                 """
         )
     }

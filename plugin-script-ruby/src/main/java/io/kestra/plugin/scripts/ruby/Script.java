@@ -67,6 +67,7 @@ import java.util.Map;
         code = """
             id: generate_csv
             namespace: company.team
+            
             tasks:
               - id: bash
                 type: io.kestra.plugin.scripts.ruby.Script
