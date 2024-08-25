@@ -31,6 +31,7 @@ import jakarta.validation.constraints.NotEmpty;
             code = """
             id: rust_flow
             namespace: company.team
+
             tasks:
               - id: rust
                 type: io.kestra.plugin.scripts.shell.Commands
@@ -43,52 +44,94 @@ import jakarta.validation.constraints.NotEmpty;
         ),        
         @Example(
             title = "Execute a single Shell command.",
-            code = {
-                "commands:",
-                "  - 'echo \"The current execution is: {{ execution.id }}\"'"
-            }
+            full = true,
+            code = """
+                   id: shell_single_command
+                   namespace: company.team
+
+                   tasks:
+                     - id: command
+                       type: io.kestra.plugin.scripts.shell.Commands
+                       commands:
+                         - 'echo "The current execution is: {{ execution.id }}"'
+                   """
         ),
         @Example(
             title = "Execute Shell commands that generate files accessible by other tasks and available for download in the UI's Output tab.",
-            code = {
-                "outputFiles:",
-                "  - first.txt",
-                "  - second.txt",
-                "commands:",
-                "  - echo \"1\" >> first.txt",
-                "  - echo \"2\" >> second.txt"
-            }
+            full = true,
+            code = """
+                   id: shell_generate_files
+                   namespace: company.team
+
+                   tasks:
+                     - id: commands
+                       type: io.kestra.plugin.scripts.shell.Commands
+                       outputFiles:
+                         - first.txt
+                         - second.txt
+                       commands:
+                         - echo "1" >> first.txt
+                         - echo "2" >> second.txt
+                   """
         ),
         @Example(
             title = "Execute a Shell command using an input file generated in a previous task.",
-            code = {
-                "commands:",
-                "  - cat {{ outputs.previousTaskId.uri }}"
-            }
+            full = true,
+            code = """
+                   id: use_input_file
+                   namespace: company.team
+
+                   tasks:
+                     - id: commands
+                       type: io.kestra.plugin.scripts.shell.Commands
+                       commands:
+                         - cat {{ outputs.previousTaskId.uri }}
+                   """
         ),
         @Example(
             title = "Run a PHP Docker container and execute a command.",
-            code = {
-                "taskRunner:",
-                "  type: io.kestra.plugin.scripts.runner.docker.Docker",
-                "containerImage: php",
-                "commands:",
-                "  - php -r 'print(phpversion());'",
-            }
+            full = true,
+            code = """
+                   id: run_php_code
+                   namespace: company.team
+
+                   tasks:
+                     - id: commands
+                       type: io.kestra.plugin.scripts.shell.Commands
+                       taskRunner:
+                         type: io.kestra.plugin.scripts.runner.docker.Docker
+                       containerImage: php
+                       commands:
+                         - php -r 'print(phpversion());'
+                   """
         ),
         @Example(
             title = "Create output variables from a standard output.",
-            code = {
-                "commands:",
-                "  - echo '::{\"outputs\":{\"test\":\"value\",\"int\":2,\"bool\":true,\"float\":3.65}}::'",
-            }
+            full = true,
+            code = """
+                   id: create_output_variables
+                   namespace: company.team
+
+                   tasks:
+                     - id: commands
+                       type: io.kestra.plugin.scripts.shell.Commands
+                       commands:
+                         - echo '::{"outputs":{"test":"value","int":2,"bool":true,"float":3.65}}::'
+                   """
         ),
         @Example(
             title = "Send a counter metric from a standard output.",
-            code = {
-                "commands:",
-                "  - echo '::{\"metrics\":[{\"name\":\"count\",\"type\":\"counter\",\"value\":1,\"tags\":{\"tag1\":\"i\",\"tag2\":\"win\"}}]}::'",
-            }
+            full = true,
+            code = """
+                   id: create_counter_metric
+                   namespace: company.team
+
+                   tasks:
+                     - id: commands
+                       type: io.kestra.plugin.scripts.shell.Commands
+                       commands:
+                         - echo '::{"metrics":[{"name":"count","type":"counter","value":1,"tags":{"tag1":"i","tag2":"win"}}]}::' 
+                   """
         )
     }
 )

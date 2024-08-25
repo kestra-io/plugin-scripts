@@ -32,10 +32,12 @@ import jakarta.validation.constraints.NotNull;
             code = """
                 id: shell_script_example
                 namespace: company.team
+
                 tasks:
                   - id: http_download
                     type: io.kestra.plugin.core.http.Download
                     uri: https://huggingface.co/datasets/kestra/datasets/raw/main/csv/orders.csv
+                  
                   - id: shell_script_task
                     type: io.kestra.plugin.scripts.shell.Script
                     outputFiles:
@@ -53,6 +55,7 @@ import jakarta.validation.constraints.NotNull;
             code = """
                 id: shell_script_example
                 namespace: company.team
+                
                 tasks:
                   - id: hello
                     type: io.kestra.plugin.scripts.shell.Script
