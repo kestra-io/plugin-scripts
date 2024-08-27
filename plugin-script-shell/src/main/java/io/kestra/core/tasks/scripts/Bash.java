@@ -33,75 +33,131 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
     examples = {
         @Example(
             title = "Single bash command.",
-            code = {
-                "commands:",
-                "  - 'echo \"The current execution is : {{ execution.id }}\"'"
-            }
+            full = true, 
+            code = """
+                   id: bash_single_command
+                   namespace: company.team
+
+                   tasks:
+                     - id: bash
+                       type: io.kestra.core.tasks.scripts.Bash
+                       commands:
+                         - 'echo "The current execution is : {{ execution.id }}"'
+                   """
         ),
         @Example(
             title = "Bash command that generate file in storage accessible through outputs.",
-            code = {
-                "outputFiles:",
-                "  - first",
-                "  - second",
-                "commands:",
-                "  - echo \"1\" >> {{ outputFiles.first }}",
-                "  - echo \"2\" >> {{ outputFiles.second }}"
-            }
+            full = true,
+            code = """
+                id: bash_generate_files
+                namespace: company.team
+                
+                tasks:
+                  - id: bash
+                    type: io.kestra.core.tasks.scripts.Bash
+                    outputFiles:
+                      - first
+                      - second
+                    commands:
+                      - echo "1" >> {{ outputFiles.first }}
+                      - echo "2" >> {{ outputFiles.second }}
+                """
         ),
         @Example(
             title = "Bash with some inputs files.",
-            code = {
-                "inputFiles:",
-                "  script.sh: |",
-                "    echo {{ workingDir }}",
-                "commands:",
-                "  - /bin/bash script.sh",
-            }
+            full = true,
+            code = """
+                id: bash_input_files
+                namespace: company.team
+                
+                tasks:
+                  - id: bash
+                    type: io.kestra.core.tasks.scripts.Bash
+                    inputFiles:
+                      script.sh: |
+                        echo {{ workingDir }}
+                    commands:
+                      - /bin/bash script.sh
+                """
         ),
         @Example(
             title = "Bash with an input file from Kestra's local storage created by a previous task.",
-            code = {
-                "inputFiles:",
-                "  data.csv: {{ outputs.previousTaskId.uri }}",
-                "commands:",
-                "  - cat data.csv"
-            }
+            full = true,
+            code = """
+                id: bash_use_input_files                
+                namespace: company.team
+                
+                tasks:
+                  - id: bash
+                    type: io.kestra.core.tasks.scripts.Bash
+                    inputFiles:
+                      data.csv: {{ outputs.previousTaskId.uri }}
+                    commands:
+                      - cat data.csv
+                """
         ),
         @Example(
             title = "Run a command on a Docker image.",
-            code = {
-                "runner: DOCKER",
-                "dockerOptions:",
-                "  image: php",
-                "commands:",
-                "  - 'php -r 'print(phpversion() . \"\\n\");'",
-            }
+            full = true,
+            code = """
+                id: bash_run_php_code
+                namespace: company.team
+                
+                tasks:
+                  - id: bash
+                    type: io.kestra.core.tasks.scripts.Bash
+                    runner: DOCKER
+                    dockerOptions:
+                      image: php
+                    commands:
+                      - php -r 'print(phpversion() . "\n");'
+                """
         ),
         @Example(
             title = "Execute cmd on Windows.",
-            code = {
-                "commands:",
-                "  - 'echo \"The current execution is : {{ execution.id }}\"'",
-                "exitOnFailed: false",
-                "interpreter: cmd",
-                "interpreterArgs:",
-                "  - /c",
-            }
+            full = true,
+            code = """
+                id: bash_run_cmd_on_windows
+                namespace: company.team
+                
+                tasks:
+                  - id: bash
+                    type: io.kestra.core.tasks.scripts.Bash
+                    commands:
+                      - 'echo "The current execution is : {{ execution.id }}"'
+                    exitOnFailed: false
+                    interpreter: cmd
+                    interpreterArgs:
+                      - /c
+                """
         ),
         @Example(
             title = "Set outputs from bash standard output.",
-            code = {
-                "commands:",
-                "  - echo '::{\"outputs\":{\"test\":\"value\",\"int\":2,\"bool\":true,\"float\":3.65}}::'",
-            }
+            full = true,
+            code = """
+                id: bash_set_outputs
+                namespace: company.team
+                
+                tasks:
+                  - id: bash
+                    type: io.kestra.core.tasks.scripts.Bash
+                    commands:
+                      - echo '::{"outputs":{"test":"value","int":2,"bool":true,"float":3.65}}::'
+                """
         ),
         @Example(
             title = "Send a counter metric from bash standard output.",
-            code = {
-                "commands:",
-                "  - echo '::{\"metrics\":[{\"name\":\"count\",\"type\":\"counter\",\"value\":1,\"tags\":{\"tag1\":\"i\",\"tag2\":\"win\"}}]}::'",
-            }
+            full = true,
+            code = """
+                id: bash_set_metrics
+                namespace: company.team
+                
+                tasks:
+                  - id: bash
+                    type: io.kestra.core.tasks.scripts.Bash
+                    commands:
+                      - echo '::{"metrics":[{"name":"count","type":"counter","value":1,"tags":{"tag1":"i","tag2":"win"}}]}::' 
+                """
         )
     }
 )

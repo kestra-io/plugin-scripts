@@ -50,38 +50,52 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 @Plugin(
     examples = {
         @Example(
-            title = "Execute a python script",
-            code = {
-                "inputFiles:",
-                "  data.json: |",
-                "          {\"status\": \"OK\"}",
-                "  main.py: |",
-                "    from kestra import Kestra",
-                "    import json",
-                "    import requests",
-                "    import sys",
-                "    result = json.loads(open(sys.argv[1]).read())",
-                "    print(f\"python script {result['status']}\")",
-                "    response = requests.get('http://google.com')",
-                "    print(response.status_code)",
-                "    Kestra.outputs({'status': response.status_code, 'text': response.text})",
-                "  pip.conf: |",
-                "    # some specific pip repository configuration",
-                "args:",
-                "  - data.json",
-                "requirements:",
-                "  - requests"
-            }
+            title = "Execute a python script.",
+            full = true,
+            code = """
+                id: python_flow
+                namespace: company.team
+                
+                tasks:
+                  - id: python
+                    type: io.kestra.core.tasks.scripts.Python
+                    inputFiles:
+                      data.json: |
+                        {"status": "OK"}
+                      main.py: |
+                        from kestra import Kestra
+                        import json
+                        import requests
+                        import sys
+                        result = json.loads(open(sys.argv[1]).read())
+                        print(f"python script {result['status']}")
+                        response = requests.get('http://google.com')
+                        print(response.status_code)
+                        Kestra.outputs({'status': response.status_code, 'text': response.text})
+                      pip.conf: |
+                        # some specific pip repository configuration
+                    args:
+                      - data.json
+                    requirements:
+                      - requests
+                """
         ),
         @Example(
             title = "Execute a python script with an input file from Kestra's local storage created by a previous task.",
-            code = {
-                "inputFiles:",
-                "  data.csv: {{outputs.previousTaskId.uri}}",
-                "  main.py: |",
-                "    with open('data.csv', 'r') as f:",
-                "      print(f.read())"
-            }
+            full = true,
+            code = """
+                id: python_flow
+                namespace: company.team
+                
+                tasks:
+                  - id: python
+                    type: io.kestra.core.tasks.scripts.Python
+                    inputFiles:
+                      data.csv: {{outputs.previousTaskId.uri}}
+                      main.py: |
+                        with open('data.csv', 'r') as f:
+                          print(f.read())
+                """
         )
     }
 )

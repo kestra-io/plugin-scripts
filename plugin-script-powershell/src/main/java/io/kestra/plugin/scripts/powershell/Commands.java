@@ -27,12 +27,13 @@ import jakarta.validation.constraints.NotEmpty;
 @Plugin(examples = {
     @Example(
         full = true,
-        title = "Create a PowerShell script and execute it.",
+        title = "Execute PowerShell commands.",
         code = """
-            id: powershell
+            id: execute_powershell_commands
             namespace: company.team
+
             tasks:
-              - id: powershell_script
+              - id: powershell
                 type: io.kestra.plugin.scripts.powershell.Commands
                 inputFiles:
                   main.ps1: |

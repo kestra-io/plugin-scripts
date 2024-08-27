@@ -60,6 +60,7 @@ import java.util.List;
         code = """
             id: generate_csv
             namespace: company.team
+            
             tasks:
               - id: bash
                 type: io.kestra.plugin.scripts.ruby.Commands
