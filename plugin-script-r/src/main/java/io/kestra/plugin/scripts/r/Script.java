@@ -86,8 +86,9 @@ import java.util.Map;
             Finally, note that the `docker` property is optional. If you don't specify it, Kestra will use the default R image. If you want to use a different image, you can specify it in the `docker` property as shown below.
             """,
             code = """
-                id: rCars
+                id: r_cars
                 namespace: company.team
+                
                 tasks:
                   - id: r
                     type: io.kestra.plugin.scripts.r.Script
