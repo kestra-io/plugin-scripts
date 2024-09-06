@@ -32,14 +32,21 @@ import java.util.Map;
 @Plugin(examples = {
     @Example(
         title = "Install package, create a Node.js script and execute it.",
-        code = {
-            "beforeCommands:",
-            "  - npm install colors",
-            "script: |",
-            "  const colors = require(\"colors\");",
-            "  console.log(colors.red(\"Hello\"));",
-            "warningOnStdErr: false",
-        }
+        full = true,
+        code = """
+            id: nodejs_script
+            namespace: company.team
+
+            tasks:
+              - id: script
+                type: io.kestra.plugin.scripts.node.Script
+                beforeCommands:
+                  - npm install colors
+                script: |
+                  const colors = require("colors");
+                  console.log(colors.red("Hello"));
+                warningOnStdErr: false"
+            """
     ),
     @Example(
         full = true,
@@ -49,8 +56,9 @@ import java.util.Map;
         Alternatively, instead of the `{{ outputDir }}` variable, you could use the `outputFiles` property to output files from your script. You can access those files in downstream tasks using the same syntax `{{ outputs.yourTaskId.outputFiles['yourFileName.fileExtension'] }}`, and you can download the files from the UI's Output tab.
         """,
         code = """
-            id: nodeJS
+            id: nodejs_script
             namespace: company.team
+            
             tasks:
               - id: node
                 type: io.kestra.plugin.scripts.node.Script

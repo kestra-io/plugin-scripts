@@ -36,11 +36,11 @@ import jakarta.validation.constraints.NotNull;
             title = "Execute a script written in Java",
             full = true,
             code = """
-                id: jbang
+                id: jbang_script
                 namespace: company.team
                 
                 tasks:
-                  - id: hello-java
+                  - id: script
                     type: io.kestra.plugin.scripts.jbang.Script
                     script: |
                       class helloworld {
@@ -51,49 +51,52 @@ import jakarta.validation.constraints.NotNull;
                                   System.out.println("Hello " + args[0]);
                               }
                           }
-                      }"""
+                      }
+                """
         ),
         @Example(
             title = "Execute a script written in Java with dependencies",
             full = true,
             code = """
-                id: jbang
+                id: jbang_script
                 namespace: company.team
                 
                 tasks:
-                - id: hello-dependency
-                  type: io.kestra.plugin.scripts.jbang.Script
-                  script: |
-                    //DEPS ch.qos.reload4j:reload4j:1.2.19
-            
-                    import org.apache.log4j.Logger;
-                    import org.apache.log4j.BasicConfigurator;
-            
-                    class classpath_example {
-            
-                      static final Logger logger = Logger.getLogger(classpath_example.class);
-            
-                      public static void main(String[] args) {
-                        BasicConfigurator.configure();\s
-                        logger.info("Hello World");
+                  - id: script_with_dependency
+                    type: io.kestra.plugin.scripts.jbang.Script
+                    script: |
+                      //DEPS ch.qos.reload4j:reload4j:1.2.19
+              
+                      import org.apache.log4j.Logger;
+                      import org.apache.log4j.BasicConfigurator;
+              
+                      class classpath_example {
+              
+                        static final Logger logger = Logger.getLogger(classpath_example.class);
+              
+                        public static void main(String[] args) {
+                          BasicConfigurator.configure();\s
+                          logger.info("Hello World");
+                        }
                       }
-                    }"""
+                """
         ),
         @Example(
-            title = "Execute a script written in Kotlin",
+            title = "Execute a script written in Kotlin.",
             full = true,
             code = """
-                id: jbang
+                id: jbang_script
                 namespace: company.team
                 
                 tasks:
-                 - id: hello-kotlin
+                  - id: script_kotlin
                     type: io.kestra.plugin.scripts.jbang.Script
                     extension: .kt
                     script: |
                       public fun main() {
                           println("Hello World");
-                      }"""
+                      }
+                """
         )
     }
 )

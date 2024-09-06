@@ -21,50 +21,56 @@ import io.kestra.core.runners.RunContext;
             full = true,
             title = "Make an API call and pass request body to a Groovy script.",
             code = """     
-    id: api-request-to-groovy
-    namespace: company.team
-
-    tasks:
-      - id: request
-        type: io.kestra.plugin.core.http.Request
-        uri: "https://dummyjson.com/products/1"
-
-      - id: groovy
-        type: io.kestra.plugin.scripts.groovy.Eval
-        script: |
-          logger.info('{{ outputs.request.body }}')
-
-      - id: download
-        type: io.kestra.plugin.core.http.Download
-        uri: "https://dummyjson.com/products/1"
-
-      - id: runContextGroovy
-        type: io.kestra.plugin.scripts.groovy.Eval
-        script: |
-          // logger.info('Vars: {}', runContext.getVariables())
-          URI uri = new URI(runContext.variables.outputs.download.uri)
-          InputStream istream = runContext.storage().getFile(uri)
-          logger.info('Content: {}', istream.text)
-                    """
+                id: api_request_to_groovy
+                namespace: company.team
+            
+                tasks:
+                  - id: request
+                    type: io.kestra.plugin.core.http.Request
+                    uri: "https://dummyjson.com/products/1"
+            
+                  - id: groovy
+                    type: io.kestra.plugin.scripts.groovy.Eval
+                    script: |
+                      logger.info('{{ outputs.request.body }}')
+            
+                  - id: download
+                    type: io.kestra.plugin.core.http.Download
+                    uri: "https://dummyjson.com/products/1"
+            
+                  - id: run_context_groovy
+                    type: io.kestra.plugin.scripts.groovy.Eval
+                    script: |
+                      // logger.info('Vars: {}', runContext.getVariables())
+                      URI uri = new URI(runContext.variables.outputs.download.uri)
+                      InputStream istream = runContext.storage().getFile(uri)
+                      logger.info('Content: {}', istream.text)
+                  """
             ),        
         @Example(
-            code = {
-                "outputs:",
-                "  - out",
-                "  - map",
-                "script: |",
-                "  import io.kestra.core.models.executions.metrics.Counter",
-                "  ",
-                "  logger.info('executionId: {}', runContext.render('{{ execution.id }}'))",
-                "  runContext.metric(Counter.of('total', 666, 'name', 'bla'))",
-                "  ",
-                "  map = Map.of('test', 'here')",
-                "  File tempFile = runContext.workingDir().createTempFile().toFile()",
-                "  var output = new FileOutputStream(tempFile)",
-                "  output.write('555\\n666\\n'.getBytes())",
-                "  ",
-                "  out = runContext.storage().putFile(tempFile)"
-            }
+            code = """
+                id: groovy_eval
+                namespace: company.team
+
+                tasks:
+                  - id: eval
+                    type: io.kestra.plugin.scripts.groovy.Eval
+                    outputs:
+                      - out
+                      - map
+                    script: |
+                      import io.kestra.core.models.executions.metrics.Counter
+                      
+                      logger.info('executionId: {}', runContext.render('{{ execution.id }}'))
+                      runContext.metric(Counter.of('total', 666, 'name', 'bla'))
+                      
+                      map = Map.of('test', 'here')
+                      File tempFile = runContext.workingDir().createTempFile().toFile()
+                      var output = new FileOutputStream(tempFile)
+                      output.write('555\\n666\\n'.getBytes())
+                      
+                      out = runContext.storage().putFile(tempFile
+                """
         )
     }
 )

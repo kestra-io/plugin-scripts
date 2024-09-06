@@ -28,17 +28,16 @@ import jakarta.validation.constraints.NotEmpty;
         @Example(
             title = "Execute JBang command to execute a JAR file.",
             full = true,
-            code = {
+            code = """
+                id: jbang_commands
+                namespace: company.team
+                
+                tasks:
+                  - id: commands
+                    type: io.kestra.plugin.scripts.jbang.Commands
+                    commands:
+                      - jbang --quiet --main picocli.codegen.aot.graalvm.ReflectionConfigGenerator info.picocli:picocli-codegen:4.6.3
                 """
-                    id: jbang
-                    namespace: company.team
-                    
-                    tasks:
-                    - id: hello-jar
-                       type: io.kestra.plugin.scripts.jbang.Commands
-                       commands:
-                         - jbang --quiet --main picocli.codegen.aot.graalvm.ReflectionConfigGenerator info.picocli:picocli-codegen:4.6.3"""
-            }
         )
     }
 )
