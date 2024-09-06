@@ -18,25 +18,32 @@ import io.kestra.core.runners.RunContext;
 @Plugin(
     examples = {
         @Example(
-            code = {
-                "outputs:",
-                "  - out",
-                "  - map",
-                "script: |",
-                "  var Counter = Java.type('io.kestra.core.models.executions.metrics.Counter');",
-                "  var File = Java.type('java.io.File');",
-                "  var FileOutputStream = Java.type('java.io.FileOutputStream');",
-                "  ",
-                "  logger.info('executionId: {}', runContext.render('{{ execution.id }}'));",
-                "  runContext.metric(Counter.of('total', 666, 'name', 'bla'));",
-                "  ",
-                "  map = {'test': 'here'}",
-                "  var tempFile = runContext.workingDir().createTempFile().toFile()",
-                "  var output = new FileOutputStream(tempFile)",
-                "  output.write('555\\n666\\n'.getBytes())",
-                "  ",
-                "  out = runContext.storage().putFile(tempFile)"
-            }
+            full = true,
+            code = """
+                id: nashorn_eval
+                namespace: company.team
+
+                tasks:
+                  - id: eval
+                    type: io.kestra.plugin.scripts.nashorn.Eval
+                    outputs:
+                      - out
+                      - map
+                    script: |
+                      var Counter = Java.type('io.kestra.core.models.executions.metrics.Counter');
+                      var File = Java.type('java.io.File');
+                      var FileOutputStream = Java.type('java.io.FileOutputStream');
+                      
+                      logger.info('executionId: {}', runContext.render('{{ execution.id }}'));
+                      runContext.metric(Counter.of('total', 666, 'name', 'bla'));
+                      
+                      map = {'test': 'here'}
+                      var tempFile = runContext.workingDir().createTempFile().toFile()
+                      var output = new FileOutputStream(tempFile)
+                      output.write('555\\n666\\n'.getBytes())
+                      
+                      out = runContext.storage().putFile(tempFile)"
+                """
         )
     }
 )

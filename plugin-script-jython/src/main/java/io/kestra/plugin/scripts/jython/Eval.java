@@ -18,24 +18,31 @@ import io.kestra.core.runners.RunContext;
 @Plugin(
     examples = {
         @Example(
-            code = {
-                "outputs:",
-                "  - out",
-                "  - map",
-                "script: |",
-                "  from io.kestra.core.models.executions.metrics import Counter",
-                "  import tempfile",
-                "  from java.io import File",
-                "  ",
-                "  logger.info('executionId: {}', runContext.render('{{ execution.id }}'))",
-                "  runContext.metric(Counter.of('total', 666, 'name', 'bla'))",
-                "  ",
-                "  map = {'test': 'here'}",
-                "  tempFile = tempfile.NamedTemporaryFile()",
-                "  tempFile.write('555\\n666\\n')",
-                "  ",
-                "  out = runContext.storage().putFile(File(tempFile.name))"
-            }
+            full = true,
+            code = """
+                id: jython_eval
+                namespace: company.team
+
+                tasks:
+                  - id: eval
+                    type: io.kestra.plugin.scripts.jython.Eval
+                    outputs:
+                      - out
+                      - map
+                    script: |
+                      from io.kestra.core.models.executions.metrics import Counter
+                      import tempfile
+                      from java.io import File
+                      
+                      logger.info('executionId: {}', runContext.render('{{ execution.id }}'))
+                      runContext.metric(Counter.of('total', 666, 'name', 'bla'))
+                      
+                      map = {'test': 'here'}
+                      tempFile = tempfile.NamedTemporaryFile()
+                      tempFile.write('555\\n666\\n')
+                      
+                      out = runContext.storage().putFile(File(tempFile.name)
+                """
         )
     }
 )

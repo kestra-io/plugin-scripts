@@ -19,31 +19,45 @@ import io.kestra.core.runners.RunContext;
     examples = {
         @Example(
             title = "Transform with file from internal storage",
-            code = {
-                "from: \"{{ outputs['avro-to-gcs'] }}\"",
-                "script: |",
-                "  logger.info('row: {}', row)",
-                "",
-                "  if (row['name'] === 'richard') {",
-                "    row = null",
-                "  } else {",
-                "    row['email'] = row['name'] + '@kestra.io'",
-                "  }"
-            }
+            full = true,
+            code = """
+                id: nashorn_file_transform
+                namespace: company.team
+
+                tasks:
+                  - id: file_transform
+                    type: io.kestra.plugin.scripts.nashorn.FileTransform
+                    from: "{{ outputs['avro-to-gcs'] }}"
+                    script: |
+                      logger.info('row: {}', row)
+                    
+                      if (row['name'] === 'richard') {
+                        row = null
+                      } else {
+                        row['email'] = row['name'] + '@kestra.io'
+                      } 
+                """
         ),
         @Example(
             title = "Transform JSON string input with a Nashorn script.",
-            code = {
-                "from: \"[{\\\"name\":\\\"jane\\\"}, {\\\"name\\\":\\\"richard\\\"}]\"",
-                "script: |",
-                "  logger.info('row: {}', row)",
-                "",
-                "  if (row['name'] === 'richard') {",
-                "    row = null",
-                "  } else {",
-                "    row['email'] = row['name'] + '@kestra.io'",
-                "  }"
-            }
+            full = true,
+            code = """
+                id: nashorn_file_transform
+                namespace: company.team
+
+                tasks:
+                  - id: file_transform
+                    type: io.kestra.plugin.scripts.nashorn.FileTransform
+                    from: "[{\"name":\"jane\"}, {\"name\":\"richard\"}]"
+                    script: |
+                      logger.info('row: {}', row)
+                    
+                      if (row['name'] === 'richard') {
+                        row = null
+                      } else {
+                        row['email'] = row['name'] + '@kestra.io'
+                      }
+                """
         )
     }
 )
