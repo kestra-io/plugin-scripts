@@ -86,7 +86,7 @@ import jakarta.validation.constraints.NotEmpty;
                    tasks:
                      - id: command
                        type: io.kestra.plugin.scripts.shell.Commands
-                       description: "All the `namespaceFiles` except those that are excluded get listed"
+                       description: "All `namespaceFiles` except those that are excluded will be injected into the task's working directory"
                        namespaceFiles:
                          enabled: true
                          exclude:
