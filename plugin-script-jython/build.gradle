@@ -15,7 +15,7 @@ jar {
 dependencies {
     implementation project(':plugin-script')
 
-    implementation group: 'org.python', name: 'jython-standalone', version: '2.7.3'
+    implementation group: 'org.python', name: 'jython-standalone', version: '2.7.4'
 
     testImplementation project(':plugin-script').sourceSets.test.output
 }
