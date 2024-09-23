@@ -28,7 +28,7 @@ import jakarta.validation.constraints.NotEmpty;
     @Example(
         full = true,
         title = """
-        Execute a Python script in a Conda virtual environment. First, add the following script in the embedded VS Code editor and name it `etl_script.py`:
+        Execute a Python script in a Conda virtual environment. First, add the following script in the embedded Code Editor and name it `etl_script.py`:
           
         ```python
         import argparse
@@ -42,7 +42,7 @@ import jakarta.validation.constraints.NotEmpty;
         print(result)
         ```
           
-        Then, make sure to set the `enabled` flag of the `namespaceFiles` property to `true` to enable [namespace files](https://kestra.io/docs/developer-guide/namespace-files).           
+        Then, make sure to set the `enabled` flag of the `namespaceFiles` property to `true` to enable [namespace files](https://kestra.io/docs/developer-guide/namespace-files). We `include` only the `etl_script.py` file as that is the only file we require from namespace files.         
 
         This flow uses a `io.kestra.plugin.core.runner.Process` Task Runner and Conda virtual environment for process isolation and dependency management. However, note that, by default, Kestra runs tasks in a Docker container (i.e. a Docker task runner), and you can use the `taskRunner` property to customize many options, as well as `containerImage` to choose the Docker image to use.
         """,
@@ -55,6 +55,8 @@ import jakarta.validation.constraints.NotEmpty;
                   type: io.kestra.plugin.scripts.python.Commands
                   namespaceFiles:
                     enabled: true
+                    include:
+                      - etl_script.py
                   taskRunner:
                     type: io.kestra.plugin.core.runner.Process
                   beforeCommands:

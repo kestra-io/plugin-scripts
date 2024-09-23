@@ -57,6 +57,46 @@ import jakarta.validation.constraints.NotEmpty;
                    """
         ),
         @Example(
+            title = "Include only specific namespace files.",
+            full = true,
+            code = """
+                   id: include_files
+                   namespace: company.team
+
+                   tasks:
+                     - id: command
+                       type: io.kestra.plugin.scripts.shell.Commands
+                       description: "Only the included `namespaceFiles` get listed"
+                       namespaceFiles:
+                         enabled: true
+                         include:
+                           - test1.txt
+                           - test2.yaml
+                       commands:
+                         - ls
+                   """
+        ),
+        @Example(
+            title = "Exclude specific namespace files.",
+            full = true,
+            code = """
+                   id: exclude_files
+                   namespace: company.team
+
+                   tasks:
+                     - id: command
+                       type: io.kestra.plugin.scripts.shell.Commands
+                       description: "All `namespaceFiles` except those that are excluded will be injected into the task's working directory"
+                       namespaceFiles:
+                         enabled: true
+                         exclude:
+                           - test1.txt
+                           - test2.yaml
+                       commands:
+                         - ls
+                   """
+        ),
+        @Example(
             title = "Execute Shell commands that generate files accessible by other tasks and available for download in the UI's Output tab.",
             full = true,
             code = """
@@ -82,10 +122,14 @@ import jakarta.validation.constraints.NotEmpty;
                    namespace: company.team
 
                    tasks:
-                     - id: commands
-                       type: io.kestra.plugin.scripts.shell.Commands
-                       commands:
-                         - cat {{ outputs.previousTaskId.uri }}
+                     - id: http_download
+                      type: io.kestra.plugin.core.http.Download
+                      uri: https://huggingface.co/datasets/kestra/datasets/raw/main/csv/products.csv
+                  
+                    - id: commands
+                      type: io.kestra.plugin.scripts.shell.Commands
+                      commands:
+                        - cat {{ outputs.http_download.uri }}
                    """
         ),
         @Example(
