@@ -32,7 +32,7 @@ import java.util.Map;
 @Plugin(
     examples = {
         @Example(
-            title = "Execute a Python script.",
+            title = "Execute a Python script and generate an output.",
             full = true,
             code = """
                 id: python_use_input_file
@@ -45,12 +45,45 @@ import java.util.Map;
                       from kestra import Kestra
                       import requests
                         
-                      response = requests.get('https://google.com')
+                      response = requests.get('https://kestra.io')
                       print(response.status_code)
                       
                       Kestra.outputs({'status': response.status_code, 'text': response.text})
                     beforeCommands:
                       - pip install requests kestra
+                """
+        ),
+        @Example(
+            title = "Log messages at different log levels using Kestra logger.",
+            full = true,
+            code = """
+                id: python_logs
+                namespace: company.team
+
+                tasks:
+                  - id: python_logger
+                    type: io.kestra.plugin.scripts.python.Script
+                    allowFailure: true
+                    warningOnStdErr: false
+                    script: |
+                      import time
+                      from kestra import Kestra 
+
+                      logger = Kestra.logger()
+
+                      logger.debug("DEBUG is used for diagnostic info.")
+                      time.sleep(0.5)
+
+                      logger.info("INFO confirms normal operation.")
+                      time.sleep(0.5)
+
+                      logger.warning("WARNING signals something unexpected.")
+                      time.sleep(0.5)
+
+                      logger.error("ERROR indicates a serious issue.")
+                      time.sleep(0.5)
+
+                      logger.critical("CRITICAL means a severe failure.")
                 """
         ),
         @Example(
