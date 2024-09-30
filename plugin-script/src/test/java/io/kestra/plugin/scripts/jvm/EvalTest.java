@@ -43,7 +43,7 @@ abstract public class EvalTest {
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());
 
         Eval.Output runOutput = task.run(runContext);
-        Thread.sleep(100);
+        Thread.sleep(500);
 
         LogEntry firstLog = receive.blockFirst();
         assertThat(firstLog.getLevel(), is(Level.INFO));
