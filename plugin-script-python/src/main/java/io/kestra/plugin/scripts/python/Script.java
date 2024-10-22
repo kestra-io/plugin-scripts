@@ -40,7 +40,7 @@ import java.util.Map;
                 
                 tasks:
                   - id: python
-                    task: io.kestra.plugin.scripts.python.Script
+                    type: io.kestra.plugin.scripts.python.Script
                     script: |
                       from kestra import Kestra
                       import requests
@@ -95,7 +95,7 @@ import java.util.Map;
                 
                 tasks:
                   - id: python
-                    task: io.kestra.plugin.scripts.python.Script
+                    type: io.kestra.plugin.scripts.python.Script
                     script: |
                       with open('{{ outputs.previousTaskId.uri }}', 'r') as f:
                         print(f.read())
