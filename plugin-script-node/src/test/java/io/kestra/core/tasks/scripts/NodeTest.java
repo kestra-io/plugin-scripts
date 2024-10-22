@@ -64,8 +64,8 @@ class NodeTest {
         });
 
         assertThat(nodeException.getExitCode(), is(1));
-        assertThat(nodeException.getStdOutSize(), is(0));
-        assertThat(nodeException.getStdErrSize(), equalTo(0));
+        assertThat(nodeException.getStdErrCount(), is(0));
+        assertThat(nodeException.getStdErrCount(), equalTo(0));
     }
 
     @Test
