@@ -2,6 +2,7 @@ package io.kestra.plugin.scripts.powershell;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.LogEntry;
+import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
@@ -81,7 +82,7 @@ class CommandsTest {
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        Assertions.assertThrows(TaskException.class, () ->  bash.run(runContext));
+        Assertions.assertThrows(RunnableTaskException.class, () ->  bash.run(runContext));
     }
 
     @Test

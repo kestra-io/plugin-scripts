@@ -2,6 +2,7 @@ package io.kestra.core.tasks.scripts;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.AbstractMetricEntry;
+import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
@@ -60,12 +61,13 @@ class PythonTest {
             .inputFiles(files)
             .build();
 
-        TaskException pythonException = assertThrows(TaskException.class, () -> {
+        RunnableTaskException pythonException = assertThrows(RunnableTaskException.class, () -> {
             python.run(runContext);
         });
 
-        assertThat(pythonException.getExitCode(), is(1));
-        assertThat(pythonException.getStdOutSize(), is(0));
+
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) pythonException.getOutput()).getExitCode(), is(1));
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) pythonException.getOutput()).getStdOutLineCount(), is(0));
     }
 
     @Test

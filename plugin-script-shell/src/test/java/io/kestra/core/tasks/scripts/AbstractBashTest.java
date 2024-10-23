@@ -3,6 +3,7 @@ package io.kestra.core.tasks.scripts;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
 import io.kestra.core.models.executions.AbstractMetricEntry;
+import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
@@ -128,14 +129,14 @@ abstract class AbstractBashTest {
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        TaskException bashException = assertThrows(TaskException.class, () -> {
+        RunnableTaskException bashException = assertThrows(RunnableTaskException.class, () -> {
             bash.run(runContext);
         });
 
 
-        assertThat(bashException.getExitCode(), is(66));
-        assertThat(bashException.getStdOutSize(), is(0));
-        assertThat(bashException.getStdErrSize(), is(1));
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getExitCode(), is(66));
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getStdOutLineCount(), is(0));
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getStdErrLineCount(), is(1));
     }
 
     @Test
@@ -146,13 +147,13 @@ abstract class AbstractBashTest {
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        TaskException bashException = assertThrows(TaskException.class, () -> {
+        RunnableTaskException bashException = assertThrows(RunnableTaskException.class, () -> {
             bash.run(runContext);
         });
 
-        assertThat(bashException.getExitCode(), is(127));
-        assertThat(bashException.getStdOutSize(), is(0));
-        assertThat(bashException.getStdErrSize(), is(1));
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getExitCode(), is(127));
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getStdOutLineCount(), is(0));
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getStdErrLineCount(), is(1));
     }
     @Test
     @DisabledIfEnvironmentVariable(named = "GITHUB_WORKFLOW", matches = ".*")

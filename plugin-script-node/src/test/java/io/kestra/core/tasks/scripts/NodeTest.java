@@ -2,13 +2,14 @@ package io.kestra.core.tasks.scripts;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.AbstractMetricEntry;
-import io.kestra.core.models.tasks.runners.TaskException;
+import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.junit.annotations.KestraTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -48,7 +49,8 @@ class NodeTest {
     }
 
     @Test
-    void failed() throws Exception {
+    void
+    failed() throws Exception {
         RunContext runContext = runContextFactory.of();
         Map<String, String> files = new HashMap<>();
         files.put("main.js", "process.exit(1)");
@@ -59,13 +61,12 @@ class NodeTest {
             .inputFiles(files)
             .build();
 
-        TaskException nodeException = assertThrows(TaskException.class, () -> {
+        RunnableTaskException nodeException = assertThrows(RunnableTaskException.class, () -> {
             node.run(runContext);
         });
 
-        assertThat(nodeException.getExitCode(), is(1));
-        assertThat(nodeException.getStdErrCount(), is(0));
-        assertThat(nodeException.getStdErrCount(), equalTo(0));
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) nodeException.getOutput()).getExitCode(), is(1));
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) nodeException.getOutput()).getStdErrLineCount(), equalTo(0));
     }
 
     @Test

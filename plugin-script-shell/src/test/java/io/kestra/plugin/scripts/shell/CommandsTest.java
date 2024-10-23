@@ -3,6 +3,7 @@ package io.kestra.plugin.scripts.shell;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
 import io.kestra.core.models.executions.LogEntry;
+import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
@@ -86,13 +87,13 @@ class CommandsTest {
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        TaskException TaskException = assertThrows(TaskException.class, () -> {
+        RunnableTaskException TaskException = assertThrows(RunnableTaskException.class, () -> {
             bash.run(runContext);
         });
 
-        assertThat(TaskException.getExitCode(), is(66));
-        assertThat(TaskException.getStdOutSize(), is(0));
-        assertThat(TaskException.getStdErrSize(), is(1));
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) TaskException.getOutput()).getExitCode(), is(66));
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) TaskException.getOutput()).getStdOutLineCount(), is(0));
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) TaskException.getOutput()).getStdErrLineCount(), is(1));
     }
 
     @ParameterizedTest
@@ -108,13 +109,13 @@ class CommandsTest {
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        TaskException TaskException = assertThrows(TaskException.class, () -> {
+        RunnableTaskException TaskException = assertThrows(RunnableTaskException.class, () -> {
             bash.run(runContext);
         });
 
-        assertThat(TaskException.getExitCode(), is(127));
-        assertThat(TaskException.getStdOutSize(), is(0));
-        assertThat(TaskException.getStdErrSize(), is(1));
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) TaskException.getOutput()).getExitCode(), is(127));
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) TaskException.getOutput()).getStdOutLineCount(), is(0));
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) TaskException.getOutput()).getStdErrLineCount(), is(1));
     }
 
     @ParameterizedTest
