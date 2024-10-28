@@ -65,7 +65,10 @@ subprojects {
         annotationProcessor group: "io.kestra", name: "processor", version: kestraVersion
 
         // Logs
-        compileOnly 'org.slf4j:slf4j-api'
+        constraints {
+            // Forced dependencies
+            api("org.slf4j:slf4j-api:2.0.16")
+        }
         compileOnly 'ch.qos.logback:logback-classic'
     }
 }
