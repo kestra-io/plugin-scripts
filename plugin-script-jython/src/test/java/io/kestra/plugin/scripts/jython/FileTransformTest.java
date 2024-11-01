@@ -19,4 +19,14 @@ class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
             )
             .build();
     }
+
+    @Override
+    protected FileTransform multipleRows(String source) {
+        return io.kestra.plugin.scripts.jython.FileTransform.builder()
+            .id("unit-test")
+            .type(Eval.class.getName())
+            .from(source)
+            .script("rows = [1, 2 , row, {\"action\": \"insert\"}]\n")
+            .build();
+    }
 }

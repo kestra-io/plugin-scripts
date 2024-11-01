@@ -37,40 +37,14 @@ class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
             .build();
     }
 
-
-    @SuppressWarnings("unchecked")
-    @Test
-    void rows() throws Exception {
-        File tempFile = File.createTempFile(this.getClass().getSimpleName().toLowerCase() + "_", ".trs");
-        OutputStream output = new FileOutputStream(tempFile);
-
-        FileSerde.write(output, ImmutableMap.of(
-            "id", "1",
-            "name", "john"
-        ));
-
-        URI source = storageInterface.put(
-            null,
-            new URI("/" + IdUtils.create()),
-            new FileInputStream(tempFile)
-        );
-
-        FileTransform task = io.kestra.plugin.scripts.groovy.FileTransform.builder()
+    @Override
+    protected FileTransform multipleRows(String source) {
+        return io.kestra.plugin.scripts.groovy.FileTransform.builder()
             .id("unit-test")
             .type(FileTransform.class.getName())
-            .from(source.toString())
+            .from(source)
             .concurrent(10)
-            .script("rows = [1,2,3, [\"action\": \"insert\"]]\n")
+            .script("rows = [1, 2, row, [\"action\": \"insert\"]]\n")
             .build();
-
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());
-        FileTransform.Output runOutput = task.run(runContext);
-
-        BufferedReader inputStream = new BufferedReader(new InputStreamReader(storageInterface.get(null, runOutput.getUri())));
-        List<Object> result = new ArrayList<>();
-        FileSerde.reader(inputStream, result::add);
-
-        assertThat(result.size(), is(4));
-        assertThat(result, hasItems(1, 2, 3));
     }
 }

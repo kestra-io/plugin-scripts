@@ -22,6 +22,7 @@ import java.util.Map;
 import jakarta.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 
 @KestraTest
@@ -33,6 +34,8 @@ public abstract class FileTransformTest {
     protected StorageInterface storageInterface;
 
     abstract protected FileTransform task(String source);
+
+    abstract protected FileTransform multipleRows(String source);
 
     @Test
     void run() throws Exception {
@@ -122,5 +125,38 @@ public abstract class FileTransformTest {
                 "email", "jane@kestra.io"
             )));
         }
+    }
+
+    @Test
+    void rows() throws Exception {
+        File tempFile = File.createTempFile(this.getClass().getSimpleName().toLowerCase() + "_", ".trs");
+        OutputStream output = new FileOutputStream(tempFile);
+
+        var map = Map.of(
+            "id", "1",
+            "name", "john"
+        );
+
+        FileSerde.write(output, map);
+
+        URI source = storageInterface.put(
+            null,
+            new URI("/" + IdUtils.create()),
+            new FileInputStream(tempFile)
+        );
+
+        io.kestra.plugin.scripts.jvm.FileTransform task = this.multipleRows(source.toString());
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());
+        io.kestra.plugin.scripts.jvm.FileTransform.Output runOutput = task.run(runContext);
+
+        BufferedReader inputStream = new BufferedReader(new InputStreamReader(storageInterface.get(null, runOutput.getUri())));
+        List<Object> result = new ArrayList<>();
+        FileSerde.reader(inputStream, result::add);
+
+        assertThat(result.size(), is(4));
+        assertThat(result, hasItems(1, 2));
+        assertThat(result.get(2), is(map));
+        assertThat(result.get(3), is(Map.of("action", "insert")));
     }
 }

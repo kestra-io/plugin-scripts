@@ -9,6 +9,9 @@ import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.runners.RunContext;
 
+import java.util.Collection;
+import java.util.List;
+
 @SuperBuilder
 @ToString
 @EqualsAndHashCode
@@ -67,11 +70,31 @@ import io.kestra.core.runners.RunContext;
                     from: "{{ inputs.file }}"
                     script: |
                       logger.info('row: {}', row)
-                    
-                      if row['name'] == 'richard': 
+                
+                      if row['name'] == 'richard':
                         row = None
-                      else: 
+                      else:
                         row['email'] = row['name'] + '@kestra.io'
+                """
+        ),
+        @Example(
+            title = "Create multiple rows from one row.",
+            full = true,
+            code = """
+                id: jython_file_transform
+                namespace: company.team
+
+                inputs:
+                  - id: file
+                    type: FILE
+
+                tasks:
+                  - id: file_transform
+                    type: io.kestra.plugin.scripts.jython.FileTransform
+                    from: "{{ inputs.file }}"
+                    script: |
+                      logger.info('row: {}', row)
+                      rows = [{"action": "insert"}, row]
                 """
         ),
         @Example(
@@ -92,8 +115,8 @@ import io.kestra.core.runners.RunContext;
                     from: "{{ inputs.json }}"
                     script: |
                       logger.info('row: {}', row)
-                    
-                      if row['name'] == 'richard': 
+                
+                      if row['name'] == 'richard':
                         row = None
                       else: 
                         row['email'] = row['name'] + '@kestra.io'
@@ -105,5 +128,11 @@ public class FileTransform extends io.kestra.plugin.scripts.jvm.FileTransform {
     @Override
     public Output run(RunContext runContext) throws Exception {
         return this.run(runContext, "python");
+    }
+
+    @Override
+    protected Collection<Object> convertRows(Object rows) {
+        //noinspection unchecked
+        return (Collection<Object>) rows;
     }
 }
