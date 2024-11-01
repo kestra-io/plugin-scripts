@@ -139,6 +139,8 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
         runContext.metric(Counter.of("records", lineCount));
     }
 
+    abstract protected Collection<Object> convertRows(Object rows);
+
     @SuppressWarnings("unchecked")
     protected Function<Object, Publisher<Object>> convert(ScriptEngineService.CompiledScript script) throws ScriptException {
         return throwFunction(row -> {
@@ -148,7 +150,7 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
             script.getScript().eval(bindings);
 
             if (bindings.get("rows") != null) {
-                return Flux.fromIterable((Collection<Object>) bindings.get("rows"));
+                return Flux.fromIterable(this.convertRows(bindings.get("rows")));
             }
 
             if (bindings.get("row") != null) {
