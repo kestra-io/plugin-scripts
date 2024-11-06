@@ -122,7 +122,7 @@ import java.util.Map;
         @Example(
             full = true,
             title = """
-            If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the outputFiles property as shown in the example above. Files will be persisted in Kestra's internal storage. The first task in this example creates a file `'myfile.txt'` and the next task can access it by leveraging the syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`.
+            If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `outputFiles` property as shown in the example above. Files will be persisted in Kestra's internal storage. The first task in this example creates a file `'clean_dataset.csv'` and the next task can access it by leveraging the syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`.
             """,
             code = """     
                 id: python_outputs
