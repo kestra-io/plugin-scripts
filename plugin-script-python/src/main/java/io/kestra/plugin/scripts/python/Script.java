@@ -65,6 +65,8 @@ import java.util.Map;
                     type: io.kestra.plugin.scripts.python.Script
                     allowFailure: true
                     warningOnStdErr: false
+                    beforeCommands:
+                      - pip install kestra
                     script: |
                       import time
                       from kestra import Kestra 
