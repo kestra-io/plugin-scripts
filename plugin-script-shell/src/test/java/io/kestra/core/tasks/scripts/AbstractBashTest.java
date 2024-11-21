@@ -77,14 +77,14 @@ abstract class AbstractBashTest {
         assertThat(run.getStdOutLineCount(), is(1));
         assertThat(run.getVars().get("extract"), is("I'm here"));
 
-        InputStream get = storageInterface.get(null, run.getOutputFiles().get("xml"));
+        InputStream get = storageInterface.get(null, null, run.getOutputFiles().get("xml"));
 
         assertThat(
             CharStreams.toString(new InputStreamReader(get)),
             is("1\n3\n")
         );
 
-        get = storageInterface.get(null, run.getOutputFiles().get("csv"));
+        get = storageInterface.get(null, null, run.getOutputFiles().get("csv"));
 
         assertThat(
             CharStreams.toString(new InputStreamReader(get)),
@@ -112,13 +112,13 @@ abstract class AbstractBashTest {
         assertThat(run.getStdErrLineCount(), is(0));
         assertThat(run.getStdOutLineCount(), is(0));
 
-        InputStream get = storageInterface.get(null, run.getOutputFiles().get("xml/file1.txt"));
+        InputStream get = storageInterface.get(null, null, run.getOutputFiles().get("xml/file1.txt"));
         assertThat(CharStreams.toString(new InputStreamReader(get)), is("1\n"));
 
-        get = storageInterface.get(null, run.getOutputFiles().get("xml/sub/sub2/file2.txt"));
+        get = storageInterface.get(null, null, run.getOutputFiles().get("xml/sub/sub2/file2.txt"));
         assertThat(CharStreams.toString(new InputStreamReader(get)), is("2\n"));
 
-        get = storageInterface.get(null, run.getOutputFiles().get("csv/file1.txt"));
+        get = storageInterface.get(null, null, run.getOutputFiles().get("csv/file1.txt"));
         assertThat(CharStreams.toString(new InputStreamReader(get)), is("3\n"));
     }
     @Test
@@ -198,6 +198,7 @@ abstract class AbstractBashTest {
 
         URI put = storageInterface.put(
             null,
+            null,
             new URI("/file/storage/get.yml"),
             new FileInputStream(Objects.requireNonNull(resource).getFile())
         );
@@ -220,7 +221,7 @@ abstract class AbstractBashTest {
         ScriptOutput run = bash.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
-        InputStream get = storageInterface.get(null, run.getOutputFiles().get("out"));
+        InputStream get = storageInterface.get(null, null, run.getOutputFiles().get("out"));
         String outputContent = CharStreams.toString(new InputStreamReader(get));
         String fileContent = String.join("\n", Files.readAllLines(new File(resource.getPath()).toPath(), StandardCharsets.UTF_8));
         assertThat(outputContent, is(fileContent + "\n"));
@@ -232,11 +233,13 @@ abstract class AbstractBashTest {
 
         URI put1 = storageInterface.put(
             null,
+            null,
             new URI("/file/storage/get.yml"),
             new FileInputStream(Objects.requireNonNull(resource).getFile())
         );
 
         URI put2 = storageInterface.put(
+            null,
             null,
             new URI("/file/storage/get.yml"),
             new FileInputStream(Objects.requireNonNull(resource).getFile())
@@ -261,7 +264,7 @@ abstract class AbstractBashTest {
         ScriptOutput run = bash.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
-        InputStream get = storageInterface.get(null, run.getOutputFiles().get("out"));
+        InputStream get = storageInterface.get(null, null, run.getOutputFiles().get("out"));
         String outputContent = CharStreams.toString(new InputStreamReader(get));
         String fileContent = String.join("\n", Files.readAllLines(new File(resource.getPath()).toPath(), StandardCharsets.UTF_8));
         assertThat(outputContent, is(fileContent + "\n" + fileContent + "\n"));
@@ -272,6 +275,7 @@ abstract class AbstractBashTest {
         URL resource = AbstractBashTest.class.getClassLoader().getResource("application.yml");
 
         URI put = storageInterface.put(
+            null,
             null,
             new URI("/file/storage/get.yml"),
             new FileInputStream(Objects.requireNonNull(resource).getFile())

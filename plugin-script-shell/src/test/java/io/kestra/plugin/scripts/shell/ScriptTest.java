@@ -160,7 +160,7 @@ class ScriptTest {
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getOutputFiles().get("out/bla.yml").toString(), startsWith("kestra://"));
         assertThat(
-            new String(storageInterface.get(null, run.getOutputFiles().get("out/bla.yml")).readAllBytes()),
+            new String(storageInterface.get(null, null, run.getOutputFiles().get("out/bla.yml")).readAllBytes()),
             containsString("base-path: /tmp/unittest")
         );
     }
@@ -169,6 +169,7 @@ class ScriptTest {
         var resource = ScriptTest.class.getClassLoader().getResource("application.yml");
 
         return storageInterface.put(
+            null,
             null,
             new URI(path),
             new FileInputStream(Objects.requireNonNull(resource).getFile())
