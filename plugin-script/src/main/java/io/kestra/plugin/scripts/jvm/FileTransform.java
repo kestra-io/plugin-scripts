@@ -113,7 +113,7 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
             .build();
     }
 
-    protected void finalize(
+    private void finalize(
         RunContext runContext,
         Flux<Object> flowable,
         ScriptEngineService.CompiledScript scripts,
