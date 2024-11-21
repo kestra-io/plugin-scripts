@@ -47,6 +47,7 @@ class CommandsTest {
 
         URI put = storageInterface.put(
             null,
+            null,
             new URI("/file/storage/get.yml"),
             IOUtils.toInputStream(
                 "Get-ChildItem | Format-List",
