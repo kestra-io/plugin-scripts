@@ -35,22 +35,22 @@ import java.util.Map;
             title = "Execute a Python script and generate an output.",
             full = true,
             code = """
-                id: python_use_input_file
+                id: python_demo
                 namespace: company.team
-                
+
                 tasks:
                   - id: python
                     type: io.kestra.plugin.scripts.python.Script
                     script: |
                       from kestra import Kestra
                       import requests
-                        
+
                       response = requests.get('https://kestra.io')
                       print(response.status_code)
-                      
+
                       Kestra.outputs({'status': response.status_code, 'text': response.text})
                     beforeCommands:
-                      - pip install requests kestra
+                      - pip install requests
                 """
         ),
         @Example(
@@ -65,11 +65,9 @@ import java.util.Map;
                     type: io.kestra.plugin.scripts.python.Script
                     allowFailure: true
                     warningOnStdErr: false
-                    beforeCommands:
-                      - pip install kestra
                     script: |
                       import time
-                      from kestra import Kestra 
+                      from kestra import Kestra
 
                       logger = Kestra.logger()
 
@@ -92,9 +90,9 @@ import java.util.Map;
             title = "Execute a Python script with an input file from Kestra's local storage created by a previous task.",
             full = true,
             code = """
-                id: python_use_input_file
+                id: pass_data_between_tasks
                 namespace: company.team
-                
+
                 tasks:
                   - id: python
                     type: io.kestra.plugin.scripts.python.Script
@@ -126,7 +124,7 @@ import java.util.Map;
             title = """
             If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `outputFiles` property as shown in the example above. Files will be persisted in Kestra's internal storage. The first task in this example creates a file `'clean_dataset.csv'` and the next task can access it by leveraging the syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`.
             """,
-            code = """     
+            code = """
                 id: python_outputs
                 namespace: company.team
 
