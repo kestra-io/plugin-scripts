@@ -3,6 +3,7 @@ package io.kestra.plugin.scripts.shell;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
 import io.kestra.core.models.executions.LogEntry;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.queues.QueueFactoryInterface;
@@ -104,7 +105,7 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .failFast(true)
+            .failFast(Property.of(true))
             .commands(List.of("unknown", "echo 1"))
             .build();
 
@@ -126,7 +127,7 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .failFast(false)
+            .failFast(Property.of(false))
             .commands(List.of("unknown", "echo 1"))
             .build();
 

@@ -3,7 +3,9 @@ package io.kestra.plugin.scripts.julia;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.runners.ScriptService;
+import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
@@ -53,7 +55,7 @@ public class Commands extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "julia";
 
     @Builder.Default
-    protected String containerImage = DEFAULT_IMAGE;
+    protected Property<String> containerImage = Property.of(DEFAULT_IMAGE);
 
     @Schema(
         title = "The commands to run."
@@ -66,7 +68,7 @@ public class Commands extends AbstractExecScript {
     protected DockerOptions injectDefaults(DockerOptions original) {
         var builder = original.toBuilder();
         if (original.getImage() == null) {
-            builder.image(this.getContainerImage());
+            builder.image(this.getContainerImage().toString());
         }
 
         return builder.build();
@@ -76,9 +78,9 @@ public class Commands extends AbstractExecScript {
     public ScriptOutput run(RunContext runContext) throws Exception {
         List<String> commandsArgs = ScriptService.scriptCommands(
             this.interpreter,
-            getBeforeCommandsWithOptions(),
+            getBeforeCommandsWithOptions(runContext),
             this.commands,
-            this.targetOS
+            runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
         );
 
         return this.commands(runContext)

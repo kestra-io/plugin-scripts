@@ -3,7 +3,9 @@ package io.kestra.plugin.scripts.python;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.runners.ScriptService;
+import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
@@ -29,7 +31,7 @@ import jakarta.validation.constraints.NotEmpty;
         full = true,
         title = """
         Execute a Python script in a Conda virtual environment. First, add the following script in the embedded Code Editor and name it `etl_script.py`:
-          
+
         ```python
         import argparse
 
@@ -41,15 +43,15 @@ import jakarta.validation.constraints.NotEmpty;
         result = args.num * 2
         print(result)
         ```
-          
-        Then, make sure to set the `enabled` flag of the `namespaceFiles` property to `true` to enable [namespace files](https://kestra.io/docs/developer-guide/namespace-files). We `include` only the `etl_script.py` file as that is the only file we require from namespace files.         
+
+        Then, make sure to set the `enabled` flag of the `namespaceFiles` property to `true` to enable [namespace files](https://kestra.io/docs/developer-guide/namespace-files). We `include` only the `etl_script.py` file as that is the only file we require from namespace files.
 
         This flow uses a `io.kestra.plugin.core.runner.Process` Task Runner and Conda virtual environment for process isolation and dependency management. However, note that, by default, Kestra runs tasks in a Docker container (i.e. a Docker task runner), and you can use the `taskRunner` property to customize many options, as well as `containerImage` to choose the Docker image to use.
         """,
         code = """
               id: python_venv
               namespace: company.team
-              
+
               tasks:
                 - id: python
                   type: io.kestra.plugin.scripts.python.Commands
@@ -64,14 +66,14 @@ import jakarta.validation.constraints.NotEmpty;
                   commands:
                     - python etl_script.py
               """
-        ),  
+        ),
     @Example(
         full = true,
         title = "Execute a Python script from Git in a Docker container and output a file",
-        code = """     
+        code = """
               id: python_commands_example
               namespace: company.team
-              
+
               tasks:
                 - id: wdir
                   type: io.kestra.plugin.core.flow.WorkingDirectory
@@ -80,7 +82,7 @@ import jakarta.validation.constraints.NotEmpty;
                       type: io.kestra.plugin.git.Clone
                       url: https://github.com/kestra-io/examples
                       branch: main
-              
+
                     - id: git_python_scripts
                       type: io.kestra.plugin.scripts.python.Commands
                       warningOnStdErr: false
@@ -92,7 +94,7 @@ import jakarta.validation.constraints.NotEmpty;
                         - python examples/scripts/generate_orders.py
                       outputFiles:
                         - orders.csv
-              
+
                 - id: load_csv_to_s3
                   type: io.kestra.plugin.aws.s3.Upload
                   accessKeyId: "{{ secret('AWS_ACCESS_KEY_ID') }}"
@@ -106,10 +108,10 @@ import jakarta.validation.constraints.NotEmpty;
     @Example(
         full = true,
         title = "Execute a Python script on a remote worker with a GPU",
-        code = """     
+        code = """
               id: gpu_task
               namespace: company.team
-              
+
               tasks:
                 - id: python
                   type: io.kestra.plugin.scripts.python.Commands
@@ -124,11 +126,11 @@ import jakarta.validation.constraints.NotEmpty;
     @Example(
         full = true,
         title = "Pass detected S3 objects from the event trigger to a Python script",
-        code = """     
+        code = """
               id: s3_trigger_commands
               namespace: company.team
               description: process CSV file from S3 trigger
-              
+
               tasks:
                 - id: wdir
                   type: io.kestra.plugin.core.flow.WorkingDirectory
@@ -137,7 +139,7 @@ import jakarta.validation.constraints.NotEmpty;
                       type: io.kestra.plugin.git.Clone
                       url: https://github.com/kestra-io/examples
                       branch: main
-              
+
                     - id: python
                       type: io.kestra.plugin.scripts.python.Commands
                       inputFiles:
@@ -150,7 +152,7 @@ import jakarta.validation.constraints.NotEmpty;
                       outputFiles:
                         - "*.csv"
                         - "*.parquet"
-              
+
               triggers:
                 - id: wait_for_s3_object
                   type: io.kestra.plugin.aws.s3.Trigger
@@ -166,14 +168,14 @@ import jakarta.validation.constraints.NotEmpty;
                   secretKeyId: "{{ secret('AWS_SECRET_ACCESS_KEY') }}"
                   region: "{{ secret('AWS_DEFAULT_REGION') }}"
               """
-        ),        
+        ),
     @Example(
         full = true,
         title = "Execute a Python script from Git using a private Docker container image",
-        code = """     
+        code = """
               id: python_in_container
               namespace: company.team
-              
+
               tasks:
                 - id: wdir
                   type: io.kestra.plugin.core.flow.WorkingDirectory
@@ -182,7 +184,7 @@ import jakarta.validation.constraints.NotEmpty;
                       type: io.kestra.plugin.git.Clone
                       url: https://github.com/kestra-io/examples
                       branch: main
-              
+
                     - id: git_python_scripts
                       type: io.kestra.plugin.scripts.python.Commands
                       warningOnStdErr: false
@@ -221,7 +223,7 @@ import jakarta.validation.constraints.NotEmpty;
 
                     response = requests.get('https://google.com')
                     print(response.status_code)
-                    Kestra.outputs({'status': response.status_code, 'text': response.text})                    
+                    Kestra.outputs({'status': response.status_code, 'text': response.text})
                 beforeCommands:
                   - python -m venv venv
                   - . venv/bin/activate
@@ -229,13 +231,13 @@ import jakarta.validation.constraints.NotEmpty;
                 commands:
                   - python main.py
             """
-    )        
+    )
 })
 public class Commands extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/kestrapy:latest";
 
     @Builder.Default
-    protected String containerImage = DEFAULT_IMAGE;
+    protected Property<String> containerImage = Property.of(DEFAULT_IMAGE);
 
     @Schema(
         title = "The commands to run."
@@ -248,7 +250,7 @@ public class Commands extends AbstractExecScript {
     protected DockerOptions injectDefaults(DockerOptions original) {
         var builder = original.toBuilder();
         if (original.getImage() == null) {
-            builder.image(this.getContainerImage());
+            builder.image(this.getContainerImage().toString());
         }
 
         return builder.build();
@@ -258,9 +260,9 @@ public class Commands extends AbstractExecScript {
     public ScriptOutput run(RunContext runContext) throws Exception {
         List<String> commandsArgs = ScriptService.scriptCommands(
             this.interpreter,
-            getBeforeCommandsWithOptions(),
+            getBeforeCommandsWithOptions(runContext),
             this.commands,
-            this.targetOS
+            runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
         );
 
         return this.commands(runContext)

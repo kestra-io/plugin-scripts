@@ -3,6 +3,7 @@ package io.kestra.plugin.scripts.shell;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.LogEntry;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
@@ -147,7 +148,8 @@ class ScriptTest {
             .inputFiles(Map.of(
                 "test/application.yml", internalFiles("/test/" + IdUtils.create() + ".yml").toString()
             ))
-            .outputFiles(List.of("out/**"))
+            .outputFiles(Property.of(
+                List.of("out/**")))
             .script("""
                 mkdir out
                 cat test/application.yml > out/bla.yml

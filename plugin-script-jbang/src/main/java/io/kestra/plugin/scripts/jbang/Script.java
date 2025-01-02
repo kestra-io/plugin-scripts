@@ -3,7 +3,9 @@ package io.kestra.plugin.scripts.jbang;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.runners.ScriptService;
+import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
@@ -38,7 +40,7 @@ import jakarta.validation.constraints.NotNull;
             code = """
                 id: jbang_script
                 namespace: company.team
-                
+
                 tasks:
                   - id: script
                     type: io.kestra.plugin.scripts.jbang.Script
@@ -60,20 +62,20 @@ import jakarta.validation.constraints.NotNull;
             code = """
                 id: jbang_script
                 namespace: company.team
-                
+
                 tasks:
                   - id: script_with_dependency
                     type: io.kestra.plugin.scripts.jbang.Script
                     script: |
                       //DEPS ch.qos.reload4j:reload4j:1.2.19
-              
+
                       import org.apache.log4j.Logger;
                       import org.apache.log4j.BasicConfigurator;
-              
+
                       class classpath_example {
-              
+
                         static final Logger logger = Logger.getLogger(classpath_example.class);
-              
+
                         public static void main(String[] args) {
                           BasicConfigurator.configure();\s
                           logger.info("Hello World");
@@ -87,7 +89,7 @@ import jakarta.validation.constraints.NotNull;
             code = """
                 id: jbang_script
                 namespace: company.team
-                
+
                 tasks:
                   - id: script_kotlin
                     type: io.kestra.plugin.scripts.jbang.Script
@@ -104,7 +106,7 @@ public class Script extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "jbangdev/jbang-action";
 
     @Builder.Default
-    private String containerImage = DEFAULT_IMAGE;
+    private Property<String> containerImage = Property.of(DEFAULT_IMAGE);
 
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `jbang hello.java` or an executable JAR, use the `Commands` task instead."
@@ -136,7 +138,7 @@ public class Script extends AbstractExecScript {
     protected DockerOptions injectDefaults(DockerOptions original) {
         var builder = original.toBuilder();
         if (original.getImage() == null) {
-            builder.image(this.getContainerImage());
+            builder.image(this.getContainerImage().toString());
         }
 
         return builder.build();
@@ -157,9 +159,9 @@ public class Script extends AbstractExecScript {
 
         List<String> commandsArgs  = ScriptService.scriptCommands(
             this.interpreter,
-            getBeforeCommandsWithOptions(),
-            String.join(" ", "jbang", quiet ? "--quiet" : "", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), this.targetOS)),
-            this.targetOS
+            getBeforeCommandsWithOptions(runContext),
+            String.join(" ", "jbang", quiet ? "--quiet" : "", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), runContext.render(this.targetOS).as(TargetOS.class).orElse(null))),
+            runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
         );
 
         return commands
