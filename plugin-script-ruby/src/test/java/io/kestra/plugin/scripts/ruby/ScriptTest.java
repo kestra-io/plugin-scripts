@@ -2,6 +2,7 @@ package io.kestra.plugin.scripts.ruby;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.LogEntry;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
@@ -35,12 +36,13 @@ class ScriptTest {
         List<LogEntry> logs = new ArrayList<>();
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
-        Script bash = Script.builder()
+        Script bash;
+        bash = Script.builder()
             .id("unit-test")
             .type(Script.class.getName())
-            .beforeCommands(List.of(
+            .beforeCommands(Property.of(List.of(
                 "gem install date"
-            ))
+            )))
             .script("""
                 require 'date'
                 puts Date.new(2012,12,25).strftime('%F')

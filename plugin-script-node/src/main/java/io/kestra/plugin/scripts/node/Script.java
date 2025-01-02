@@ -3,7 +3,9 @@ package io.kestra.plugin.scripts.node;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.runners.ScriptService;
+import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
@@ -51,14 +53,14 @@ import java.util.Map;
     @Example(
         full = true,
         title = """
-        If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{ outputDir }}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{ outputs.yourTaskId.outputFiles['yourFileName.fileExtension'] }}`. 
-        
+        If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{ outputDir }}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{ outputs.yourTaskId.outputFiles['yourFileName.fileExtension'] }}`.
+
         Alternatively, instead of the `{{ outputDir }}` variable, you could use the `outputFiles` property to output files from your script. You can access those files in downstream tasks using the same syntax `{{ outputs.yourTaskId.outputFiles['yourFileName.fileExtension'] }}`, and you can download the files from the UI's Output tab.
         """,
         code = """
             id: nodejs_script
             namespace: company.team
-            
+
             tasks:
               - id: node
                 type: io.kestra.plugin.scripts.node.Script
@@ -113,15 +115,15 @@ import java.util.Map;
 
                     fs.writeFileSync('{{ outputDir }}/orders.csv', csvData);
 
-                    console.log('Orders saved to orders.csv');       
+                    console.log('Orders saved to orders.csv');
             """
-    )    
+    )
 })
 public class Script extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "node";
 
     @Builder.Default
-    protected String containerImage = DEFAULT_IMAGE;
+    protected Property<String> containerImage = Property.of(DEFAULT_IMAGE);
 
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
@@ -135,7 +137,7 @@ public class Script extends AbstractExecScript {
     protected DockerOptions injectDefaults(DockerOptions original) {
         var builder = original.toBuilder();
         if (original.getImage() == null) {
-            builder.image(this.getContainerImage());
+            builder.image(this.getContainerImage().toString());
         }
 
         return builder.build();
@@ -156,9 +158,9 @@ public class Script extends AbstractExecScript {
 
         List<String> commandsArgs  = ScriptService.scriptCommands(
             this.interpreter,
-            getBeforeCommandsWithOptions(),
-            String.join(" ", "node", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), this.targetOS)),
-            this.targetOS
+            getBeforeCommandsWithOptions(runContext),
+            String.join(" ", "node", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), runContext.render(this.targetOS).as(TargetOS.class).orElse(null))),
+            runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
         );
 
         return commands

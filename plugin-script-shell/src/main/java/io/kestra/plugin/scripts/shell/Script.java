@@ -3,7 +3,9 @@ package io.kestra.plugin.scripts.shell;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.runners.ScriptService;
+import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
@@ -37,7 +39,7 @@ import jakarta.validation.constraints.NotNull;
                   - id: http_download
                     type: io.kestra.plugin.core.http.Download
                     uri: https://huggingface.co/datasets/kestra/datasets/raw/main/csv/orders.csv
-                  
+
                   - id: shell_script_task
                     type: io.kestra.plugin.scripts.shell.Script
                     outputFiles:
@@ -55,7 +57,7 @@ import jakarta.validation.constraints.NotNull;
             code = """
                 id: shell_script_example
                 namespace: company.team
-                
+
                 tasks:
                   - id: hello
                     type: io.kestra.plugin.scripts.shell.Script
@@ -65,14 +67,14 @@ import jakarta.validation.constraints.NotNull;
                       - hello.txt
                     script: |
                       echo "Hello world!" > hello.txt"""
-        )        
+        )
     }
 )
 public class Script extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "ubuntu";
 
     @Builder.Default
-    protected String containerImage = DEFAULT_IMAGE;
+    protected Property<String> containerImage = Property.of(DEFAULT_IMAGE);
 
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
@@ -86,7 +88,7 @@ public class Script extends AbstractExecScript {
     protected DockerOptions injectDefaults(DockerOptions original) {
         var builder = original.toBuilder();
         if (original.getImage() == null) {
-            builder.image(this.getContainerImage());
+            builder.image(this.getContainerImage().toString());
         }
 
         return builder.build();
@@ -96,9 +98,9 @@ public class Script extends AbstractExecScript {
     public ScriptOutput run(RunContext runContext) throws Exception {
         List<String> commandsArgs = ScriptService.scriptCommands(
             this.interpreter,
-            getBeforeCommandsWithOptions(),
+            getBeforeCommandsWithOptions(runContext),
             this.script,
-            this.targetOS
+            runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
         );
 
         return this.commands(runContext)
