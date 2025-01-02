@@ -2,6 +2,7 @@ package io.kestra.plugin.scripts.powershell;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.LogEntry;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.queues.QueueFactoryInterface;
@@ -79,7 +80,7 @@ class CommandsTest {
             .id("unit-test")
             .type(Script.class.getName())
             .commands(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\""))
-            .failFast(true)
+            .failFast(Property.of(true))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -92,7 +93,7 @@ class CommandsTest {
             .id("unit-test")
             .type(Script.class.getName())
             .commands(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\""))
-            .failFast(false)
+            .failFast(Property.of(false))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());

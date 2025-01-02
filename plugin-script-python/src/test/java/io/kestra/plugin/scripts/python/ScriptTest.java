@@ -2,6 +2,7 @@ package io.kestra.plugin.scripts.python;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.AbstractMetricEntry;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.runners.RunContext;
@@ -94,11 +95,11 @@ class ScriptTest {
             .script("import requests;" +
                 "print('::{\"outputs\": {\"extract\":\"' + str(requests.get('https://google.com').status_code) + '\"}}::')"
             )
-            .beforeCommands(List.of(
+            .beforeCommands(Property.of(List.of(
                 "python3 -m venv venv",
                 ". venv/bin/activate",
                 "pip install requests > /dev/null"
-            ))
+            )))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
@@ -152,11 +153,11 @@ class ScriptTest {
                 "print(\"1234\\n\\n\")\n" +
                 "Kestra.outputs({'secrets': \"test string\"})"
             )
-            .beforeCommands(List.of(
+            .beforeCommands(Property.of(List.of(
                 "python -m venv venv",
                 ". venv/bin/activate",
                 "pip install kestra > /dev/null"
-            ))
+            )))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
@@ -174,11 +175,11 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .beforeCommands(List.of(
+            .beforeCommands(Property.of(List.of(
                 "python -m venv venv",
                 ". venv/bin/activate",
                 "pip install kestra > /dev/null"
-            ))
+            )))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
@@ -203,11 +204,11 @@ class ScriptTest {
                 "Kestra.timer('timer1', lambda: time.sleep(1), {'tag1': 'i', 'tag2': 'lost'})\n" +
                 "Kestra.timer('timer2', 2.12, {'tag1': 'i', 'tag2': 'destroy'})\n"
             )
-            .beforeCommands(List.of(
+            .beforeCommands(Property.of(List.of(
                 "python -m venv venv",
                 ". venv/bin/activate",
                 "pip install kestra > /dev/null"
-            ))
+            )))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());

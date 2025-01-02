@@ -3,7 +3,9 @@ package io.kestra.plugin.scripts.julia;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.runners.ScriptService;
+import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
@@ -36,7 +38,7 @@ import java.util.Map;
         code = """
             id: julia_script
             namespace: company.team
-            
+
             tasks:
               - id: script
                 type: io.kestra.plugin.scripts.julia.Script
@@ -56,7 +58,7 @@ public class Script extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "julia";
 
     @Builder.Default
-    protected String containerImage = DEFAULT_IMAGE;
+    protected Property<String> containerImage = Property.of(DEFAULT_IMAGE);
 
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command such as `julia myscript.jl`, use the `Commands` task instead."
@@ -70,7 +72,7 @@ public class Script extends AbstractExecScript {
     protected DockerOptions injectDefaults(DockerOptions original) {
         var builder = original.toBuilder();
         if (original.getImage() == null) {
-            builder.image(this.getContainerImage());
+            builder.image(this.getContainerImage().toString());
         }
 
         return builder.build();
@@ -91,9 +93,9 @@ public class Script extends AbstractExecScript {
 
         List<String> commandsArgs  = ScriptService.scriptCommands(
             this.interpreter,
-            getBeforeCommandsWithOptions(),
-            String.join(" ", "julia", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), this.targetOS)),
-            this.targetOS
+            getBeforeCommandsWithOptions(runContext),
+            String.join(" ", "julia", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), runContext.render(this.targetOS).as(TargetOS.class).orElse(null))),
+            runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
         );
 
         return commands
