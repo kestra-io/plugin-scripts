@@ -14,6 +14,7 @@ import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.core.junit.annotations.KestraTest;
 import jakarta.inject.Inject;
+import jakarta.validation.ConstraintViolationException;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -26,8 +27,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @KestraTest
@@ -183,9 +183,8 @@ class ScriptTest {
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
-        ScriptOutput run = python.run(runContext);
-
-        assertThat(run.getExitCode(), is(0));
+        ConstraintViolationException exception = assertThrows(ConstraintViolationException.class, () -> python.run(runContext));
+        assertThat(exception.getMessage(), containsString("script: must not be empty"));
     }
 
     @ParameterizedTest
