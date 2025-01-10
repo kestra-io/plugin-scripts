@@ -43,6 +43,8 @@ import java.util.Map;
                 tasks:
                   - id: python
                     type: io.kestra.plugin.scripts.python.Script
+                    beforeCommands:
+                      - pip install requests
                     script: |
                       from kestra import Kestra
                       import requests
@@ -51,8 +53,6 @@ import java.util.Map;
                       print(response.status_code)
 
                       Kestra.outputs({'status': response.status_code, 'text': response.text})
-                    beforeCommands:
-                      - pip install requests
                 """
         ),
         @Example(
@@ -89,17 +89,21 @@ import java.util.Map;
                 """
         ),
         @Example(
-            title = "Execute a Python script with an input file from Kestra's local storage created by a previous task.",
+            title = "Execute a Python script with a file stored in Kestra's local storage created by a previous task.",
             full = true,
             code = """
                 id: pass_data_between_tasks
                 namespace: company.team
 
                 tasks:
+                  - id: download
+                    type: io.kestra.plugin.core.http.Download
+                    uri: https://huggingface.co/datasets/kestra/datasets/raw/main/csv/orders.csv
+            
                   - id: python
                     type: io.kestra.plugin.scripts.python.Script
                     script: |
-                      with open('{{ outputs.previousTaskId.uri }}', 'r') as f:
+                      with open('{{ outputs.download.uri }}', 'r') as f:
                         print(f.read())
                 """
         ),
@@ -149,7 +153,7 @@ import java.util.Map;
                       df["Age"] = df["Age"].fillna(mean_age)
                       df.to_csv("clean_dataset.csv", index=False)
 
-                  - id: readFileFromPython
+                  - id: read_file_from_python
                     type: io.kestra.plugin.scripts.shell.Commands
                     taskRunner:
                       type: io.kestra.plugin.core.runner.Process
