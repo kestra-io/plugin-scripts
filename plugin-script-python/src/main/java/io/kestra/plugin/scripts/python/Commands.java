@@ -98,7 +98,7 @@ import jakarta.validation.constraints.NotEmpty;
                 - id: load_csv_to_s3
                   type: io.kestra.plugin.aws.s3.Upload
                   accessKeyId: "{{ secret('AWS_ACCESS_KEY_ID') }}"
-                  secretKeyId: "{{ secret('AWS_SECRET_ACCESS_KEY') }}"
+                  secretKeyId: "{{ secret('AWS_SECRET_KEY_ID') }}"
                   region: eu-central-1
                   bucket: kestraio
                   key: stage/orders.csv
@@ -165,7 +165,7 @@ import jakarta.validation.constraints.NotEmpty;
                   moveTo:
                     key: archive/raw/
                   accessKeyId: "{{ secret('AWS_ACCESS_KEY_ID') }}"
-                  secretKeyId: "{{ secret('AWS_SECRET_ACCESS_KEY') }}"
+                  secretKeyId: "{{ secret('AWS_SECRET_KEY_ID') }}"
                   region: "{{ secret('AWS_DEFAULT_REGION') }}"
               """
         ),
