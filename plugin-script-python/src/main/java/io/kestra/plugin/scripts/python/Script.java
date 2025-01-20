@@ -172,10 +172,8 @@ public class Script extends AbstractExecScript {
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
     )
-    @PluginProperty(dynamic = true)
     @NotNull
-    @NotEmpty
-    protected String script;
+    protected Property<@NotEmpty String> script;
 
     @Override
     protected DockerOptions injectDefaults(DockerOptions original) {
@@ -194,9 +192,10 @@ public class Script extends AbstractExecScript {
         Map<String, String> inputFiles = FilesService.inputFiles(runContext, commands.getTaskRunner().additionalVars(runContext, commands), this.getInputFiles());
         List<String> internalToLocalFiles = new ArrayList<>();
         Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(".py"));
+        String renderedScript = runContext.render(this.script).as(String.class).orElse(null);
         inputFiles.put(
             relativeScriptPath.toString(),
-            commands.render(runContext, this.script, internalToLocalFiles)
+            commands.render(runContext, renderedScript, internalToLocalFiles)
         );
         commands = commands.withInputFiles(inputFiles);
 

@@ -1,5 +1,6 @@
 package io.kestra.plugin.scripts.jvm;
 
+import io.kestra.core.models.property.Property;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -33,8 +34,7 @@ public abstract class Eval extends AbstractJvmScript implements RunnableTask<Eva
     @Schema(
         title = "A list of output variables that will be usable in outputs."
     )
-    @PluginProperty
-    protected List<String> outputs;
+    protected Property<List<String>> outputs;
 
     protected Eval.Output run(RunContext runContext, String engineName) throws Exception {
         ScriptEngineService.CompiledScript scripts = ScriptEngineService.scripts(
@@ -53,8 +53,9 @@ public abstract class Eval extends AbstractJvmScript implements RunnableTask<Eva
 
         Output.OutputBuilder builder = Output.builder();
 
-        if (outputs != null && outputs.size() > 0) {
-            builder.outputs(gatherOutputs(scripts.getEngine(), bindings));
+        List<String> renderedOutputs = runContext.render(this.outputs).asList(String.class);
+        if (renderedOutputs.size() > 0) {
+            builder.outputs(gatherOutputs(scripts.getEngine(), bindings, renderedOutputs));
         }
 
         return builder
@@ -62,11 +63,9 @@ public abstract class Eval extends AbstractJvmScript implements RunnableTask<Eva
             .build();
     }
 
-    protected Map<String, Object> gatherOutputs(ScriptEngine engine, Bindings bindings) throws Exception {
+    protected Map<String, Object> gatherOutputs(ScriptEngine engine, Bindings bindings, List<String> renderedOutputs) throws Exception {
         Map<String, Object> outputs = new HashMap<>();
-        this.outputs
-            .forEach(s -> outputs.put(s, bindings.get(s)));
-
+        renderedOutputs.forEach(s -> outputs.put(s, bindings.get(s)));
         return outputs;
     }
 

@@ -79,10 +79,8 @@ public class Script extends AbstractExecScript {
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
     )
-    @PluginProperty(dynamic = true)
     @NotNull
-    @NotEmpty
-    protected String script;
+    protected Property<@NotEmpty String> script;
 
     @Override
     protected DockerOptions injectDefaults(DockerOptions original) {
@@ -99,7 +97,7 @@ public class Script extends AbstractExecScript {
         List<String> commandsArgs = ScriptService.scriptCommands(
             this.interpreter,
             getBeforeCommandsWithOptions(runContext),
-            this.script,
+            runContext.render(this.script).as(String.class).orElseThrow(),
             runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
         );
 

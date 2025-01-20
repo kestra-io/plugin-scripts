@@ -2,6 +2,7 @@ package io.kestra.plugin.scripts.node;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.LogEntry;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
@@ -37,7 +38,7 @@ class ScriptTest {
         Script bash = Script.builder()
             .id("unit-test")
             .type(Script.class.getName())
-            .script("console.log('hello there!')")
+            .script(Property.of("console.log('hello there!')"))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
