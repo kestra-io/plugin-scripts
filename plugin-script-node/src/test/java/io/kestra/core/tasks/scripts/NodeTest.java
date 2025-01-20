@@ -2,6 +2,7 @@ package io.kestra.core.tasks.scripts;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.AbstractMetricEntry;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
@@ -36,7 +37,7 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
-            .nodePath("node")
+            .nodePath(Property.of("node"))
             .inputFiles(files)
             .build();
 
@@ -57,7 +58,7 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
-            .nodePath("node")
+            .nodePath(Property.of("node"))
             .inputFiles(files)
             .build();
 
@@ -78,8 +79,8 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
-            .nodePath("node")
-            .npmPath("npm")
+            .nodePath(Property.of("node"))
+            .npmPath(Property.of("npm"))
             .inputFiles(files)
             .build();
 
@@ -98,7 +99,7 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
-            .nodePath("node")
+            .nodePath(Property.of("node"))
             .inputFiles(files)
             .build();
 
@@ -118,7 +119,7 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
-            .nodePath("node")
+            .nodePath(Property.of("node"))
             .inputFiles(files)
             .build();
 
@@ -130,15 +131,15 @@ class NodeTest {
 
     @Test
     void args() throws Exception {
-        RunContext runContext = runContextFactory.of(ImmutableMap.of("test", "value"));
+        RunContext runContext = runContextFactory.of();
         Map<String, String> files = new HashMap<>();
         files.put("main.js", "console.log('::{\"outputs\": {\"extract\":\"' + (process.argv.slice(2).join(' ')) + '\"}}::')");
 
         Node node = Node.builder()
             .id("test-node-task")
-            .nodePath("node")
+            .nodePath(Property.of("node"))
             .inputFiles(files)
-            .args(Arrays.asList("test", "param", "{{test}}"))
+            .args(Property.of(Arrays.asList("test", "param", "value")))
             .build();
 
         ScriptOutput run = node.run(runContext);
@@ -160,7 +161,7 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
-            .nodePath("node")
+            .nodePath(Property.of("node"))
             .inputFiles(files)
             .build();
 

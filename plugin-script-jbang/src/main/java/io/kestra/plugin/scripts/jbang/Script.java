@@ -111,27 +111,22 @@ public class Script extends AbstractExecScript {
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `jbang hello.java` or an executable JAR, use the `Commands` task instead."
     )
-    @PluginProperty(dynamic = true)
-    @NotEmpty
-    private String script;
+    private Property<@NotEmpty String> script;
 
     @Schema(
         title = "The JBang script extension.",
         description = "JBang support more than Java scripts, you can use it with JShell (.jsh), Kotlin (.kt), Groovy (.groovy) or even Markdowns (.md)."
     )
-    @PluginProperty(dynamic = true)
-    @NotEmpty
     @Builder.Default
-    private String extension = ".java";
+    private Property<@NotEmpty String> extension = Property.of(".java");
 
     @Schema(
         title = "Whether JBang should be quit.",
         description = "By default, JBang logs in stderr so quiet is configured to true by default so no JBang logs are shown except errors."
     )
-    @PluginProperty(dynamic = true)
     @NotNull
     @Builder.Default
-    private Boolean quiet = true;
+    private Property<Boolean> quiet = Property.of(true);
 
 
     @Override
@@ -150,17 +145,17 @@ public class Script extends AbstractExecScript {
 
         Map<String, String> inputFiles = FilesService.inputFiles(runContext, commands.getTaskRunner().additionalVars(runContext, commands), this.getInputFiles());
         List<String> internalToLocalFiles = new ArrayList<>();
-        Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(extension));
+        Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(runContext.render(extension).as(String.class).orElseThrow()));
         inputFiles.put(
             relativeScriptPath.toString(),
-            commands.render(runContext, this.script, internalToLocalFiles)
+            commands.render(runContext, runContext.render(this.script).as(String.class).orElseThrow(), internalToLocalFiles)
         );
         commands = commands.withInputFiles(inputFiles);
 
         List<String> commandsArgs  = ScriptService.scriptCommands(
             this.interpreter,
             getBeforeCommandsWithOptions(runContext),
-            String.join(" ", "jbang", quiet ? "--quiet" : "", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), runContext.render(this.targetOS).as(TargetOS.class).orElse(null))),
+            String.join(" ", "jbang", runContext.render(quiet).as(Boolean.class).orElseThrow() ? "--quiet" : "", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), runContext.render(this.targetOS).as(TargetOS.class).orElse(null))),
             runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
         );
 

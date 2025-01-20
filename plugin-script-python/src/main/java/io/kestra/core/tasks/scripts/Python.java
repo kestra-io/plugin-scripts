@@ -149,7 +149,7 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
     protected String virtualEnvCommand(RunContext runContext, List<String> requirements) throws IllegalVariableEvaluationException {
         List<String> renderer = new ArrayList<>();
 
-        if (this.exitOnFailed) {
+        if (runContext.render(this.exitOnFailed).as(Boolean.class).orElseThrow()) {
             renderer.add("set -o errexit");
         }
         renderer.add(this.pythonPath + " -m venv --system-site-packages " + workingDirectory + " > /dev/null");
@@ -164,8 +164,8 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
     }
 
     @Override
-    protected Map<String, String> finalEnv() throws IOException {
-        Map<String, String> env = super.finalEnv();
+    protected Map<String, String> finalEnv(RunContext runContext) throws IOException, IllegalVariableEvaluationException {
+        Map<String, String> env = super.finalEnv(runContext);
 
         // python buffer log by default, so we force unbuffer to have the whole log
         env.put("PYTHONUNBUFFERED", "true");
@@ -211,7 +211,7 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
             List<String> renderer = new ArrayList<>();
             if (this.virtualEnv) {
                 renderer.add(this.virtualEnvCommand(runContext, requirements));
-            } else if (this.exitOnFailed) {
+            } else if (runContext.render(this.exitOnFailed).as(Boolean.class).orElseThrow()) {
                 renderer.add("set -o errexit");
             }
 

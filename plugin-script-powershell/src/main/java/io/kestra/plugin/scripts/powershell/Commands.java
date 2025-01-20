@@ -54,9 +54,7 @@ public class Commands extends AbstractExecScript {
     @Schema(
         title = "The commands to run."
     )
-    @PluginProperty(dynamic = true)
-    @NotEmpty
-    protected List<String> commands;
+    protected Property<@NotEmpty List<String>> commands;
 
     @Builder.Default
     @Schema(
@@ -81,10 +79,12 @@ public class Commands extends AbstractExecScript {
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
+        var renderedCommands = runContext.render(this.commands).asList(String.class);
+
         List<String> commandsArgs = ScriptService.scriptCommands(
             this.interpreter,
             getBeforeCommandsWithOptions(runContext),
-            this.commands,
+            renderedCommands,
             runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
         );
 

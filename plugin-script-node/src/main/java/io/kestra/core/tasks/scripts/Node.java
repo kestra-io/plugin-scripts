@@ -2,6 +2,7 @@ package io.kestra.core.tasks.scripts;
 
 import com.google.common.base.Charsets;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
+import io.kestra.core.models.property.Property;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -102,24 +103,21 @@ public class Node extends AbstractBash implements RunnableTask<io.kestra.core.ta
         title = "The node interpreter to use.",
         description = "Set the node interpreter path to use."
     )
-    @PluginProperty
-    private final String nodePath = "node";
+    private final Property<String> nodePath = Property.of("node");
 
     @Builder.Default
     @Schema(
         title = "The npm binary to use.",
         description = "Set the npm binary path for node dependencies setup."
     )
-    @PluginProperty
-    private final String npmPath = "npm";
+    private final Property<String> npmPath = Property.of("npm");
 
     @Schema(
         title = "Node command args.",
         description = "Arguments list to pass to main JavaScript script."
 
     )
-    @PluginProperty(dynamic = true)
-    private List<String> args;
+    private Property<List<String>> args;
 
     @Override
     protected Map<String, String> finalInputFiles(RunContext runContext) throws IOException, IllegalVariableEvaluationException {
@@ -157,16 +155,17 @@ public class Node extends AbstractBash implements RunnableTask<io.kestra.core.ta
             // final command
             List<String> renderer = new ArrayList<>();
 
-            if (this.exitOnFailed) {
+            if (runContext.render(this.exitOnFailed).as(Boolean.class).orElseThrow()) {
                 renderer.add("set -o errexit");
             }
 
-            String args = getArgs() == null ? "" : " " + runContext.render(String.join(" ", getArgs()));
+            var renderedArgs = runContext.render(this.getArgs()).asList(String.class);
+            String args = renderedArgs.isEmpty() ? "" : " " + String.join(" ", renderedArgs);
 
-            String npmInstall = finalInputFiles.containsKey("package.json") ? npmPath + " i > /dev/null" : "";
+            String npmInstall = finalInputFiles.containsKey("package.json") ? runContext.render(npmPath).as(String.class).orElse(null) + " i > /dev/null" : "";
 
             renderer.addAll(Arrays.asList(
-                "PATH=\"$PATH:" + new File(nodePath).getParent() + "\"",
+                "PATH=\"$PATH:" + new File(runContext.render(nodePath).as(String.class).orElseThrow()).getParent() + "\"",
                 npmInstall,
                 nodePath + " main.js" + args
             ));

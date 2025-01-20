@@ -2,6 +2,7 @@ package io.kestra.plugin.scripts.python;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.LogEntry;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
@@ -54,7 +55,7 @@ class CommandsTest {
         Commands task = Commands.builder()
             .id("unit-test")
             .type(Script.class.getName())
-            .commands(List.of("python " + put.toString()))
+            .commands(Property.of(List.of("python " + put.toString())))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());

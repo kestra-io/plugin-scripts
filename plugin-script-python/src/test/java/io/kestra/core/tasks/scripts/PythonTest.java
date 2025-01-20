@@ -2,6 +2,7 @@ package io.kestra.core.tasks.scripts;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.AbstractMetricEntry;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.runners.RunContext;
@@ -114,7 +115,7 @@ class PythonTest {
             .id("test-python-task")
             .type(Python.class.getName())
             .inputFiles(files)
-            .runner(RunnerType.DOCKER)
+            .runner(Property.of(RunnerType.DOCKER))
             .dockerOptions(DockerOptions.builder()
                 .image("python")
                 .build()

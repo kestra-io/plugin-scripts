@@ -33,7 +33,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
     examples = {
         @Example(
             title = "Single bash command.",
-            full = true, 
+            full = true,
             code = """
                    id: bash_single_command
                    namespace: company.team
@@ -51,7 +51,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
             code = """
                 id: bash_generate_files
                 namespace: company.team
-                
+
                 tasks:
                   - id: bash
                     type: io.kestra.core.tasks.scripts.Bash
@@ -69,7 +69,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
             code = """
                 id: bash_input_files
                 namespace: company.team
-                
+
                 tasks:
                   - id: bash
                     type: io.kestra.core.tasks.scripts.Bash
@@ -84,9 +84,9 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
             title = "Bash with an input file from Kestra's local storage created by a previous task.",
             full = true,
             code = """
-                id: bash_use_input_files                
+                id: bash_use_input_files
                 namespace: company.team
-                
+
                 tasks:
                   - id: bash
                     type: io.kestra.core.tasks.scripts.Bash
@@ -102,7 +102,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
             code = """
                 id: bash_run_php_code
                 namespace: company.team
-                
+
                 tasks:
                   - id: bash
                     type: io.kestra.core.tasks.scripts.Bash
@@ -119,7 +119,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
             code = """
                 id: bash_run_cmd_on_windows
                 namespace: company.team
-                
+
                 tasks:
                   - id: bash
                     type: io.kestra.core.tasks.scripts.Bash
@@ -137,7 +137,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
             code = """
                 id: bash_set_outputs
                 namespace: company.team
-                
+
                 tasks:
                   - id: bash
                     type: io.kestra.core.tasks.scripts.Bash
@@ -151,12 +151,12 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
             code = """
                 id: bash_set_metrics
                 namespace: company.team
-                
+
                 tasks:
                   - id: bash
                     type: io.kestra.core.tasks.scripts.Bash
                     commands:
-                      - echo '::{"metrics":[{"name":"count","type":"counter","value":1,"tags":{"tag1":"i","tag2":"win"}}]}::' 
+                      - echo '::{"metrics":[{"name":"count","type":"counter","value":1,"tags":{"tag1":"i","tag2":"win"}}]}::'
                 """
         )
     }
@@ -179,7 +179,7 @@ public class Bash extends AbstractBash implements RunnableTask<io.kestra.core.ta
             // final command
             List<String> renderer = new ArrayList<>();
 
-            if (this.exitOnFailed) {
+            if (runContext.render(this.exitOnFailed).as(Boolean.class).orElseThrow()) {
                 renderer.add("set -o errexit");
             }
 
