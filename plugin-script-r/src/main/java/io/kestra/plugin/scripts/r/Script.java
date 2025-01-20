@@ -113,10 +113,8 @@ public class Script extends AbstractExecScript {
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `Rscript main.R` or `python main.py`, use the corresponding `Commands` task for a given language instead."
     )
-    @PluginProperty(dynamic = true)
     @NotNull
-    @NotEmpty
-    protected String script;
+    protected Property<@NotEmpty String> script;
 
     @Override
     protected DockerOptions injectDefaults(DockerOptions original) {
@@ -137,7 +135,7 @@ public class Script extends AbstractExecScript {
         Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(".R"));
         inputFiles.put(
             relativeScriptPath.toString(),
-            commands.render(runContext, this.script, internalToLocalFiles)
+            commands.render(runContext, runContext.render(this.script).as(String.class).orElse(null), internalToLocalFiles)
         );
         commands = commands.withInputFiles(inputFiles);
 

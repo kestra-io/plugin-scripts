@@ -53,7 +53,7 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script("print('::{\"outputs\": {\"extract\":\"hello world\"}}::')")
+            .script(Property.of("print('::{\"outputs\": {\"extract\":\"hello world\"}}::')"))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
@@ -72,7 +72,7 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script("import sys; sys.exit(1)")
+            .script(Property.of("import sys; sys.exit(1)"))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
@@ -92,9 +92,9 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script("import requests;" +
+            .script(Property.of("import requests;" +
                 "print('::{\"outputs\": {\"extract\":\"' + str(requests.get('https://google.com').status_code) + '\"}}::')"
-            )
+            ))
             .beforeCommands(Property.of(List.of(
                 "python3 -m venv venv",
                 ". venv/bin/activate",
@@ -127,11 +127,11 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script("import os\n" +
+            .script(Property.of("import os\n" +
                 "\n" +
                 "file_size = os.path.getsize(\"" + put.toString() + "\")\n" +
                 "print('::{\"outputs\": {\"extract\":' + str(file_size) + '}}::')"
-            )
+            ))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
@@ -149,10 +149,10 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script("from kestra import Kestra\n" +
+            .script(Property.of("from kestra import Kestra\n" +
                 "print(\"1234\\n\\n\")\n" +
                 "Kestra.outputs({'secrets': \"test string\"})"
-            )
+            ))
             .beforeCommands(Property.of(List.of(
                 "python -m venv venv",
                 ". venv/bin/activate",
@@ -175,6 +175,7 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
+            .script(new Property<>("{{ script }}"))
             .beforeCommands(Property.of(List.of(
                 "python -m venv venv",
                 ". venv/bin/activate",
@@ -182,7 +183,8 @@ class ScriptTest {
             )))
             .build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of("script", "efzfe"));
+
         ConstraintViolationException exception = assertThrows(ConstraintViolationException.class, () -> python.run(runContext));
         assertThat(exception.getMessage(), containsString("script: must not be empty"));
     }
@@ -195,14 +197,14 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script("from kestra import Kestra\n" +
+            .script(Property.of("from kestra import Kestra\n" +
                 "import time\n" +
                 "Kestra.outputs({'test': 'value', 'int': 2, 'bool': True, 'float': 3.65})\n" +
                 "Kestra.counter('count', 1, {'tag1': 'i', 'tag2': 'win'})\n" +
                 "Kestra.counter('count2', 2)\n" +
                 "Kestra.timer('timer1', lambda: time.sleep(1), {'tag1': 'i', 'tag2': 'lost'})\n" +
                 "Kestra.timer('timer2', 2.12, {'tag1': 'i', 'tag2': 'destroy'})\n"
-            )
+            ))
             .beforeCommands(Property.of(List.of(
                 "python -m venv venv",
                 ". venv/bin/activate",

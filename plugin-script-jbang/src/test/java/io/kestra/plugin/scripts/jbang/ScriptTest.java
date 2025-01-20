@@ -2,6 +2,7 @@ package io.kestra.plugin.scripts.jbang;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.models.executions.LogEntry;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
@@ -35,10 +36,11 @@ class ScriptTest {
         List<LogEntry> logs = new ArrayList<>();
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
-        Script bash = Script.builder()
+        Script bash;
+        bash = Script.builder()
             .id("unit-test")
             .type(Script.class.getName())
-            .script("""
+            .script(Property.of("""
                 class helloworld {
                     public static void main(String[] args) {
                         if(args.length==0) {
@@ -48,7 +50,7 @@ class ScriptTest {
                         }
                     }
                 }"""
-            )
+            ))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());

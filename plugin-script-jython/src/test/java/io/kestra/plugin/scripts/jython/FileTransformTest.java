@@ -1,6 +1,7 @@
 package io.kestra.plugin.scripts.jython;
 
 import io.kestra.core.junit.annotations.KestraTest;
+import io.kestra.core.models.property.Property;
 import io.kestra.plugin.scripts.jvm.FileTransform;
 
 @KestraTest
@@ -11,12 +12,12 @@ class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
             .id("unit-test")
             .type(Eval.class.getName())
             .from(source)
-            .script("logger.info('row: {}', row)\n" +
+            .script(Property.of("logger.info('row: {}', row)\n" +
                 "if row['name'] == 'richard': \n" +
                 "  row = None\n" +
                 "else: \n" +
                 "  row['email'] = row['name'] + '@kestra.io'\n"
-            )
+            ))
             .build();
     }
 
@@ -26,7 +27,7 @@ class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
             .id("unit-test")
             .type(Eval.class.getName())
             .from(source)
-            .script("rows = [1, 2 , row, {\"action\": \"insert\"}]\n")
+            .script(Property.of("rows = [1, 2 , row, {\"action\": \"insert\"}]\n"))
             .build();
     }
 }

@@ -24,7 +24,7 @@ class DockerBashTest extends AbstractBashTest {
         return builder
             .id(this.getClass().getSimpleName())
             .type(Bash.class.getName())
-            .runner(RunnerType.DOCKER)
+            .runner(io.kestra.core.models.property.Property.of(RunnerType.DOCKER))
             .dockerOptions(DockerOptions.builder()
                 .image("ubuntu")
                 .build()

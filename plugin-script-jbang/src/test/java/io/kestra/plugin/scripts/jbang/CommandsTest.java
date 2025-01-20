@@ -3,6 +3,7 @@ package io.kestra.plugin.scripts.jbang;
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
@@ -63,7 +64,7 @@ class CommandsTest {
         Commands bash = Commands.builder()
             .id("unit-test")
             .type(Commands.class.getName())
-            .commands(List.of("jbang --quiet " + put.toString()))
+            .commands(Property.of(List.of("jbang --quiet " + put.toString())))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
