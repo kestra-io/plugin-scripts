@@ -95,7 +95,7 @@ public class Script extends AbstractExecScript {
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
         List<String> commandsArgs = ScriptService.scriptCommands(
-            this.interpreter,
+            runContext.render(this.interpreter).asList(String.class),
             getBeforeCommandsWithOptions(runContext),
             runContext.render(this.script).as(String.class).orElseThrow(),
             runContext.render(this.targetOS).as(TargetOS.class).orElse(null)

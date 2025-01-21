@@ -90,7 +90,7 @@ public class Script extends AbstractExecScript {
         commands = commands.withInputFiles(inputFiles);
 
         List<String> commandsArgs  = ScriptService.scriptCommands(
-            this.interpreter,
+            runContext.render(this.interpreter).asList(String.class),
             getBeforeCommandsWithOptions(runContext),
             String.join(" ", "julia", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), runContext.render(this.targetOS).as(TargetOS.class).orElse(null))),
             runContext.render(this.targetOS).as(TargetOS.class).orElse(null)

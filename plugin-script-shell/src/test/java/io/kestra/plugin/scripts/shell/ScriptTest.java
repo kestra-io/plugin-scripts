@@ -85,7 +85,7 @@ class ScriptTest {
             .id("unit-test")
             .type(Script.class.getName())
             .docker(dockerOptions)
-            .interpreter(List.of("/bin/bash", "-c"))
+            .interpreter(Property.of(List.of("/bin/bash", "-c")))
             .runner(runner)
             .script(Property.of("""
                 for i in {1..2000}
@@ -112,9 +112,9 @@ class ScriptTest {
             .docker(DockerOptions.builder()
                 .image("ubuntu")
                 .credentials(Credentials.builder()
-                    .registry("own.registry")
-                    .username(username)
-                    .password("doe")
+                    .registry(Property.of("own.registry"))
+                    .username(Property.of(username))
+                    .password(Property.of("doe"))
                     .build()
                 )
                 .build()
