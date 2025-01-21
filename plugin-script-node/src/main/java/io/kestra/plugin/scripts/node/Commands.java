@@ -73,7 +73,7 @@ public class Commands extends AbstractExecScript {
     public ScriptOutput run(RunContext runContext) throws Exception {
         var renderedCommands = runContext.render(this.commands).asList(String.class);
         List<String> commandsArgs = ScriptService.scriptCommands(
-            this.interpreter,
+            runContext.render(this.interpreter).asList(String.class),
             getBeforeCommandsWithOptions(runContext),
             renderedCommands,
             runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
