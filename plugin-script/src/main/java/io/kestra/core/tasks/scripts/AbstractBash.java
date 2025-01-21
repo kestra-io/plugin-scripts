@@ -221,7 +221,7 @@ public abstract class AbstractBash extends Task {
         );
 
         var taskRunner = switch (runContext.render(this.runner).as(RunnerType.class).orElseThrow()) {
-            case DOCKER -> Docker.from(this.getDockerOptions()).toBuilder().fileHandlingStrategy(Docker.FileHandlingStrategy.MOUNT).build();
+            case DOCKER -> Docker.from(this.getDockerOptions()).toBuilder().fileHandlingStrategy(Property.of(Docker.FileHandlingStrategy.MOUNT)).build();
             case PROCESS -> Process.instance();
         };
 

@@ -2,7 +2,6 @@ package io.kestra.plugin.scripts.python;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
-import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.models.tasks.runners.TargetOS;
@@ -200,7 +199,7 @@ public class Script extends AbstractExecScript {
         commands = commands.withInputFiles(inputFiles);
 
         List<String> commandsArgs  = ScriptService.scriptCommands(
-            this.interpreter,
+            Property.asList(this.interpreter, runContext, String.class),
             getBeforeCommandsWithOptions(runContext),
             String.join(" ", "python", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), runContext.render(this.targetOS).as(TargetOS.class).orElse(null))),
             runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
