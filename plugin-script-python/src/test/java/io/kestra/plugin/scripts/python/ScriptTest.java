@@ -175,7 +175,6 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script(new Property<>("{{ script }}"))
             .beforeCommands(Property.of(List.of(
                 "python -m venv venv",
                 ". venv/bin/activate",
@@ -186,7 +185,7 @@ class ScriptTest {
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of("script", "efzfe"));
 
         ConstraintViolationException exception = assertThrows(ConstraintViolationException.class, () -> python.run(runContext));
-        assertThat(exception.getMessage(), containsString("script: must not be empty"));
+        assertThat(exception.getMessage(), containsString("script: must not be null"));
     }
 
     @ParameterizedTest
