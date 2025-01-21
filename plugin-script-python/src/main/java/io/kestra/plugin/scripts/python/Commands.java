@@ -2,7 +2,6 @@ package io.kestra.plugin.scripts.python;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
-import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.models.tasks.runners.TargetOS;
@@ -11,12 +10,12 @@ import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 import java.util.Map;
-import jakarta.validation.constraints.NotEmpty;
 
 @SuperBuilder
 @ToString
@@ -259,7 +258,7 @@ public class Commands extends AbstractExecScript {
         var renderedCommand = runContext.render(this.commands).asList(String.class);
 
         List<String> commandsArgs = ScriptService.scriptCommands(
-            this.interpreter,
+            Property.asList(this.interpreter, runContext, String.class),
             getBeforeCommandsWithOptions(runContext),
             renderedCommand,
             runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
