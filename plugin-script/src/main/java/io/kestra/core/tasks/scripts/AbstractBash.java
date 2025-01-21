@@ -56,7 +56,7 @@ public abstract class AbstractBash extends Task {
         title = "Interpreter to use when launching the process."
     )
     @NotNull
-    protected Property<@NotEmpty String> interpreter = Property.of("/bin/sh");
+    protected Property<String> interpreter = Property.of("/bin/sh");
 
     @Builder.Default
     @Schema(

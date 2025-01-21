@@ -11,6 +11,7 @@ import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -58,7 +59,8 @@ public class Commands extends AbstractExecScript {
     @Schema(
         title = "The commands to run"
     )
-    protected Property<@NotEmpty List<String>> commands;
+    @NotNull
+    protected Property<List<String>> commands;
 
     @Override
     protected DockerOptions injectDefaults(DockerOptions original) {

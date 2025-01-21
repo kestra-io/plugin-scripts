@@ -111,14 +111,16 @@ public class Script extends AbstractExecScript {
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `jbang hello.java` or an executable JAR, use the `Commands` task instead."
     )
-    private Property<@NotEmpty String> script;
+    @NotNull
+    private Property<String> script;
 
     @Schema(
         title = "The JBang script extension.",
         description = "JBang support more than Java scripts, you can use it with JShell (.jsh), Kotlin (.kt), Groovy (.groovy) or even Markdowns (.md)."
     )
     @Builder.Default
-    private Property<@NotEmpty String> extension = Property.of(".java");
+    @NotNull
+    private Property<String> extension = Property.of(".java");
 
     @Schema(
         title = "Whether JBang should be quit.",
