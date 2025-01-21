@@ -98,7 +98,7 @@ import java.util.Map;
                   - id: download
                     type: io.kestra.plugin.core.http.Download
                     uri: https://huggingface.co/datasets/kestra/datasets/raw/main/csv/orders.csv
-            
+
                   - id: python
                     type: io.kestra.plugin.scripts.python.Script
                     script: |
@@ -172,7 +172,7 @@ public class Script extends AbstractExecScript {
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
     )
     @NotNull
-    protected Property<@NotEmpty String> script;
+    protected Property<String> script;
 
     @Override
     protected DockerOptions injectDefaults(DockerOptions original) {
