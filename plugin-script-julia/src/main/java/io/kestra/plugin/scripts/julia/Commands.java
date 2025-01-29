@@ -1,5 +1,6 @@
 package io.kestra.plugin.scripts.julia;
 
+import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
@@ -65,10 +66,10 @@ public class Commands extends AbstractExecScript {
     protected Property<List<String>> commands;
 
     @Override
-    protected DockerOptions injectDefaults(DockerOptions original) {
+    protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
         var builder = original.toBuilder();
         if (original.getImage() == null) {
-            builder.image(this.getContainerImage().toString());
+            builder.image(runContext.render(this.getContainerImage()).as(String.class).orElse(null));
         }
 
         return builder.build();
