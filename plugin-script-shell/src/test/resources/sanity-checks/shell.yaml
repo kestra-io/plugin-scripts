@@ -1,0 +1,40 @@
+id: shell
+namespace: qa
+
+tasks:
+  - id: shell_script
+    type: io.kestra.plugin.scripts.shell.Script
+    outputFiles:
+      - hello.txt
+    script: |
+      echo "{{ execution.id }} - Test with Docker runner"
+      echo "Hello Kestra!" >> hello.txt
+
+  - id: shell_script_process_runner
+    type: io.kestra.plugin.scripts.shell.Script
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    targetOS: AUTO
+    outputFiles:
+      - hello.txt
+    script: |
+      echo "{{ execution.id }} - Test with Process runner"
+      echo "Hello Kestra!" >> hello.txt
+
+  - id: shell_command
+    type: io.kestra.plugin.scripts.shell.Commands
+    outputFiles:
+      - hello.txt
+    commands:
+      - echo "{{ execution.id }} - Test with Docker runner"
+      - echo "Hello Kestra!" >> hello.txt
+
+  - id: shell_command_process_runner
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    outputFiles:
+      - hello.txt
+    commands:
+      - echo "{{ execution.id }} - Test with Docker runner"
+      - echo "Hello Kestra!" >> hello.txt
