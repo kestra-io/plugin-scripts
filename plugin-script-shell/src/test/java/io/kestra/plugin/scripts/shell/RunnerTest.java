@@ -22,7 +22,7 @@ class RunnerTest {
     @Test
     @ExecuteFlow("sanity-checks/shell.yaml")
     void shell(Execution execution) {
-        assertThat(execution.getTaskRunList(), hasSize(4));
+        assertThat(execution.getTaskRunList(), hasSize(5));
         assertThat(execution.getState().getCurrent(), is(State.Type.SUCCESS));
     }
 }
