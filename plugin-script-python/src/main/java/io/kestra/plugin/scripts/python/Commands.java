@@ -3,6 +3,7 @@ package io.kestra.plugin.scripts.python;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.models.tasks.runners.TargetOS;
@@ -244,7 +245,8 @@ public class Commands extends AbstractExecScript {
         title = "The commands to run."
     )
     @NotNull
-    protected Property<List<String>> commands;
+    @PluginProperty(dynamic = true)
+    protected List<String> commands;
 
     @Override
     protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
@@ -258,12 +260,11 @@ public class Commands extends AbstractExecScript {
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
-        var renderedCommand = runContext.render(this.commands).asList(String.class);
 
         List<String> commandsArgs = ScriptService.scriptCommands(
             Property.asList(this.interpreter, runContext, String.class),
             getBeforeCommandsWithOptions(runContext),
-            renderedCommand,
+            commands,
             runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
         );
 

@@ -12,13 +12,13 @@ class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
             .id("unit-test")
             .type(Eval.class.getName())
             .from(source)
-            .script(Property.of("logger.info('row: {}', row)\n" +
+            .script("logger.info('row: {}', row)\n" +
                 "if (row['name'] == 'richard') {\n" +
                 "  row = null;\n" +
                 "} else {\n" +
                 "  row['email'] = row['name'] + '@kestra.io';\n" +
                 "}\n"
-            ))
+            )
             .build();
     }
 
@@ -28,7 +28,7 @@ class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
             .id("unit-test")
             .type(Eval.class.getName())
             .from(source)
-            .script(Property.of("rows = [1, 2, row, {\"action\": \"insert\"}]\n"))
+            .script("rows = [1, 2, row, {\"action\": \"insert\"}]\n")
             .build();
     }
 }
