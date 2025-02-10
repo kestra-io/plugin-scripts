@@ -14,7 +14,7 @@ class EvalTest extends io.kestra.plugin.scripts.jvm.EvalTest {
             .id("unit-test")
             .type(Eval.class.getName())
             .outputs(Property.of(Arrays.asList("out", "map")))
-            .script(Property.of("var Counter = Java.type('io.kestra.core.models.executions.metrics.Counter');\n" +
+            .script("var Counter = Java.type('io.kestra.core.models.executions.metrics.Counter');\n" +
                 "var File = Java.type('java.io.File');\n" +
                 "var FileOutputStream = Java.type('java.io.FileOutputStream');\n" +
                 "\n" +
@@ -27,7 +27,7 @@ class EvalTest extends io.kestra.plugin.scripts.jvm.EvalTest {
                 "output.write('555\\n666\\n'.getBytes())\n" +
                 "\n" +
                 "out = runContext.storage().putFile(tempFile)"
-            ))
+            )
             .build();
     }
 }
