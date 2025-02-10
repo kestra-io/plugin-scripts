@@ -113,7 +113,7 @@ public class Script extends AbstractExecScript {
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `jbang hello.java` or an executable JAR, use the `Commands` task instead."
     )
     @NotNull
-    private Property<String> script;
+    private String script;
 
     @Schema(
         title = "The JBang script extension.",
@@ -151,7 +151,7 @@ public class Script extends AbstractExecScript {
         Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(runContext.render(extension).as(String.class).orElseThrow()));
         inputFiles.put(
             relativeScriptPath.toString(),
-            commands.render(runContext, runContext.render(this.script).as(String.class).orElseThrow(), internalToLocalFiles)
+            commands.render(runContext, this.script, internalToLocalFiles)
         );
         commands = commands.withInputFiles(inputFiles);
 

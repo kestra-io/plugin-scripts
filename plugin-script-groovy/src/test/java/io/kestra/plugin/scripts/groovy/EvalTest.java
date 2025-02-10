@@ -13,7 +13,7 @@ class EvalTest extends io.kestra.plugin.scripts.jvm.EvalTest {
             .id("unit-test")
             .type(Eval.class.getName())
             .outputs(Property.of(Arrays.asList("out", "map")))
-            .script(Property.of("import io.kestra.core.models.executions.metrics.Counter\n" +
+            .script("import io.kestra.core.models.executions.metrics.Counter\n" +
                 "\n" +
                 "logger.info('executionId: {}', runContext.render('{{ execution.id }}'))\n" +
                 "runContext.metric(Counter.of('total', 666, 'name', 'bla'))\n" +
@@ -24,7 +24,7 @@ class EvalTest extends io.kestra.plugin.scripts.jvm.EvalTest {
                 "output.write('555\\n666\\n'.getBytes())\n" +
                 "\n" +
                 "out = runContext.storage().putFile(tempFile)"
-            ))
+            )
             .build();
     }
 }
