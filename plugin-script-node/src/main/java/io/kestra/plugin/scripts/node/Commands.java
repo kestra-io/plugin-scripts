@@ -60,7 +60,8 @@ public class Commands extends AbstractExecScript {
         title = "The commands to run."
     )
     @NotNull
-    protected Property<List<String>> commands;
+    @PluginProperty(dynamic = true)
+    protected List<String> commands;
 
     @Override
     protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
@@ -74,11 +75,10 @@ public class Commands extends AbstractExecScript {
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
-        var renderedCommands = runContext.render(this.commands).asList(String.class);
         List<String> commandsArgs = ScriptService.scriptCommands(
             runContext.render(this.interpreter).asList(String.class),
             getBeforeCommandsWithOptions(runContext),
-            renderedCommands,
+            commands,
             runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
         );
 

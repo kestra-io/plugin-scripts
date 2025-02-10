@@ -130,7 +130,8 @@ public class Script extends AbstractExecScript {
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
     )
     @NotNull
-    protected Property<String> script;
+    @PluginProperty(dynamic = true)
+    protected String script;
 
     @Override
     protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
@@ -151,7 +152,7 @@ public class Script extends AbstractExecScript {
         Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(".js"));
         inputFiles.put(
             relativeScriptPath.toString(),
-            commands.render(runContext, runContext.render(this.script).as(String.class).orElse(null), internalToLocalFiles)
+            commands.render(runContext, this.script, internalToLocalFiles)
         );
         commands = commands.withInputFiles(inputFiles);
 
