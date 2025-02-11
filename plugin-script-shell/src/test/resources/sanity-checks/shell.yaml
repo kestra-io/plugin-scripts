@@ -1,5 +1,5 @@
 id: shell
-namespace: qa
+namespace: sanitychecks
 
 tasks:
   - id: shell_script
