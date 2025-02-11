@@ -1,7 +1,9 @@
 package io.kestra.plugin.scripts.python;
 
+import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.models.tasks.runners.TargetOS;
@@ -172,13 +174,14 @@ public class Script extends AbstractExecScript {
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
     )
     @NotNull
-    protected Property<String> script;
+    @PluginProperty(dynamic = true)
+    protected String script;
 
     @Override
-    protected DockerOptions injectDefaults(DockerOptions original) {
+    protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
         var builder = original.toBuilder();
         if (original.getImage() == null) {
-            builder.image(this.getContainerImage().toString());
+            builder.image(runContext.render(this.getContainerImage()).as(String.class).orElse(null));
         }
 
         return builder.build();
@@ -191,10 +194,9 @@ public class Script extends AbstractExecScript {
         Map<String, String> inputFiles = FilesService.inputFiles(runContext, commands.getTaskRunner().additionalVars(runContext, commands), this.getInputFiles());
         List<String> internalToLocalFiles = new ArrayList<>();
         Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(".py"));
-        String renderedScript = runContext.render(this.script).as(String.class).orElse(null);
         inputFiles.put(
             relativeScriptPath.toString(),
-            commands.render(runContext, renderedScript, internalToLocalFiles)
+            commands.render(runContext, this.script, internalToLocalFiles)
         );
         commands = commands.withInputFiles(inputFiles);
 

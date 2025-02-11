@@ -1,5 +1,6 @@
 package io.kestra.plugin.scripts.julia;
 
+import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
@@ -64,13 +65,14 @@ public class Script extends AbstractExecScript {
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command such as `julia myscript.jl`, use the `Commands` task instead."
     )
     @NotNull
-    protected Property<String> script;
+    @PluginProperty(dynamic = true)
+    protected String script;
 
     @Override
-    protected DockerOptions injectDefaults(DockerOptions original) {
+    protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
         var builder = original.toBuilder();
         if (original.getImage() == null) {
-            builder.image(this.getContainerImage().toString());
+            builder.image(runContext.render(this.getContainerImage()).as(String.class).orElse(null));
         }
 
         return builder.build();
@@ -85,7 +87,7 @@ public class Script extends AbstractExecScript {
         Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(".jl"));
         inputFiles.put(
             relativeScriptPath.toString(),
-            commands.render(runContext, runContext.render(this.script).as(String.class).orElse(null), internalToLocalFiles)
+            commands.render(runContext, this.script, internalToLocalFiles)
         );
         commands = commands.withInputFiles(inputFiles);
 

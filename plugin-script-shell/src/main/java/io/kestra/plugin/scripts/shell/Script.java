@@ -1,5 +1,6 @@
 package io.kestra.plugin.scripts.shell;
 
+import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
@@ -80,13 +81,14 @@ public class Script extends AbstractExecScript {
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
     )
     @NotNull
-    protected Property<String> script;
+    @PluginProperty(dynamic = true)
+    protected String script;
 
     @Override
-    protected DockerOptions injectDefaults(DockerOptions original) {
+    protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
         var builder = original.toBuilder();
         if (original.getImage() == null) {
-            builder.image(this.getContainerImage().toString());
+            builder.image(runContext.render(this.getContainerImage()).as(String.class).orElse(null));
         }
 
         return builder.build();
@@ -97,7 +99,7 @@ public class Script extends AbstractExecScript {
         List<String> commandsArgs = ScriptService.scriptCommands(
             runContext.render(this.interpreter).asList(String.class),
             getBeforeCommandsWithOptions(runContext),
-            runContext.render(this.script).as(String.class).orElseThrow(),
+            this.script,
             runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
         );
 

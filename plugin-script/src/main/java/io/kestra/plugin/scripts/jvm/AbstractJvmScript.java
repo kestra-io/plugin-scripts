@@ -18,9 +18,9 @@ public abstract class AbstractJvmScript extends Task {
     @Schema(
         title = "A full script."
     )
-    protected Property<String> script;
+    protected String script;
 
     protected String generateScript(RunContext runContext) throws IllegalVariableEvaluationException {
-        return runContext.render(this.script).as(String.class).orElse(null);
+        return runContext.render(this.script);
     }
 }
