@@ -1,5 +1,5 @@
 id: python
-namespace: qa
+namespace: sanitychecks
 
 inputs:
   - id: dataset_uri
