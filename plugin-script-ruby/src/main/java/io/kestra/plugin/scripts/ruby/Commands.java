@@ -1,5 +1,6 @@
 package io.kestra.plugin.scripts.ruby;
 
+import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
@@ -97,13 +98,14 @@ public class Commands extends AbstractExecScript {
         title = "The commands to run"
     )
     @NotNull
-    protected Property<List<String>> commands;
+    @PluginProperty(dynamic = true)
+    protected List<String> commands;
 
     @Override
-    protected DockerOptions injectDefaults(DockerOptions original) {
+    protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
         var builder = original.toBuilder();
         if (original.getImage() == null) {
-            builder.image(this.getContainerImage().toString());
+            builder.image(runContext.render(this.getContainerImage()).as(String.class).orElse(null));
         }
 
         return builder.build();
@@ -111,12 +113,11 @@ public class Commands extends AbstractExecScript {
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
-        var renderedCommands = runContext.render(this.commands).asList(String.class);
 
         List<String> commandsArgs = ScriptService.scriptCommands(
             runContext.render(this.interpreter).asList(String.class),
             getBeforeCommandsWithOptions(runContext),
-            renderedCommands,
+            commands,
             runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
         );
 

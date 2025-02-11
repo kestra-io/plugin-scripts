@@ -59,7 +59,7 @@ class CommandsTest {
         Commands bash = Commands.builder()
             .id("unit-test")
             .type(Script.class.getName())
-            .commands(Property.of(List.of("pwsh " + put.toString())))
+            .commands(List.of("pwsh " + put.toString()))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -79,7 +79,7 @@ class CommandsTest {
         Commands bash = Commands.builder()
             .id("unit-test")
             .type(Script.class.getName())
-            .commands(Property.of(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\"")))
+            .commands(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\""))
             .failFast(Property.of(true))
             .build();
 
@@ -92,7 +92,7 @@ class CommandsTest {
         Commands bash = Commands.builder()
             .id("unit-test")
             .type(Script.class.getName())
-            .commands(Property.of(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\"")))
+            .commands(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\""))
             .failFast(Property.of(false))
             .build();
 

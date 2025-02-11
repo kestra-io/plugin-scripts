@@ -55,7 +55,7 @@ class CommandsTest {
         Commands task = Commands.builder()
             .id("unit-test")
             .type(Script.class.getName())
-            .commands(Property.of(List.of("python " + put.toString())))
+            .commands(List.of("python " + put.toString()))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());

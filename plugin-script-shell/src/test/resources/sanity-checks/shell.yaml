@@ -1,5 +1,5 @@
 id: shell
-namespace: qa
+namespace: sanitychecks
 
 tasks:
   - id: shell_script
@@ -38,3 +38,11 @@ tasks:
     commands:
       - echo "{{ execution.id }} - Test with Docker runner"
       - echo "Hello Kestra!" >> hello.txt
+
+  - id: log_files
+    type: io.kestra.plugin.core.log.Log
+    message: 
+      - "{{ read(outputs.shell_script.outputFiles['hello.txt'])}}"
+      - "{{ read(outputs.shell_script_process_runner.outputFiles['hello.txt']) }}"
+      - "{{ read(outputs.shell_command.outputFiles['hello.txt']) }}"
+      - "{{ read(outputs.shell_command_process_runner.outputFiles['hello.txt']) }}"
