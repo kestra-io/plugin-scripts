@@ -43,12 +43,12 @@ class ScriptTest {
             .beforeCommands(Property.of(List.of(
                 "gem install date"
             )))
-            .script("""
+            .script(Property.of("""
                 require 'date'
                 puts Date.new(2012,12,25).strftime('%F')
                 STDERR.puts Date.jd(2451944).strftime('%F')
                 """
-            )
+            ))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());

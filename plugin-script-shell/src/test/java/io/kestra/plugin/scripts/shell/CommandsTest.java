@@ -65,7 +65,7 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .commands(List.of("echo 0", "echo 1", ">&2 echo 2", ">&2 echo 3"))
+            .commands(Property.of(List.of("echo 0", "echo 1", ">&2 echo 2", ">&2 echo 3")))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -84,7 +84,7 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .commands(List.of("echo 1 1>&2", "exit 66", "echo 2"))
+            .commands(Property.of(List.of("echo 1 1>&2", "exit 66", "echo 2")))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -106,7 +106,7 @@ class CommandsTest {
             .docker(dockerOptions)
             .runner(runner)
             .failFast(Property.of(true))
-            .commands(List.of("unknown", "echo 1"))
+            .commands(Property.of(List.of("unknown", "echo 1")))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -128,7 +128,7 @@ class CommandsTest {
             .docker(dockerOptions)
             .runner(runner)
             .failFast(Property.of(false))
-            .commands(List.of("unknown", "echo 1"))
+            .commands(Property.of(List.of("unknown", "echo 1")))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -154,13 +154,13 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .commands(List.of(
+            .commands(TestsUtils.propertyFromList(List.of(
                 "mkdir -p {{ outputDir}}/sub/dir/",
                 "echo '::{\"outputs\": {\"extract\":\"'$(cat " + put.toString() + ")'\"}}::'",
                 "echo 1 >> {{ outputDir}}/file.xml",
                 "echo 2 >> {{ outputDir}}/sub/dir/file.csv",
                 "echo 3 >> {{ outputDir}}/file.xml"
-            ))
+            )))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -197,9 +197,9 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .commands(List.of(
+            .commands(Property.of(List.of(
                 "echo '::{\"outputs\": {\"extract\":null}}::'"
-            ))
+            )))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -227,7 +227,7 @@ class CommandsTest {
                 .build()
             )
             .runner(RunnerType.DOCKER)
-            .commands(List.of("pwd"))
+            .commands(Property.of(List.of("pwd")))
             .build();
 
 
@@ -255,7 +255,7 @@ class CommandsTest {
                 .build()
             )
             .runner(RunnerType.DOCKER)
-            .commands(List.of("pwd"))
+            .commands(Property.of(List.of("pwd")))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -272,7 +272,7 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .commands(List.of("echo {{ workingDir }}"))
+            .commands(TestsUtils.propertyFromList(List.of("echo {{ workingDir }}")))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());

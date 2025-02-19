@@ -76,8 +76,7 @@ public class Script extends AbstractExecScript {
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
     )
     @NotNull
-    @PluginProperty(dynamic = true)
-    protected String script;
+    protected Property<String> script;
 
     @Builder.Default
     @Schema(
@@ -100,23 +99,28 @@ public class Script extends AbstractExecScript {
         CommandsWrapper commands = this.commands(runContext);
 
         Map<String, String> inputFiles = FilesService.inputFiles(runContext, commands.getTaskRunner().additionalVars(runContext, commands), this.getInputFiles());
-        List<String> internalToLocalFiles = new ArrayList<>();
         Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(".ps1"));
         inputFiles.put(
             relativeScriptPath.toString(),
-            commands.render(runContext, this.script, internalToLocalFiles)
+            commands.render(runContext, this.script)
         );
         commands = commands.withInputFiles(inputFiles);
 
-        List<String> commandsArgs = ScriptService.scriptCommands(
-            runContext.render(this.interpreter).asList(String.class),
-            getBeforeCommandsWithOptions(runContext),
-            commands.getTaskRunner().toAbsolutePath(runContext, commands, ".\\" + relativeScriptPath, runContext.render(this.targetOS).as(TargetOS.class).orElse(null)),
-            runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
-        );
+//        List<String> commandsArgs = ScriptService.scriptCommands(
+//            runContext.render(this.interpreter).asList(String.class),
+//            getBeforeCommandsWithOptions(runContext),
+//            commands.getTaskRunner().toAbsolutePath(runContext, commands, ".\\" + relativeScriptPath, runContext.render(this.targetOS).as(TargetOS.class).orElse(null)),
+//            runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
+//        );
 
+        TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
         return commands
-            .withCommands(commandsArgs)
+            .withInterpreter(this.interpreter)
+            .withBeforeCommands(Property.of(getBeforeCommandsWithOptions(runContext)))
+            .withCommands(Property.of((List.of(
+                commands.getTaskRunner().toAbsolutePath(runContext, commands, ".\\" + relativeScriptPath, os)
+            ))))
+            .withTargetOS(os)
             .run();
     }
 

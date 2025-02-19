@@ -64,7 +64,7 @@ class CommandsTest {
         Commands bash = Commands.builder()
             .id("unit-test")
             .type(Commands.class.getName())
-            .commands(List.of("jbang --quiet " + put.toString()))
+            .commands(Property.of(List.of("jbang --quiet " + put.toString())))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
