@@ -65,8 +65,7 @@ public class Script extends AbstractExecScript {
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command such as `julia myscript.jl`, use the `Commands` task instead."
     )
     @NotNull
-    @PluginProperty(dynamic = true)
-    protected String script;
+    protected Property<String> script;
 
     @Override
     protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
@@ -83,23 +82,29 @@ public class Script extends AbstractExecScript {
         CommandsWrapper commands = this.commands(runContext);
 
         Map<String, String> inputFiles = FilesService.inputFiles(runContext, commands.getTaskRunner().additionalVars(runContext, commands), this.getInputFiles());
-        List<String> internalToLocalFiles = new ArrayList<>();
         Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(".jl"));
         inputFiles.put(
             relativeScriptPath.toString(),
-            commands.render(runContext, this.script, internalToLocalFiles)
+            commands.render(runContext, script)
         );
         commands = commands.withInputFiles(inputFiles);
+
+        TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
 
         List<String> commandsArgs  = ScriptService.scriptCommands(
             runContext.render(this.interpreter).asList(String.class),
             getBeforeCommandsWithOptions(runContext),
-            String.join(" ", "julia", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), runContext.render(this.targetOS).as(TargetOS.class).orElse(null))),
-            runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
+            String.join(" ", "julia", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os)),
+            os
         );
 
         return commands
-            .withCommands(commandsArgs)
+            .withTargetOS(os)
+            .withInterpreter(this.interpreter)
+            .withBeforeCommands(Property.of(getBeforeCommandsWithOptions(runContext)))
+            .withCommands(Property.of(List.of(
+                String.join(" ", "julia", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
+            )))
             .run();
     }
 }
