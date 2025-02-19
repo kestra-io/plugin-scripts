@@ -42,12 +42,12 @@ class ScriptTest {
             .beforeCommands(Property.of(List.of(
                 "Rscript -e 'install.packages(\"lubridate\")'"
             )))
-            .script("""
+            .script(Property.of("""
                 library(lubridate)
                 ymd("20100604");
                 mdy("06-04-2011");
                 dmy("04/06/2012")"""
-            )
+            ))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());

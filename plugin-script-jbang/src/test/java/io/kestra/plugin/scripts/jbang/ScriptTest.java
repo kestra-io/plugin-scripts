@@ -40,7 +40,7 @@ class ScriptTest {
         bash = Script.builder()
             .id("unit-test")
             .type(Script.class.getName())
-            .script("""
+            .script(Property.of("""
                 class helloworld {
                     public static void main(String[] args) {
                         if(args.length==0) {
@@ -50,7 +50,7 @@ class ScriptTest {
                         }
                     }
                 }"""
-            )
+            ))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());

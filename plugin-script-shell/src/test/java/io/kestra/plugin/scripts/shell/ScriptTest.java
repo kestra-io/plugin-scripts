@@ -62,12 +62,12 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script("""
+            .script(Property.of("""
                 echo 0
                 echo 1
                 >&2 echo 2
                 >&2 echo 3
-            """)
+            """))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -87,12 +87,12 @@ class ScriptTest {
             .docker(dockerOptions)
             .interpreter(Property.of(List.of("/bin/bash", "-c")))
             .runner(runner)
-            .script("""
+            .script(Property.of("""
                 for i in {1..2000}
                 do
                    echo "$i"
                 done
-            """)
+            """))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -119,9 +119,9 @@ class ScriptTest {
                 )
                 .build()
             )
-            .script("""
+            .script(Property.of("""
                     echo '::{"outputs":{"config":'$(cat config.json)'}}::'
-                """)
+                """))
             .build();
 
 
@@ -150,10 +150,10 @@ class ScriptTest {
             ))
             .outputFiles(Property.of(
                 List.of("out/**")))
-            .script("""
+            .script(Property.of("""
                 mkdir out
                 cat test/application.yml > out/bla.yml
-            """)
+            """))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());

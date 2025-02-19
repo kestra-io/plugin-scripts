@@ -11,6 +11,7 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
@@ -81,8 +82,7 @@ public class Script extends AbstractExecScript {
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
     )
     @NotNull
-    @PluginProperty(dynamic = true)
-    protected String script;
+    protected Property<String> script;
 
     @Override
     protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
@@ -96,15 +96,15 @@ public class Script extends AbstractExecScript {
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
-        List<String> commandsArgs = ScriptService.scriptCommands(
-            runContext.render(this.interpreter).asList(String.class),
-            getBeforeCommandsWithOptions(runContext),
-            this.script,
-            runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
-        );
+        CommandsWrapper commandsWrapper = this.commands(runContext);
 
-        return this.commands(runContext)
-            .withCommands(commandsArgs)
+        TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
+
+        return commandsWrapper
+            .withInterpreter(this.interpreter)
+            .withBeforeCommands(Property.of(getBeforeCommandsWithOptions(runContext)))
+            .withCommands(Property.of(List.of(commandsWrapper.render(runContext, this.script))))
+            .withTargetOS(os)
             .run();
     }
 }

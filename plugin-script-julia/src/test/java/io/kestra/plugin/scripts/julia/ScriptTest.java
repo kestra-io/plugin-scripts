@@ -38,7 +38,7 @@ class ScriptTest {
         Script bash = Script.builder()
             .id("unit-test")
             .type(Script.class.getName())
-            .script("@info \"hello there!\"")
+            .script(Property.of("@info \"hello there!\""))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());

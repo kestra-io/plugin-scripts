@@ -113,7 +113,7 @@ public class Script extends AbstractExecScript {
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `jbang hello.java` or an executable JAR, use the `Commands` task instead."
     )
     @NotNull
-    private String script;
+    private Property<String> script;
 
     @Schema(
         title = "The JBang script extension.",
@@ -147,23 +147,22 @@ public class Script extends AbstractExecScript {
         CommandsWrapper commands = this.commands(runContext);
 
         Map<String, String> inputFiles = FilesService.inputFiles(runContext, commands.getTaskRunner().additionalVars(runContext, commands), this.getInputFiles());
-        List<String> internalToLocalFiles = new ArrayList<>();
         Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(runContext.render(extension).as(String.class).orElseThrow()));
         inputFiles.put(
             relativeScriptPath.toString(),
-            commands.render(runContext, this.script, internalToLocalFiles)
+            commands.render(runContext, runContext.render(this.script).as(String.class).orElse(null), new ArrayList<>())
         );
         commands = commands.withInputFiles(inputFiles);
 
-        List<String> commandsArgs  = ScriptService.scriptCommands(
-            runContext.render(this.interpreter).asList(String.class),
-            getBeforeCommandsWithOptions(runContext),
-            String.join(" ", "jbang", runContext.render(quiet).as(Boolean.class).orElseThrow() ? "--quiet" : "", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), runContext.render(this.targetOS).as(TargetOS.class).orElse(null))),
-            runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
-        );
+        TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
 
         return commands
-            .withCommands(commandsArgs)
+            .withTargetOS(os)
+            .withInterpreter(this.interpreter)
+            .withBeforeCommands(Property.of((getBeforeCommandsWithOptions(runContext))))
+            .withCommands(Property.of(List.of(
+                String.join(" ", "jbang", runContext.render(quiet).as(Boolean.class).orElseThrow() ? "--quiet" : "", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
+            )))
             .run();
     }
 }
