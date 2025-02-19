@@ -100,8 +100,7 @@ public class Script extends AbstractExecScript {
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
     )
     @NotNull
-    @PluginProperty(dynamic = true)
-    protected String script;
+    protected Property<String> script;
 
     @Override
     protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
@@ -118,23 +117,22 @@ public class Script extends AbstractExecScript {
         CommandsWrapper commands = this.commands(runContext);
 
         Map<String, String> inputFiles = FilesService.inputFiles(runContext, commands.getTaskRunner().additionalVars(runContext, commands), this.getInputFiles());
-        List<String> internalToLocalFiles = new ArrayList<>();
         Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(".rb"));
         inputFiles.put(
             relativeScriptPath.toString(),
-            commands.render(runContext, this.script, internalToLocalFiles)
+            commands.render(runContext, this.script)
         );
         commands = commands.withInputFiles(inputFiles);
 
-        List<String> commandsArgs = ScriptService.scriptCommands(
-            runContext.render(this.interpreter).asList(String.class),
-            getBeforeCommandsWithOptions(runContext),
-            String.join(" ", "ruby", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), runContext.render(this.targetOS).as(TargetOS.class).orElse(null))),
-            runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
-        );
+        TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
 
         return commands
-            .withCommands(commandsArgs)
+            .withInterpreter(this.interpreter)
+            .withBeforeCommands(Property.of(getBeforeCommandsWithOptions(runContext)))
+            .withCommands(Property.of(List.of(
+                String.join(" ", "ruby", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
+            )))
+            .withTargetOS(os)
             .run();
     }
 }
