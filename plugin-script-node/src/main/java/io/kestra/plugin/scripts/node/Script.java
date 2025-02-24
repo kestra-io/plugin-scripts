@@ -161,7 +161,8 @@ public class Script extends AbstractExecScript {
                 "PIP_ROOT_USER_ACTION", "ignore"
             ))
             .withInterpreter(this.interpreter)
-            .withBeforeCommands(Property.of(getBeforeCommandsWithOptions(runContext)))
+            .withBeforeCommands(beforeCommands)
+            .withBeforeCommandsWithOptions(true)
             .withCommands(Property.of(List.of(
                 String.join(" ", "node", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
             )))
