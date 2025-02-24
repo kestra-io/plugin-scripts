@@ -159,7 +159,8 @@ public class Script extends AbstractExecScript {
         return commands
             .withTargetOS(os)
             .withInterpreter(this.interpreter)
-            .withBeforeCommands(Property.of((getBeforeCommandsWithOptions(runContext))))
+            .withBeforeCommands(beforeCommands)
+            .withBeforeCommandsWithOptions(true)
             .withCommands(Property.of(List.of(
                 String.join(" ", "jbang", runContext.render(quiet).as(Boolean.class).orElseThrow() ? "--quiet" : "", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
             )))

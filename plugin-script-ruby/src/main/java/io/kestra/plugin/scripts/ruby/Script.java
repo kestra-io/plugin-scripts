@@ -128,7 +128,8 @@ public class Script extends AbstractExecScript {
 
         return commands
             .withInterpreter(this.interpreter)
-            .withBeforeCommands(Property.of(getBeforeCommandsWithOptions(runContext)))
+            .withBeforeCommands(beforeCommands)
+            .withBeforeCommandsWithOptions(true)
             .withCommands(Property.of(List.of(
                 String.join(" ", "ruby", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
             )))

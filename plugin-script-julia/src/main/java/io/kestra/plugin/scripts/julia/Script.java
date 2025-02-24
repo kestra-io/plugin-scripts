@@ -91,17 +91,11 @@ public class Script extends AbstractExecScript {
 
         TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
 
-        List<String> commandsArgs  = ScriptService.scriptCommands(
-            runContext.render(this.interpreter).asList(String.class),
-            getBeforeCommandsWithOptions(runContext),
-            String.join(" ", "julia", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os)),
-            os
-        );
-
         return commands
             .withTargetOS(os)
             .withInterpreter(this.interpreter)
-            .withBeforeCommands(Property.of(getBeforeCommandsWithOptions(runContext)))
+            .withBeforeCommands(beforeCommands)
+            .withBeforeCommandsWithOptions(true)
             .withCommands(Property.of(List.of(
                 String.join(" ", "julia", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
             )))

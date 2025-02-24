@@ -142,7 +142,8 @@ public class Script extends AbstractExecScript {
         TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
         return commands
             .withInterpreter(this.interpreter)
-            .withBeforeCommands(Property.of(getBeforeCommandsWithOptions(runContext)))
+            .withBeforeCommands(beforeCommands)
+            .withBeforeCommandsWithOptions(true)
             .withCommands(Property.of(List.of(
                 String.join(" ", "Rscript", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
             )))
