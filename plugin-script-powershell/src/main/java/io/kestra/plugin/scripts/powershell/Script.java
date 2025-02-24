@@ -106,13 +106,6 @@ public class Script extends AbstractExecScript {
         );
         commands = commands.withInputFiles(inputFiles);
 
-//        List<String> commandsArgs = ScriptService.scriptCommands(
-//            runContext.render(this.interpreter).asList(String.class),
-//            getBeforeCommandsWithOptions(runContext),
-//            commands.getTaskRunner().toAbsolutePath(runContext, commands, ".\\" + relativeScriptPath, runContext.render(this.targetOS).as(TargetOS.class).orElse(null)),
-//            runContext.render(this.targetOS).as(TargetOS.class).orElse(null)
-//        );
-
         TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
         return commands
             .withInterpreter(this.interpreter)

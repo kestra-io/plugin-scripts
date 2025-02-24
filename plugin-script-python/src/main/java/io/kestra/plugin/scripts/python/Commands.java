@@ -268,8 +268,9 @@ public class Commands extends AbstractExecScript {
                 "PIP_DISABLE_PIP_VERSION_CHECK", "1"
             ))
             .withInterpreter(this.interpreter)
-            .withBeforeCommands(Property.of(getBeforeCommandsWithOptions(runContext)))
             .withCommands(commands)
+            .withBeforeCommands(beforeCommands)
+            .withBeforeCommandsWithOptions(true)
             .withTargetOS(os)
             .run();
     }
