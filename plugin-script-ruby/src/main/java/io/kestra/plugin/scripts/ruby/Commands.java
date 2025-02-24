@@ -116,8 +116,9 @@ public class Commands extends AbstractExecScript {
 
         return this.commands(runContext)
             .withInterpreter(this.interpreter)
-            .withBeforeCommands(Property.of(getBeforeCommandsWithOptions(runContext)))
+            .withBeforeCommands(beforeCommands)
             .withCommands(commands)
+            .withBeforeCommandsWithOptions(true)
             .withTargetOS(os)
             .run();
     }

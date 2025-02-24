@@ -102,7 +102,8 @@ public class Script extends AbstractExecScript {
 
         return commandsWrapper
             .withInterpreter(this.interpreter)
-            .withBeforeCommands(Property.of(getBeforeCommandsWithOptions(runContext)))
+            .withBeforeCommands(beforeCommands)
+            .withBeforeCommandsWithOptions(true)
             .withCommands(Property.of(List.of(commandsWrapper.render(runContext, this.script))))
             .withTargetOS(os)
             .run();
