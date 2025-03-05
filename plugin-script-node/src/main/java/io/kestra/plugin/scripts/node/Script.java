@@ -118,6 +118,28 @@ import java.util.Map;
 
                     console.log('Orders saved to orders.csv');
             """
+    ),
+    @Example(
+        title = "Install package, create a Node.js script and execute it.",
+        full = true,
+        code = """
+            id: nodejs_script
+            namespace: company.team
+
+            tasks:
+            - id: node
+                type: io.kestra.plugin.scripts.node.Script
+                warningOnStdErr: false
+                beforeCommands:
+                - npm i @kestra-io/libs
+                script: |
+                const Kestra = require('@kestra-io/libs');
+                Kestra.outputs({test: 'hello world'});
+
+            - id: get_outputs
+                type: io.kestra.plugin.core.log.Log
+                message: "{{ outputs.node.vars.test }}"
+            """
     )
 })
 public class Script extends AbstractExecScript {
