@@ -68,7 +68,7 @@ import java.util.Map;
                   commands:
                     - python etl_script.py
               """
-        ),
+    ),
     @Example(
         full = true,
         title = "Execute a Python script from Git in a Docker container and output a file",
@@ -106,7 +106,7 @@ import java.util.Map;
                   key: stage/orders.csv
                   from: "{{ outputs.gitPythonScripts.outputFiles['orders.csv'] }}"
               """
-        ),
+    ),
     @Example(
         full = true,
         title = "Execute a Python script on a remote worker with a GPU",
@@ -124,7 +124,45 @@ import java.util.Map;
                   workerGroup:
                     key: gpu
               """
-        ),
+    ),
+    @Example(
+        full = true,
+        title = "Run a Python command that can takes an input using an environment variable",
+        code = """
+            id: python_input_as_env_variable
+            namespace: company.team
+            
+            inputs:
+              - id: uri
+                type: URI
+                defaults: https://www.google.com/
+            
+            tasks:
+              - id: code
+                type: io.kestra.plugin.scripts.python.Commands
+                taskRunner:
+                  type: io.kestra.plugin.scripts.runner.docker.Docker
+                containerImage: ghcr.io/kestra-io/pydata:latest
+                inputFiles:
+                  main.py: |
+                      import requests
+                      import os
+                      
+                      # Perform the GET request
+                      response = requests.get(os.environ['URI'])
+                      
+                      # Check if the request was successful
+                      if response.status_code == 200:
+                          # Print the content of the page
+                          print(response.text)
+                      else:
+                          print(f"Failed to retrieve the webpage. Status code: {response.status_code}")
+                env:
+                  URI: "{{ inputs.uri }}"
+                commands:
+                  - python main.py
+        """
+    ),
     @Example(
         full = true,
         title = "Pass detected S3 objects from the event trigger to a Python script",
@@ -170,7 +208,7 @@ import java.util.Map;
                   secretKeyId: "{{ secret('AWS_SECRET_KEY_ID') }}"
                   region: "{{ secret('AWS_DEFAULT_REGION') }}"
               """
-        ),
+    ),
     @Example(
         full = true,
         title = "Execute a Python script from Git using a private Docker container image",
@@ -208,7 +246,7 @@ import java.util.Map;
                             }
                           }
                 """
-        ),
+    ),
     @Example(
         full = true,
         title = "Create a python script and execute it in a virtual environment",
