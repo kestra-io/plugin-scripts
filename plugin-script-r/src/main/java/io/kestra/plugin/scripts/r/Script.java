@@ -102,6 +102,48 @@ import java.util.Map;
                       - "*.csv"
                       - "*.parquet"
                 """
+        ),
+        @Example(
+            full = true,
+            title = """
+            Run R script in a Docker container and output downloadable artifacts
+            """,
+            code = """
+                id: r-script
+                namespace: company.team
+                
+                tasks:
+                  - id: r_script
+                    type: io.kestra.plugin.scripts.r.Script
+                    warningOnStdErr: false
+                    taskRunner:
+                      type: io.kestra.plugin.scripts.runner.docker.Docker
+                    containerImage: ghcr.io/kestra-io/rdata:latest
+                    outputFiles:
+                      - women.parquet
+                      - women.csv
+                    script: |
+                      library(dplyr)
+                      library(arrow)
+                
+                      data(women)
+                
+                      women <- women %>%
+                        mutate(height_cm = height * 2.54,
+                              weight_kg = weight * 0.453592)
+                
+                      print(head(women, 2))
+                
+                      women_clean <- na.omit(women)
+                      df <- women_clean %>%
+                        summarise(mean_height_cm = mean(height_cm), 
+                                  median_height_cm = median(height_cm), 
+                                  mean_weight_kg = mean(weight_kg),
+                                  median_weight_kg = median(weight_kg))
+                      print(df)
+                      write_parquet(df, "women.parquet")
+                      write_csv_arrow(df, "women.csv")
+            """
         )
     }
 )
