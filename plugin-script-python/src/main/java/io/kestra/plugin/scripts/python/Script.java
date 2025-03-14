@@ -161,7 +161,110 @@ import java.util.Map;
                     commands:
                       - head -n 10 {{ outputs.clean_dataset.outputFiles['clean_dataset.csv'] }}
                 """
-        )
+        ),
+        @Example(
+            full = true,
+            title = """
+            Create a Python inline script that takes input using an expression
+            """,
+            code = """
+                id: python_use_input_in_inline
+                namespace: company.team
+                
+                inputs:
+                  - id: pokemon
+                    type: STRING
+                    defaults: pikachu
+                
+                  - id: your_age
+                    type: INT
+                    defaults: 25
+                
+                tasks:
+                  - id: inline_script
+                    type: io.kestra.plugin.scripts.python.Script
+                    description: Fetch the pokemon detail and compare its experience
+                    containerImage: ghcr.io/kestra-io/pydata:latest
+                    script: |
+                      import requests
+                      import json
+                
+                      url = "https://pokeapi.co/api/v2/pokemon/{{ inputs.pokemon }}"
+                      response = requests.get(url)
+                
+                      if response.status_code == 200:
+                          pokemon = json.loads(response.text)
+                          print(f"Base experience of {{ inputs.pokemon }} is { pokemon.get('base_experience') }")
+                          if pokemon.get('base_experience') > int("{{ inputs.your_age }}"):
+                              print("{{ inputs.pokemon }} has more base experience than your age")
+                          else:
+                              print("{{ inputs.pokemon}} is too young!")
+                      else:
+                          print(f"Failed to retrieve the webpage. Status code: {response.status_code}")
+            """
+        ),
+        @Example(
+            full = true,
+            title = """
+            Pass an input file to a Python script
+            """,
+            code = """
+                id: python_input_file
+                namespace: company.team
+                
+                tasks:
+                  - id: download_file
+                    type: io.kestra.plugin.core.http.Download
+                    uri: https://huggingface.co/datasets/kestra/datasets/raw/main/csv/orders.csv
+                
+                  - id: get_total_rows
+                    type: io.kestra.plugin.scripts.python.Script
+                    beforeCommands:
+                      - pip install pandas
+                    inputFiles:
+                      input.csv: "{{ outputs.download_file.uri }}"
+                    script: |
+                      import pandas as pd
+                
+                      # Path to your CSV file
+                      csv_file_path = "input.csv"
+                
+                      # Read the CSV file using pandas
+                      df = pd.read_csv(csv_file_path)
+                
+                      # Get the number of rows
+                      num_rows = len(df)
+                
+                      print(f"Number of rows: {num_rows}")
+            """
+        ),
+        @Example(
+            full = true,
+            title = """
+            Run a simple Python script to generate outputs and log them
+            """,
+            code = """
+                id: python_generate_outputs
+                namespace: company.team
+                
+                tasks:
+                  - id: generate_output
+                    type: io.kestra.plugin.scripts.python.Script
+                    beforeCommands:
+                      - pip install kestra
+                    script: |
+                      from kestra import Kestra
+                      
+                      marks = [79, 91, 85, 64, 82]
+                      Kestra.outputs({"total_marks": sum(marks),"average_marks": sum(marks)/len(marks)})
+                
+                  - id: log_result
+                    type: io.kestra.plugin.core.log.Log
+                    message: 
+                      - "Total Marks: {{ outputs.generate_output.vars.total_marks }}"
+                      - "Average Marks: {{ outputs.generate_output.vars.average_marks }}"
+            """
+        )   
     }
 )
 public class Script extends AbstractExecScript {
