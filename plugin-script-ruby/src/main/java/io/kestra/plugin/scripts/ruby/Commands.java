@@ -55,7 +55,7 @@ import java.util.List;
         end
         ```
 
-        In order to read that script from the [Namespace File](https://kestra.io/docs/developer-guide/namespace-files) called `main.rb`, you need to enable the `namespaceFiles` property. We include only `main.rb` as that is the only file we want from the `namespaceFiles`.
+        In order to read that script from the [Namespace File](https://kestra.io/docs/developer-guide/namespace-files) called `main.rb`, you need to enable the `namespaceFiles` property. By default, setting to `true` injects all Namespace files; we include only `main.rb` as that is the only file we want from the `namespaceFiles`.
 
         Also, note how we use the `inputFiles` option to read additional files into the script's working directory. In this case, we read the `data.json` file, which contains the data that we want to convert to CSV.
 
