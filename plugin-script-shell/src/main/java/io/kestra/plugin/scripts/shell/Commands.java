@@ -47,8 +47,8 @@ import jakarta.validation.constraints.NotEmpty;
             """
         ),
         @Example(
-            title = "Execute a single Shell command.",
             full = true,
+            title = "Execute a single Shell command.",
             code = """
                    id: shell_single_command
                    namespace: company.team
@@ -61,8 +61,8 @@ import jakarta.validation.constraints.NotEmpty;
                    """
         ),
         @Example(
-            title = "Include only specific namespace files.",
             full = true,
+            title = "Include only specific namespace files.",
             code = """
                    id: include_files
                    namespace: company.team
@@ -81,8 +81,8 @@ import jakarta.validation.constraints.NotEmpty;
                    """
         ),
         @Example(
-            title = "Exclude specific namespace files.",
             full = true,
+            title = "Exclude specific namespace files.",
             code = """
                    id: exclude_files
                    namespace: company.team
@@ -101,8 +101,8 @@ import jakarta.validation.constraints.NotEmpty;
                    """
         ),
         @Example(
-            title = "Execute Shell commands that generate files accessible by other tasks and available for download in the UI's Output tab.",
             full = true,
+            title = "Execute Shell commands that generate files accessible by other tasks and available for download in the UI's Output tab.",
             code = """
                    id: shell_generate_files
                    namespace: company.team
@@ -119,8 +119,8 @@ import jakarta.validation.constraints.NotEmpty;
                    """
         ),
         @Example(
-            title = "Execute a Shell command using an input file generated in a previous task.",
             full = true,
+            title = "Execute a Shell command using an input file generated in a previous task.",
             code = """
                    id: use_input_file
                    namespace: company.team
@@ -137,8 +137,8 @@ import jakarta.validation.constraints.NotEmpty;
                    """
         ),
         @Example(
-            title = "Run a PHP Docker container and execute a command.",
             full = true,
+            title = "Run a PHP Docker container and execute a command.",
             code = """
                    id: run_php_code
                    namespace: company.team
@@ -154,8 +154,8 @@ import jakarta.validation.constraints.NotEmpty;
                    """
         ),
         @Example(
-            title = "Create output variables from a standard output.",
             full = true,
+            title = "Create output variables from a standard output.",
             code = """
                    id: create_output_variables
                    namespace: company.team
@@ -168,8 +168,8 @@ import jakarta.validation.constraints.NotEmpty;
                    """
         ),
         @Example(
-            title = "Send a counter metric from a standard output.",
             full = true,
+            title = "Send a counter metric from a standard output.",
             code = """
                    id: create_counter_metric
                    namespace: company.team
@@ -180,7 +180,73 @@ import jakarta.validation.constraints.NotEmpty;
                        commands:
                          - echo '::{"metrics":[{"name":"count","type":"counter","value":1,"tags":{"tag1":"i","tag2":"win"}}]}::'
                    """
+        ),
+        @Example(
+            full = true,
+            title = "Run C code inside of a Shell environment",
+            code = """
+                id: shell-execute-code
+                namespace: company.team
+                
+                inputs:
+                  - id: dataset_url
+                    type: STRING
+                    defaults: https://huggingface.co/datasets/kestra/datasets/raw/main/csv/orders.csv
+                
+                tasks:
+                  - id: download_dataset
+                    type: io.kestra.plugin.core.http.Download
+                    uri: "{{ inputs.dataset_url }}"
+                
+                  - id: c_code
+                    type: io.kestra.plugin.scripts.shell.Commands
+                    taskRunner:
+                      type: io.kestra.plugin.scripts.runner.docker.Docker
+                    containerImage: gcc:latest
+                    commands:
+                      - gcc example.c
+                      - ./a.out
+                    inputFiles:
+                      orders.csv: "{{ outputs.download_dataset.uri }}"
+                      example.c: |
+                        #include <stdio.h>
+                        #include <stdlib.h>
+                        #include <string.h>
+                
+                        int main() {
+                            FILE *file = fopen("orders.csv", "r");
+                            if (!file) {
+                                printf("Error opening file!\n");
+                                return 1;
+                            }
+                
+                            char line[1024];
+                            double total_revenue = 0.0;
+                
+                            fgets(line, 1024, file);
+                            while (fgets(line, 1024, file)) {
+                                char *token = strtok(line, ",");
+                                int i = 0;
+                                double total = 0.0;
+                                
+                                while (token) {
+                                    if (i == 6) {
+                                        total = atof(token);
+                                        total_revenue += total;
+                                    }
+                                    token = strtok(NULL, ",");
+                                    i++;
+                                }
+                            }
+                
+                            fclose(file);
+                            printf("Total Revenue: $%.2f\n", total_revenue);
+                
+                            return 0;
+                        }
+            """
         )
+            
     }
 )
 public class Commands extends AbstractExecScript {
