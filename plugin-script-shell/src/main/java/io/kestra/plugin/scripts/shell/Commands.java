@@ -185,7 +185,7 @@ import jakarta.validation.constraints.NotEmpty;
             full = true,
             title = "Run C code inside of a Shell environment",
             code = """
-                id: shell-execute-code
+                id: shell_execute_code
                 namespace: company.team
                 
                 inputs:
