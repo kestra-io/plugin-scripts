@@ -140,6 +140,33 @@ import java.util.Map;
                 type: io.kestra.plugin.core.log.Log
                 message: "{{ outputs.node.vars.test }}"
             """
+    ),
+    @Example(
+        full = true,
+        title = "Install custom Node packages from package.json before running a Node.js",
+        code = """
+            id: node_custom_package
+            namespace: company.team
+            
+            tasks:
+              - id: script
+                type: io.kestra.plugin.scripts.node.Script
+                inputFiles:
+                  package.json: |
+                    {
+                      "name": "your_project_name",
+                      "version": "1.0.0",
+                      "type": "module",
+                      "dependencies": {
+                        "colors": "^1.4.0"
+                      }
+                    }
+                beforeCommands:
+                  - npm install
+                script: |
+                  import colors from 'colors';
+                  console.log(colors.red("Hello"));
+        """
     )
 })
 public class Script extends AbstractExecScript {
