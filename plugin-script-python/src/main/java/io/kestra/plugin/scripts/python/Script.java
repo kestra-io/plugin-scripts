@@ -57,6 +57,28 @@ import java.util.Map;
                 """
         ),
         @Example(
+            full = true,
+            title = "Install pip packages before starting a Python Script task",
+            code = """
+                id: pip_packages_docker
+                namespace: company.team
+                
+                tasks:
+                  - id: run_python
+                    type: io.kestra.plugin.scripts.python.Script
+                    beforeCommands:
+                      - pip install requests kestra
+                    warningOnStdErr: false
+                    script: |
+                      import requests
+                      import json
+                
+                      response = requests.get("https://api.github.com")
+                      data = response.json()
+                      print(data)
+            """
+        ),
+        @Example(
             title = "Log messages at different log levels using Kestra logger.",
             full = true,
             code = """
@@ -264,7 +286,7 @@ import java.util.Map;
                       - "Total Marks: {{ outputs.generate_output.vars.total_marks }}"
                       - "Average Marks: {{ outputs.generate_output.vars.average_marks }}"
             """
-        )   
+        )
     }
 )
 public class Script extends AbstractExecScript {
