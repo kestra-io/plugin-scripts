@@ -138,6 +138,26 @@ import jakarta.validation.constraints.NotEmpty;
         ),
         @Example(
             full = true,
+            title = "Read a file from inputs",
+            code = """
+                id: input_file
+                namespace: company.team
+                
+                inputs:
+                  - id: text_file
+                    type: FILE
+                
+                tasks:
+                  - id: read_file
+                    type: io.kestra.plugin.scripts.shell.Commands
+                    taskRunner:
+                      type: io.kestra.plugin.core.runner.Process
+                    commands:
+                      - cat "{{ inputs.text_file }}"
+            """
+        ),
+        @Example(
+            full = true,
             title = "Run a PHP Docker container and execute a command.",
             code = """
                    id: run_php_code
