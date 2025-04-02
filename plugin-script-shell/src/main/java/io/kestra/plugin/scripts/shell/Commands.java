@@ -3,9 +3,7 @@ package io.kestra.plugin.scripts.shell;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
-import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
-import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
@@ -17,7 +15,6 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
-import jakarta.validation.constraints.NotEmpty;
 
 @SuperBuilder
 @ToString
@@ -142,11 +139,11 @@ import jakarta.validation.constraints.NotEmpty;
             code = """
                 id: input_file
                 namespace: company.team
-                
+
                 inputs:
                   - id: text_file
                     type: FILE
-                
+
                 tasks:
                   - id: read_file
                     type: io.kestra.plugin.scripts.shell.Commands
@@ -205,68 +202,94 @@ import jakarta.validation.constraints.NotEmpty;
             full = true,
             title = "Run C code inside of a Shell environment",
             code = """
-                id: shell_execute_code
-                namespace: company.team
-                
-                inputs:
-                  - id: dataset_url
-                    type: STRING
-                    defaults: https://huggingface.co/datasets/kestra/datasets/raw/main/csv/orders.csv
-                
-                tasks:
-                  - id: download_dataset
-                    type: io.kestra.plugin.core.http.Download
-                    uri: "{{ inputs.dataset_url }}"
-                
-                  - id: c_code
-                    type: io.kestra.plugin.scripts.shell.Commands
-                    taskRunner:
-                      type: io.kestra.plugin.scripts.runner.docker.Docker
-                    containerImage: gcc:latest
-                    commands:
-                      - gcc example.c
-                      - ./a.out
-                    inputFiles:
-                      orders.csv: "{{ outputs.download_dataset.uri }}"
-                      example.c: |
-                        #include <stdio.h>
-                        #include <stdlib.h>
-                        #include <string.h>
-                
-                        int main() {
-                            FILE *file = fopen("orders.csv", "r");
-                            if (!file) {
-                                printf("Error opening file!\n");
-                                return 1;
-                            }
-                
-                            char line[1024];
-                            double total_revenue = 0.0;
-                
-                            fgets(line, 1024, file);
-                            while (fgets(line, 1024, file)) {
-                                char *token = strtok(line, ",");
-                                int i = 0;
-                                double total = 0.0;
-                                
-                                while (token) {
-                                    if (i == 6) {
-                                        total = atof(token);
-                                        total_revenue += total;
-                                    }
-                                    token = strtok(NULL, ",");
-                                    i++;
-                                }
-                            }
-                
-                            fclose(file);
-                            printf("Total Revenue: $%.2f\n", total_revenue);
-                
-                            return 0;
-                        }
-            """
+                   id: shell_execute_code
+                   namespace: company.team
+
+                   inputs:
+                     - id: dataset_url
+                       type: STRING
+                       defaults: https://huggingface.co/datasets/kestra/datasets/raw/main/csv/orders.csv
+
+                   tasks:
+                     - id: download_dataset
+                       type: io.kestra.plugin.core.http.Download
+                       uri: "{{ inputs.dataset_url }}"
+
+                     - id: c_code
+                       type: io.kestra.plugin.scripts.shell.Commands
+                       taskRunner:
+                         type: io.kestra.plugin.scripts.runner.docker.Docker
+                       containerImage: gcc:latest
+                       commands:
+                         - gcc example.c
+                         - ./a.out
+                       inputFiles:
+                         orders.csv: "{{ outputs.download_dataset.uri }}"
+                         example.c: |
+                           #include <stdio.h>
+                           #include <stdlib.h>
+                           #include <string.h>
+
+                           int main() {
+                               FILE *file = fopen("orders.csv", "r");
+                               if (!file) {
+                                   printf("Error opening file!\\n");
+                                   return 1;
+                               }
+
+                               char line[1024];
+                               double total_revenue = 0.0;
+
+                               fgets(line, 1024, file);
+                               while (fgets(line, 1024, file)) {
+                                   char *token = strtok(line, ",");
+                                   int i = 0;
+                                   double total = 0.0;
+
+                                   while (token) {
+                                       if (i == 6) {
+                                           total = atof(token);
+                                           total_revenue += total;
+                                       }
+                                       token = strtok(NULL, ",");
+                                       i++;
+                                   }
+                               }
+
+                               fclose(file);
+                               printf("Total Revenue: $%.2f\\n", total_revenue);
+
+                               return 0;
+                           }
+                   """
+        ),
+        @Example(
+            full = true,
+            title = """
+            If you want to use an input file's absolute path within the current task's working directory, \
+            you can leverage the `{{ workingDir }}` variable.
+            """,
+            code = """
+                   id: shell_commands_example
+                   namespace: company.team
+
+                   tasks:
+                     - id: generator_shell_commands_task
+                       type: io.kestra.plugin.scripts.shell.Commands
+                       outputFiles:
+                         - out.txt
+                       commands:
+                         - echo "Test" > out.txt
+
+                     - id: reader_shell_commands_task
+                       type: io.kestra.plugin.scripts.shell.Commands
+                       inputFiles:
+                         generated.txt: "{{ outputs.generator_shell_commands_task.outputFiles['out.txt'] }}"
+                       commands:
+                         - >
+                           echo "Input's absolute path: '{{ workingDir }}/generated.txt'"
+                   """
         )
-            
     }
 )
 public class Commands extends AbstractExecScript {

@@ -3,9 +3,7 @@ package io.kestra.plugin.scripts.shell;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
-import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
-import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
@@ -13,7 +11,6 @@ import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -69,6 +66,32 @@ import jakarta.validation.constraints.NotNull;
                       - hello.txt
                     script: |
                       echo "Hello world!" > hello.txt"""
+        ),
+        @Example(
+            full = true,
+            title = """
+            If you want to use an input file's absolute path within the current task's working directory, \
+            you can leverage the `{{ workingDir }}` variable.
+            """,
+            code = """
+                   id: shell_script_example
+                   namespace: company.team
+
+                   tasks:
+                     - id: generator_shell_script_task
+                       type: io.kestra.plugin.scripts.shell.Script
+                       outputFiles:
+                         - out.txt
+                       script: |
+                         echo "Test" > out.txt
+
+                     - id: reader_shell_script_task
+                       type: io.kestra.plugin.scripts.shell.Script
+                       inputFiles:
+                         generated.txt: "{{ outputs.generator_shell_script_task.outputFiles['out.txt'] }}"
+                       script: |
+                         echo "Input's absolute path: '{{ workingDir }}/generated.txt'"
+                   """
         )
     }
 )
