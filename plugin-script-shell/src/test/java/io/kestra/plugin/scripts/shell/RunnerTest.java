@@ -13,15 +13,8 @@ import static org.hamcrest.Matchers.is;
 @KestraTest(startRunner = true)
 class RunnerTest {
     @Test
-    @ExecuteFlow("sanity-checks/bash.yaml")
-    void bash(Execution execution) {
-        assertThat(execution.getTaskRunList(), hasSize(3));
-        assertThat(execution.getState().getCurrent(), is(State.Type.SUCCESS));
-    }
-
-    @Test
-    @ExecuteFlow("sanity-checks/shell.yaml")
-    void shell(Execution execution) {
+    @ExecuteFlow("sanity-checks/all_shell.yaml")
+    void all_shell(Execution execution) {
         assertThat(execution.getTaskRunList(), hasSize(5));
         assertThat(execution.getState().getCurrent(), is(State.Type.SUCCESS));
     }
