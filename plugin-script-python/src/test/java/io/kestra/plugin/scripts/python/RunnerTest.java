@@ -13,8 +13,8 @@ import static org.hamcrest.Matchers.is;
 @KestraTest(startRunner = true)
 class RunnerTest {
     @Test
-    @ExecuteFlow("sanity-checks/python.yaml")
-    void python(Execution execution) {
+    @ExecuteFlow("sanity-checks/all_python.yaml")
+    void all_python(Execution execution) {
         assertThat(execution.getTaskRunList(), hasSize(8));
         assertThat(execution.getState().getCurrent(), is(State.Type.SUCCESS));
     }
