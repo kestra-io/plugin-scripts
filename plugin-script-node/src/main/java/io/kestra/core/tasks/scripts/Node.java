@@ -80,7 +80,6 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
                 "    }",
                 "args:",
                 "  - data.json",
-                "warningOnStdErr: false",
             }
         ),
         @Example(

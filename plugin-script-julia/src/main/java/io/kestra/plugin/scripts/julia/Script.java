@@ -43,7 +43,6 @@ import java.util.Map;
             tasks:
               - id: script
                 type: io.kestra.plugin.scripts.julia.Script
-                warningOnStdErr: false
                 script: |
                   using DataFrames, CSV
                   df = DataFrame(Name = ["Alice", "Bob", "Charlie"], Age = [25, 30, 35])
