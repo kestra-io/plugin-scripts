@@ -128,12 +128,11 @@ public abstract class AbstractBash extends Task {
     )
     protected Property<Map<String, String>> env;
 
-    @Builder.Default
     @Schema(
-        title = "Whether to set the execution state to `WARNING` if any `stdErr` is emitted."
+        title = "Not used anymore, will be removed soon"
     )
-    @NotNull
-    protected Property<Boolean> warningOnStdErr = Property.of(true);
+    @Deprecated
+    protected Property<Boolean> warningOnStdErr;
 
     @Getter(AccessLevel.NONE)
     protected transient Path workingDirectory;
@@ -228,7 +227,6 @@ public abstract class AbstractBash extends Task {
 
         ScriptOutput run = new CommandsWrapper(runContext)
             .withEnv(this.finalEnv(runContext))
-            .withWarningOnStdErr(runContext.render(this.warningOnStdErr).as(Boolean.class).orElseThrow())
             .withTaskRunner(taskRunner)
             .withCommands(new Property<>(JacksonMapper.ofJson().writeValueAsString(commandsArgs)))
             .addAdditionalVars(this.additionalVars)
@@ -266,7 +264,6 @@ public abstract class AbstractBash extends Task {
             .exitCode(run.getExitCode())
             .stdOutLineCount(run.getStdOutLineCount())
             .stdErrLineCount(run.getStdErrLineCount())
-            .warningOnStdErr(runContext.render(this.warningOnStdErr).as(Boolean.class).orElseThrow())
             .vars(run.getVars())
             .files(uploaded)
             .outputFiles(uploaded)

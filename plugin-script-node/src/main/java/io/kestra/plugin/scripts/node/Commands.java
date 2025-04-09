@@ -46,7 +46,6 @@ import jakarta.validation.constraints.NotEmpty;
                   - npm install colors
                 commands:
                   - node main.js
-                warningOnStdErr: false
             """
     )
 })

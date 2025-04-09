@@ -38,7 +38,6 @@ import jakarta.validation.constraints.NotEmpty;
             tasks:
               - id: commands
                 type: io.kestra.plugin.scripts.julia.Commands
-                warningOnStdErr: false
                 inputFiles:
                   main.jl: |
                     using DataFrames, CSV

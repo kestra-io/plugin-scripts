@@ -87,7 +87,6 @@ import java.util.Map;
 
                     - id: git_python_scripts
                       type: io.kestra.plugin.scripts.python.Commands
-                      warningOnStdErr: false
                       containerImage: ghcr.io/kestra-io/pydata:latest
                       beforeCommands:
                         - pip install faker > /dev/null
@@ -131,12 +130,12 @@ import java.util.Map;
         code = """
             id: python_input_as_env_variable
             namespace: company.team
-            
+
             inputs:
               - id: uri
                 type: URI
                 defaults: https://www.google.com/
-            
+
             tasks:
               - id: code
                 type: io.kestra.plugin.scripts.python.Commands
@@ -147,10 +146,10 @@ import java.util.Map;
                   main.py: |
                       import requests
                       import os
-                      
+
                       # Perform the GET request
                       response = requests.get(os.environ['URI'])
-                      
+
                       # Check if the request was successful
                       if response.status_code == 200:
                           # Print the content of the page
@@ -186,7 +185,6 @@ import java.util.Map;
                         data.csv: "{{ trigger.objects | jq('.[].uri') | first }}"
                       description: this script reads a file `data.csv` from S3 trigger
                       containerImage: ghcr.io/kestra-io/pydata:latest
-                      warningOnStdErr: false
                       commands:
                         - python examples/scripts/clean_messy_dataset.py
                       outputFiles:
@@ -227,7 +225,6 @@ import java.util.Map;
 
                     - id: git_python_scripts
                       type: io.kestra.plugin.scripts.python.Commands
-                      warningOnStdErr: false
                       commands:
                         - python examples/scripts/etl_script.py
                       outputFiles:
