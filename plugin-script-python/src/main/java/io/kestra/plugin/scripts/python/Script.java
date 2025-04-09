@@ -62,17 +62,16 @@ import java.util.Map;
             code = """
                 id: pip_packages_docker
                 namespace: company.team
-                
+
                 tasks:
                   - id: run_python
                     type: io.kestra.plugin.scripts.python.Script
                     beforeCommands:
                       - pip install requests kestra
-                    warningOnStdErr: false
                     script: |
                       import requests
                       import json
-                
+
                       response = requests.get("https://api.github.com")
                       data = response.json()
                       print(data)
@@ -89,7 +88,6 @@ import java.util.Map;
                   - id: python_logger
                     type: io.kestra.plugin.scripts.python.Script
                     allowFailure: true
-                    warningOnStdErr: false
                     script: |
                       import time
                       from kestra import Kestra
@@ -192,16 +190,16 @@ import java.util.Map;
             code = """
                 id: python_use_input_in_inline
                 namespace: company.team
-                
+
                 inputs:
                   - id: pokemon
                     type: STRING
                     defaults: pikachu
-                
+
                   - id: your_age
                     type: INT
                     defaults: 25
-                
+
                 tasks:
                   - id: inline_script
                     type: io.kestra.plugin.scripts.python.Script
@@ -210,10 +208,10 @@ import java.util.Map;
                     script: |
                       import requests
                       import json
-                
+
                       url = "https://pokeapi.co/api/v2/pokemon/{{ inputs.pokemon }}"
                       response = requests.get(url)
-                
+
                       if response.status_code == 200:
                           pokemon = json.loads(response.text)
                           print(f"Base experience of {{ inputs.pokemon }} is { pokemon.get('base_experience') }")
@@ -233,12 +231,12 @@ import java.util.Map;
             code = """
                 id: python_input_file
                 namespace: company.team
-                
+
                 tasks:
                   - id: download_file
                     type: io.kestra.plugin.core.http.Download
                     uri: https://huggingface.co/datasets/kestra/datasets/raw/main/csv/orders.csv
-                
+
                   - id: get_total_rows
                     type: io.kestra.plugin.scripts.python.Script
                     beforeCommands:
@@ -247,16 +245,16 @@ import java.util.Map;
                       input.csv: "{{ outputs.download_file.uri }}"
                     script: |
                       import pandas as pd
-                
+
                       # Path to your CSV file
                       csv_file_path = "input.csv"
-                
+
                       # Read the CSV file using pandas
                       df = pd.read_csv(csv_file_path)
-                
+
                       # Get the number of rows
                       num_rows = len(df)
-                
+
                       print(f"Number of rows: {num_rows}")
             """
         ),
@@ -268,7 +266,7 @@ import java.util.Map;
             code = """
                 id: python_generate_outputs
                 namespace: company.team
-                
+
                 tasks:
                   - id: generate_output
                     type: io.kestra.plugin.scripts.python.Script
@@ -276,13 +274,13 @@ import java.util.Map;
                       - pip install kestra
                     script: |
                       from kestra import Kestra
-                      
+
                       marks = [79, 91, 85, 64, 82]
                       Kestra.outputs({"total_marks": sum(marks),"average_marks": sum(marks)/len(marks)})
-                
+
                   - id: log_result
                     type: io.kestra.plugin.core.log.Log
-                    message: 
+                    message:
                       - "Total Marks: {{ outputs.generate_output.vars.total_marks }}"
                       - "Average Marks: {{ outputs.generate_output.vars.average_marks }}"
             """

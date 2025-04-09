@@ -48,7 +48,6 @@ import java.util.Map;
                 script: |
                   const colors = require("colors");
                   console.log(colors.red("Hello"));
-                warningOnStdErr: false"
             """
     ),
     @Example(
@@ -65,7 +64,6 @@ import java.util.Map;
             tasks:
               - id: node
                 type: io.kestra.plugin.scripts.node.Script
-                warningOnStdErr: false
                 beforeCommands:
                     - npm install json2csv > /dev/null 2>&1
                 script: |
@@ -129,7 +127,6 @@ import java.util.Map;
             tasks:
             - id: node
                 type: io.kestra.plugin.scripts.node.Script
-                warningOnStdErr: false
                 beforeCommands:
                 - npm i @kestra-io/libs
                 script: |
@@ -147,7 +144,7 @@ import java.util.Map;
         code = """
             id: node_custom_package
             namespace: company.team
-            
+
             tasks:
               - id: script
                 type: io.kestra.plugin.scripts.node.Script
