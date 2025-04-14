@@ -8,6 +8,7 @@ import lombok.experimental.SuperBuilder;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.runners.RunContext;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Collection;
 import java.util.List;
@@ -17,6 +18,9 @@ import java.util.List;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
+@Schema(
+    title = "Transform an ION file from Kestra's internal storage with a Jython script."
+)
 @Plugin(
     examples = {
         @Example(

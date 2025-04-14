@@ -17,7 +17,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Transform ion format file from Kestra's internal storage with a Nashorn (JavaScript) script."
+    title = "Transform an ION file from Kestra's internal storage with a Nashorn (JavaScript) script."
 )
 @Plugin(
     examples = {

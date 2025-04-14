@@ -35,7 +35,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Transform ion format file from Kestra with a groovy script.",
+    title = "Transform an ION file from Kestra with a Groovy script.",
     description = "This allows you to transform the data, previously loaded by Kestra, as you need.\n\n" +
         "Take a ion format file from Kestra and iterate row per row.\n" +
         "Each row will populate a `row` global variable. You need to alter this variable that will be saved on output file.\n" +

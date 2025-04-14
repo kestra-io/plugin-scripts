@@ -31,7 +31,7 @@ import jakarta.validation.constraints.NotNull;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a script written in Java, JShell, Kotlin, Groovy or Markdown with JBang."
+    title = "Execute a script written in Java, JShell, Kotlin, Groovy or render Markdown with JBang."
 )
 @Plugin(
     examples = {

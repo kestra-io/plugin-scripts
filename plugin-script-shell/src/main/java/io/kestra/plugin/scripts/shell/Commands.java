@@ -22,7 +22,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute one or more Shell commands."
+    title = "Execute Shell commands."
 )
 @Plugin(
     examples = {
