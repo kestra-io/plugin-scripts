@@ -31,7 +31,8 @@ import jakarta.validation.constraints.NotNull;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a script written in Java, JShell, Kotlin, Groovy or render Markdown with JBang."
+    title = "Execute a script written in Java, JShell, Kotlin, Groovy or render Markdown with JBang.",
+    description = "Besides scripting languages, with JBang, it is possible to [write scripts using Markdown](https://www.jbang.dev/documentation/guide/latest/usage.html#running-markdowns-md-experimental). JBang will extract code found in java, jsh, or jshelllanguage code blocks."
 )
 @Plugin(
     examples = {
