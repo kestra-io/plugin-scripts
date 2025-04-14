@@ -25,8 +25,8 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Node.js script.",
-    description = "This task is deprecated, please use the [io.kestra.plugin.scripts.node.Script](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.node.script) or [io.kestra.plugin.scripts.node.Commands](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.node.commands) task instead.\n\n" +
+    title = "Execute a Node.js script (Deprecated).",
+    description = "This task is deprecated, please use the [io.kestra.plugin.scripts.node.Script](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.node.script) or [io.kestra.plugin.scripts.node.Commands](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.node.commands) tasks instead.\n\n" +
         "With the Node task, you can execute a full JavaScript script.\n" +
         "The task will create a temporary folder for each task, and allows you to install some npm packages defined in an optional `package.json` file.\n" +
         "\n" +
