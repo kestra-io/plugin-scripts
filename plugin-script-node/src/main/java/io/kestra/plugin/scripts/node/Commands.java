@@ -26,7 +26,7 @@ import jakarta.validation.constraints.NotEmpty;
 @NoArgsConstructor
 @Schema(
     title = "Execute Node.js commands from the CLI.",
-    description = "Note that instead of adding the script using the `inputFiles` property, you can also add the script from the embedded VS Code editor and point to its location by path. If you do so, make sure to enable Namespace Files by setting the `enabled` flag of the `namespaceFiles` property to `true`.\""
+    description = "Note that instead of adding the script using the inputFiles property, you can also add the script from the embedded VS Code editor and point to its location by path. If you do so, make sure to enable Namespace Files by setting the enabled flag of the namespaceFiles property to true.\""
 )
 @Plugin(examples = {
     @Example(
