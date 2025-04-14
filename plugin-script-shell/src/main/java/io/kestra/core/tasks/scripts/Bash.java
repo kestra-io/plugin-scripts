@@ -25,8 +25,8 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Bash script, command or set of commands.",
-    description = "This task is deprecated, please use the [io.kestra.plugin.scripts.shell.Script](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.shell.script) or [io.kestra.plugin.scripts.shell.Commands](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.shell.commands) task instead.",
+    title = "Run a Bash script or command (Deprecated).",
+    description = "This task is deprecated, please use the [io.kestra.plugin.scripts.shell.Script](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.shell.script) or [io.kestra.plugin.scripts.shell.Commands](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.shell.commands) tasks instead.",
     deprecated = true
 )
 @Plugin(

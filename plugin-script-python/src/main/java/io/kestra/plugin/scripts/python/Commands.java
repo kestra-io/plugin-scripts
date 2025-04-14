@@ -26,7 +26,7 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute one or more Python scripts from a Command Line Interface."
+    title = "Execute Python commands from the CLI."
 )
 @Plugin(examples = {
     @Example(

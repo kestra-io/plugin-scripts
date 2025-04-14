@@ -25,7 +25,7 @@ import jakarta.validation.constraints.NotEmpty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute R scripts from the Command Line Interface."
+    title = "Execute R scripts from the CLI."
 )
 @Plugin(examples = {
     @Example(
