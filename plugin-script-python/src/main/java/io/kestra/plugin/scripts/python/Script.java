@@ -3,24 +3,22 @@ package io.kestra.plugin.scripts.python;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
-import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
-import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.RunContext;
-import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -199,7 +197,7 @@ import java.util.Map;
                   - id: your_age
                     type: INT
                     defaults: 25
-
+                    
                 tasks:
                   - id: inline_script
                     type: io.kestra.plugin.scripts.python.Script
@@ -287,11 +285,7 @@ import java.util.Map;
         )
     }
 )
-public class Script extends AbstractExecScript {
-    private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/kestrapy:latest";
-
-    @Builder.Default
-    protected Property<String> containerImage = Property.of(DEFAULT_IMAGE);
+public class Script extends AbstractPythonExecScript {
 
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
@@ -322,20 +316,28 @@ public class Script extends AbstractExecScript {
         commands = commands.withInputFiles(inputFiles);
 
         TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
+        boolean isCacheEnabled = isCacheEnabled(runContext);
+        ResolvedPythonEnvironment pythonEnvironment = setupPythonEnvironment(runContext, isCacheEnabled);
 
-        return commands
+        ScriptOutput output = commands
             .addEnv(Map.of(
                 "PYTHONUNBUFFERED", "true",
                 "PIP_ROOT_USER_ACTION", "ignore",
-                "PIP_DISABLE_PIP_VERSION_CHECK", "1"
-                ))
+                "PIP_DISABLE_PIP_VERSION_CHECK", "1",
+                "PYTHONPATH", pythonEnvironment.packages().path().toString()
+            ))
             .withInterpreter(this.interpreter)
             .withBeforeCommands(beforeCommands)
             .withBeforeCommandsWithOptions(true)
             .withCommands(Property.of(List.of(
-                String.join(" ", "python", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
+                String.join(" ", pythonEnvironment.interpreter(), commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
             )))
             .withTargetOS(os)
             .run();
+
+        if (!pythonEnvironment.cached() && isCacheEnabled) {
+            uploadCache(runContext, pythonEnvironment.packages());
+        }
+        return output;
     }
 }
