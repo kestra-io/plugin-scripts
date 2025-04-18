@@ -1,10 +1,10 @@
 package io.kestra.plugin.scripts.python;
 
 import com.google.common.collect.ImmutableMap;
+import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.AbstractMetricEntry;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
-import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
@@ -12,7 +12,6 @@ import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.core.junit.annotations.KestraTest;
 import jakarta.inject.Inject;
 import jakarta.validation.ConstraintViolationException;
 import org.apache.commons.io.IOUtils;
@@ -27,7 +26,9 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @KestraTest
@@ -107,6 +108,38 @@ class ScriptTest {
 
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getVars().get("extract"), is("200"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("source")
+    void shouldExecScriptGivenDependency(RunnerType runner, DockerOptions dockerOptions) throws Exception {
+        Script python = Script.builder()
+            .id("test-python-task")
+            .type(Script.class.getName())
+            .docker(dockerOptions)
+            .runner(runner)
+            .dependencies(Property.of(List.of("pandas")))
+            .pythonVersion(Property.of("3"))
+            .script(Property.of("""
+                  from kestra import Kestra
+                  import pandas as pd
+                  data = {
+                      'Name': ['Alice', 'Bob', 'Charlie'],
+                      'Age': [25, 30, 35]
+                  }
+                  df = pd.DataFrame(data)
+                  print(df)
+                  print("Average age:", df['Age'].mean())
+                  Kestra.outputs({"average_age": df['Age'].mean()})
+                  """
+            ))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
+        ScriptOutput run = python.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+        assertThat(run.getVars().get("average_age"), is(30.0));
     }
 
     @ParameterizedTest

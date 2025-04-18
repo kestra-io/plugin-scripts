@@ -3,18 +3,17 @@ package io.kestra.plugin.scripts.python;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
-import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
-import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.RunContext;
-import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
@@ -270,11 +269,7 @@ import java.util.Map;
             """
     )
 })
-public class Commands extends AbstractExecScript {
-    private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/kestrapy:latest";
-
-    @Builder.Default
-    protected Property<String> containerImage = Property.of(DEFAULT_IMAGE);
+public class Commands extends AbstractPythonExecScript {
 
     @Schema(
         title = "The commands to run."
@@ -296,11 +291,15 @@ public class Commands extends AbstractExecScript {
     public ScriptOutput run(RunContext runContext) throws Exception {
         TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
 
-        return this.commands(runContext)
+        boolean isCacheEnabled = isCacheEnabled(runContext);
+        ResolvedPythonEnvironment pythonEnvironment = setupPythonEnvironment(runContext, isCacheEnabled);
+
+        ScriptOutput output = this.commands(runContext)
             .addEnv(Map.of(
                 "PYTHONUNBUFFERED", "true",
                 "PIP_ROOT_USER_ACTION", "ignore",
-                "PIP_DISABLE_PIP_VERSION_CHECK", "1"
+                "PIP_DISABLE_PIP_VERSION_CHECK", "1",
+                "PYTHONPATH", pythonEnvironment.packages().path().toString()
             ))
             .withInterpreter(this.interpreter)
             .withCommands(commands)
@@ -308,5 +307,10 @@ public class Commands extends AbstractExecScript {
             .withBeforeCommandsWithOptions(true)
             .withTargetOS(os)
             .run();
+
+        if (!pythonEnvironment.cached() && isCacheEnabled) {
+            uploadCache(runContext, pythonEnvironment.packages());
+        }
+        return output;
     }
 }
