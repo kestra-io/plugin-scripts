@@ -1,0 +1,19 @@
+project.description = 'Execute Go scripts as part of Kestra data workflows.'
+
+jar {
+    manifest {
+        attributes(
+            "X-Kestra-Name": project.name,
+            "X-Kestra-Title": "Go",
+            "X-Kestra-Group": project.group + ".scripts.go",
+            "X-Kestra-Description": project.description,
+            "X-Kestra-Version": project.version
+        )
+    }
+}
+
+dependencies {
+    implementation project(':plugin-script')
+
+    testImplementation project(':plugin-script').sourceSets.test.output
+}
