@@ -35,6 +35,7 @@ import java.util.List;
             tasks:
               - id: commands
                 type: io.kestra.plugin.scripts.go.Commands
+                allowWarning: true # cause golang redirect ALL to stderr even false positives
                 inputFiles:
                     go_script.go: |
                         package main
