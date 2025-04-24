@@ -42,6 +42,7 @@ public class ScriptTest {
         var script = Script.builder()
             .id("go_script")
             .type(Script.class.getName())
+            .allowWarning(true)
             .script(Property.of("""
                     package main
                     import "fmt"
@@ -69,6 +70,7 @@ public class ScriptTest {
         var script = Script.builder()
             .id("go_script")
             .type(Script.class.getName())
+            .allowWarning(true)
             .script(Property.of("""
                     package main
                     import (

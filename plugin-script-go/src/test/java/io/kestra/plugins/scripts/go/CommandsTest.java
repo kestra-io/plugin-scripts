@@ -65,6 +65,7 @@ public class CommandsTest {
         var commands = Commands.builder()
             .id("go_commands")
             .type(Script.class.getName())
+            .allowWarning(true)
             .inputFiles(inputFiles)
             .beforeCommands(Property.of(List.of(
                 "go mod init go_commands",
@@ -78,16 +79,7 @@ public class CommandsTest {
 
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getStdOutLineCount(), is(1));
-
-        /**
-         * Those lines are displayed in the container even if a "go mod tidy" was added as a beforeCommand,
-         * and even if we are in the same folder than the "go.mod" file and the script executes well, strange...
-         *
-         * 11:54:52.807 ERROR docker-java-stream-455560730 f.s.go_commands go: creating new go.mod: module go_commands
-         * 11:54:52.860 ERROR docker-java-stream-455560730 f.s.go_commands go: to add module requirements and sums:
-         * 11:54:52.972 ERROR docker-java-stream-455560730 f.s.go_commands 	go mod tidy
-         */
-        assertThat(run.getStdErrLineCount(), is(3));
+        assertThat(run.getStdErrLineCount(), is(3)); // go logs everything to stderr
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("hello there!"));
         receive.blockLast();
@@ -129,6 +121,7 @@ public class CommandsTest {
         var commands = Commands.builder()
             .id("go_commands")
             .type(Script.class.getName())
+            .allowWarning(true)
             .inputFiles(inputFiles)
             .outputFiles(Property.of(List.of(outputFile)))
             .beforeCommands(Property.of(List.of(
