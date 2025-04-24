@@ -4,6 +4,7 @@ namespace: sanitychecks.plugin-scripts
 tasks:
   - id: script
     type: io.kestra.plugin.scripts.go.Script
+    allowWarning: true # cause golang redirect ALL to stderr even false positives
     script: |
       package main
       import (
@@ -28,6 +29,7 @@ tasks:
 
   - id: commands
     type: io.kestra.plugin.scripts.go.Commands
+    allowWarning: true # cause golang redirect ALL to stderr even false positives
     inputFiles:
       go_script.go: |
         package main
