@@ -28,6 +28,7 @@ public record ResolvedPythonPackages(
 ) {
 
     public static final String REQUIREMENTS_TXT = "requirements.txt";
+    public static final String REQUIREMENTS_IN = "requirements.in";
 
     public File toZippedArchive(final WorkingDir workingDir) throws IOException {
         Path tempFile = workingDir.createTempFile("python-" + this.version() + "-cache.zip");
