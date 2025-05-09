@@ -84,7 +84,12 @@ public class PythonDependenciesResolver {
         try (ZipInputStream zis = new ZipInputStream(stream)) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
-                Path outputPath = path.resolve(entry.getName()).normalize();
+                var fileName = entry.getName();
+                if (entry.getName().equals(ResolvedPythonPackages.REQUIREMENTS_TXT)) {
+                    fileName = getRequirementTxtFilename(hash);
+                }
+
+                Path outputPath = path.resolve(fileName).normalize();
 
                 // Prevent zip-slip vulnerability
                 if (!outputPath.startsWith(path)) {
@@ -105,20 +110,25 @@ public class PythonDependenciesResolver {
         }
         return new ResolvedPythonPackages(
             workingDir.resolve(Path.of(WORKING_DIR_ADDITIONAL_PYTHON_LIB)),
-            workingDir.resolve(Path.of(ResolvedPythonPackages.REQUIREMENTS_TXT)),
+            workingDir.resolve(Path.of(getRequirementTxtFilename(hash))),
             hash,
             version
         );
+    }
+
+    private static String getRequirementTxtFilename(String hash) {
+        // Prefix with 'hash' to avoid file name collision
+        return hash + "-" + ResolvedPythonPackages.REQUIREMENTS_TXT;
     }
 
     public ResolvedPythonPackages getPythonLibs(final String version, final String hash, final List<String> requirements) throws IOException {
         final String pythonPath = getPythonPath(version);
         final Path pythonLibDir = workingDir.resolve(Path.of(WORKING_DIR_ADDITIONAL_PYTHON_LIB));
 
-        Path in = createRequirementInFileAndGetPath(version, requirements);
+        Path in = createRequirementInFileAndGetPath(version, hash, requirements);
 
         logger.debug("Compiling dependencies");
-        Path req = workingDir.createFile(ResolvedPythonPackages.REQUIREMENTS_TXT);
+        Path req = workingDir.createFile(getRequirementTxtFilename(hash));
 
         try {
             execCommandAndGetStdOut(
@@ -166,8 +176,9 @@ public class PythonDependenciesResolver {
         return new ResolvedPythonPackages(pythonLibDir, req, hash, version);
     }
 
-    public Path createRequirementInFileAndGetPath(String version, List<String> requirements) throws IOException {
-        Path in = workingDir.createFile("requirements.in");
+    public Path createRequirementInFileAndGetPath(String version, String hash, List<String> requirements) throws IOException {
+        // prefix with hash to avoid file name collision
+        Path in = workingDir.createFile(hash + "-" + ResolvedPythonPackages.REQUIREMENTS_IN);
         Files.write(in, normalizeRequirements(version, requirements), StandardCharsets.UTF_8);
         return in;
     }
