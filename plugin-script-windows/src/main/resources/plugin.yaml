@@ -1,0 +1,5 @@
+tasks:
+  - id: windows-cmd-task
+    name: Windows Command Task
+    description: Execute Windows commands using cmd.exe
+    class: io.kestra.plugin.scripts.windows.WindowsCmdTask
