@@ -71,6 +71,33 @@ public class PythonDependenciesResolver {
     }
 
     /**
+     * Finds the version of the local Python installation.
+     *
+     * @return an {@link Optional} containing the version string (e.g., {@code "3.12.3"})
+     *         if Python is installed and the version can be determined; otherwise, an empty {@link Optional}
+     */
+    public Optional<String> findLocalPythonVersion() {
+        Optional<String> python = findPython(null);
+        if (python.isPresent()) {
+            logger.debug("Find local python version");
+            try {
+                ExecExitStatus execExitStatus = execCommandAndGetStdOut(List.of(python.get(), "--version"));
+                if (execExitStatus.isSuccess()) {
+                    return execExitStatus.stdOuts().stream().findFirst()
+                        .map(version -> version.replaceFirst("Python ", ""));
+                }
+                return Optional.empty();
+            } catch (IOException | InterruptedException e) {
+                if (e instanceof InterruptedException)  {
+                    Thread.currentThread().interrupt();
+                }
+                throw new KestraRuntimeException("Failed to wait for '" + python.get() + " --version' command. Error " + e.getMessage());
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
      * Restores and get the resolved pythons packages from the given input stream.
      *
      * @param version The python version.
@@ -80,19 +107,22 @@ public class PythonDependenciesResolver {
      * @throws IOException if an error occurred while reading the {@code stream}.
      */
     public ResolvedPythonPackages getPythonLibs(final String version, final String hash, final InputStream stream) throws IOException {
-        final Path path = workingDir.path();
+        final Path workingDirPath = workingDir.path();
         try (ZipInputStream zis = new ZipInputStream(stream)) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 var fileName = entry.getName();
+
+                Path outputPath;
                 if (entry.getName().equals(ResolvedPythonPackages.REQUIREMENTS_TXT)) {
                     fileName = getRequirementTxtFilename(hash);
+                    outputPath = workingDirPath.resolve(fileName).normalize();
+                } else {
+                    outputPath = workingDirPath.resolve(WORKING_DIR_ADDITIONAL_PYTHON_LIB).resolve(fileName).normalize();
                 }
 
-                Path outputPath = path.resolve(fileName).normalize();
-
                 // Prevent zip-slip vulnerability
-                if (!outputPath.startsWith(path)) {
+                if (!outputPath.startsWith(workingDirPath)) {
                     logger.trace("Skipping entry '{}'", entry.getName());
                     continue;
                 }
@@ -353,11 +383,18 @@ public class PythonDependenciesResolver {
     }
 
     private Optional<String> findPython(final String version) {
-        logger.debug("Finding Python '{}' interpreter.", version);
 
-        List<String> command = List.of(
-            getUvCmd(), "python", "find", version, "--system", "--python-preference=only-managed"
-        );
+        List<String> command;
+        if (version != null) {
+            logger.debug("Finding Python '{}' interpreter.", version);
+            command = List.of(
+                getUvCmd(), "python", "find", version, "--system", "--python-preference=only-managed"
+            );
+        } else {
+            command = List.of(
+                getUvCmd(), "python", "find", "--system", "--no-managed-python"
+            );
+        }
 
         final ExecExitStatus exec;
         try {
@@ -368,7 +405,9 @@ public class PythonDependenciesResolver {
                 env.put("HOME", HOME_ENV);
                 env.put("PATH", PATH_ENV);
                 env.put("UV_PYTHON_INSTALL_DIR", getUvPythonInstallDir());
-                env.put("UV_PYTHON_PREFERENCE", "only-managed");
+                if (version != null) {
+                    env.put("UV_PYTHON_PREFERENCE", "only-managed");
+                }
                 env.put("UV_CACHE_DIR", getUvCacheDir());
 
                 return builder;
@@ -421,3 +460,4 @@ public class PythonDependenciesResolver {
         public boolean isSuccess() { return exitCode == 0; }
     }
 }
+
