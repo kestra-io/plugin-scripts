@@ -118,7 +118,7 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .dependencies(Property.of(List.of("pandas")))
+            .dependencies(Property.of(List.of("kestra", "pandas")))
             .pythonVersion(Property.of("3"))
             .script(Property.of("""
                   from kestra import Kestra

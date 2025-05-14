@@ -8,6 +8,8 @@ import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+import io.kestra.plugin.scripts.python.internals.PythonEnvironmentManager;
+import io.kestra.plugin.scripts.python.internals.PythonEnvironmentManager.ResolvedPythonEnvironment;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
@@ -16,6 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -291,16 +294,20 @@ public class Commands extends AbstractPythonExecScript {
     public ScriptOutput run(RunContext runContext) throws Exception {
         TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
 
-        boolean isCacheEnabled = isCacheEnabled(runContext);
-        ResolvedPythonEnvironment pythonEnvironment = setupPythonEnvironment(runContext, isCacheEnabled);
+        PythonEnvironmentManager pythonEnvironmentManager = new PythonEnvironmentManager(runContext, this);
+        ResolvedPythonEnvironment pythonEnvironment = pythonEnvironmentManager.setup(containerImage, taskRunner, runner);
+
+        Map<String, String> env = new HashMap<>();
+        env.put("PYTHONUNBUFFERED", "true");
+        env.put("PIP_ROOT_USER_ACTION", "ignore");
+        env.put("PIP_DISABLE_PIP_VERSION_CHECK", "1");
+
+        if (pythonEnvironment.packages() != null) {
+            env.put("PYTHONPATH", pythonEnvironment.packages().path().toString());
+        }
 
         ScriptOutput output = this.commands(runContext)
-            .addEnv(Map.of(
-                "PYTHONUNBUFFERED", "true",
-                "PIP_ROOT_USER_ACTION", "ignore",
-                "PIP_DISABLE_PIP_VERSION_CHECK", "1",
-                "PYTHONPATH", pythonEnvironment.packages().path().toString()
-            ))
+            .addEnv(env)
             .withInterpreter(this.interpreter)
             .withCommands(commands)
             .withBeforeCommands(beforeCommands)
@@ -308,8 +315,9 @@ public class Commands extends AbstractPythonExecScript {
             .withTargetOS(os)
             .run();
 
-        if (!pythonEnvironment.cached() && isCacheEnabled) {
-            uploadCache(runContext, pythonEnvironment.packages());
+        // Cache upload
+        if (pythonEnvironmentManager.isCacheEnabled() && pythonEnvironment.packages() != null && !pythonEnvironment.cached()) {
+            pythonEnvironmentManager.uploadCache(runContext, pythonEnvironment.packages());
         }
         return output;
     }
