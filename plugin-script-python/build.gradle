@@ -14,6 +14,6 @@ jar {
 
 dependencies {
     implementation project(':plugin-script')
-
+    implementation("org.apache.commons:commons-compress")
     testImplementation project(':plugin-script').sourceSets.test.output
 }

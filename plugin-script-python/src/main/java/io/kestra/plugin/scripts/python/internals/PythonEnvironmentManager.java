@@ -24,6 +24,11 @@ import static io.kestra.plugin.scripts.python.internals.PythonBasedPlugin.DEFAUL
 
 public class PythonEnvironmentManager {
 
+    /**
+     * 0: TAR+GZIP
+     */
+    private static final int CACHE_FORMAT_VERSION = 0; // Increment the value when changing the cache format to avoid cache restoration error
+
     private final PythonBasedPlugin plugin;
     private final RunContext runContext;
     private final boolean isDependencyCacheEnabled;
@@ -59,7 +64,7 @@ public class PythonEnvironmentManager {
         if (!requirements.isEmpty()) {
             final long metricCacheDownloadStart = System.currentTimeMillis();
 
-            Optional<InputStream> cacheFile = isDependencyCacheEnabled ? runContext.storage().getCacheFile("python-" + plugin.getType(), hash) : Optional.empty();
+            Optional<InputStream> cacheFile = isDependencyCacheEnabled ? runContext.storage().getCacheFile(getCacheKey(), hash) : Optional.empty();
 
             if (cacheFile.isPresent()) {
                 runContext.logger().debug("Restoring python dependencies cache for key: {}", hash);
@@ -84,6 +89,10 @@ public class PythonEnvironmentManager {
         return new ResolvedPythonEnvironment(cached, resolvedPythonPackages, pythonInterpreter);
     }
 
+    private String getCacheKey() {
+        return "python-dependencies-v"+ CACHE_FORMAT_VERSION + "-" + plugin.getType();
+    }
+
     private String logAndGetPythonDefaultVersion() {
         runContext.logger().warn("No Python Version found. Using default: '{}'", DEFAULT_IMAGE);
         return DEFAULT_PYTHON_VERSION;
@@ -104,7 +113,7 @@ public class PythonEnvironmentManager {
             final long start = System.currentTimeMillis();
             runContext.logger().debug("Uploading python dependencies cache for key: {}", resolvedPythonPackages.hash());
             File cache = resolvedPythonPackages.toZippedArchive(runContext.workingDir());
-            runContext.storage().putCacheFile(cache, "python-" + this.plugin.getType(), resolvedPythonPackages.hash());
+            runContext.storage().putCacheFile(cache, getCacheKey(), resolvedPythonPackages.hash());
             runContext.logger().debug("Cache uploaded successfully (size: {} bytes)", cache.length());
             runContext.metric(Timer.of("task.pythondeps.cache.upload.duration", Duration.ofMillis(System.currentTimeMillis() - start)));
         } catch (IOException e) {
