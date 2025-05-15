@@ -151,7 +151,7 @@ import java.util.List;
                       type: io.kestra.plugin.core.runner.Process
                     commands:
                       - cat "{{ inputs.text_file }}"
-            """
+                """
         ),
         @Example(
             full = true,

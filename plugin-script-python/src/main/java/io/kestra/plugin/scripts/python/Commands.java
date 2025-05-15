@@ -162,7 +162,7 @@ import java.util.Map;
                   URI: "{{ inputs.uri }}"
                 commands:
                   - python main.py
-        """
+            """
     ),
     @Example(
         full = true,
