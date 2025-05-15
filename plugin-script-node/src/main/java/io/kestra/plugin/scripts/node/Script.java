@@ -163,7 +163,7 @@ import java.util.Map;
                 script: |
                   import colors from 'colors';
                   console.log(colors.red("Hello"));
-        """
+            """
     )
 })
 public class Script extends AbstractExecScript {
