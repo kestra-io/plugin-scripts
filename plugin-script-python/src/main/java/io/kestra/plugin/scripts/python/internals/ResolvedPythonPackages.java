@@ -1,17 +1,22 @@
 package io.kestra.plugin.scripts.python.internals;
 
 import io.kestra.core.runners.WorkingDir;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 /**
  *
@@ -32,19 +37,33 @@ public record ResolvedPythonPackages(
 
     public File toZippedArchive(final WorkingDir workingDir) throws IOException {
         Path tempFile = workingDir.createTempFile("python-" + this.version() + "-cache.zip");
-        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(tempFile))) {
-            ZipEntry reqZipEntry = new ZipEntry(REQUIREMENTS_TXT);
-            zos.putNextEntry(reqZipEntry);
-            Files.copy(this.lockFile(), zos);
-            zos.closeEntry();
+
+        try (
+            OutputStream fos = Files.newOutputStream(tempFile);
+            BufferedOutputStream bos = new BufferedOutputStream(fos);
+            GzipCompressorOutputStream gzos = new GzipCompressorOutputStream(bos);
+            TarArchiveOutputStream taos = new TarArchiveOutputStream(gzos)
+        ) {
+            taos.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
+
+            // Add requirements.txt first
+            Path reqFile = this.lockFile();
+            TarArchiveEntry reqEntry = new TarArchiveEntry(reqFile.toFile(), REQUIREMENTS_TXT);
+            taos.putArchiveEntry(reqEntry);
+            Files.copy(reqFile, taos);
+            taos.closeArchiveEntry();
+
+            // Walk the packages directory
             Files.walkFileTree(this.path(), new SimpleFileVisitor<>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     Path relativePath = path().relativize(file);
-                    ZipEntry zipEntry = new ZipEntry(relativePath.toString().replace("\\", "/"));
-                    zos.putNextEntry(zipEntry);
-                    Files.copy(file, zos);
-                    zos.closeEntry();
+                    String entryName = relativePath.toString().replace("\\", "/");
+                    TarArchiveEntry tarEntry = new TarArchiveEntry(file.toFile(), entryName);
+                    setPosixPermission(file, tarEntry);
+                    taos.putArchiveEntry(tarEntry);
+                    Files.copy(file, taos);
+                    taos.closeArchiveEntry();
                     return FileVisitResult.CONTINUE;
                 }
 
@@ -52,14 +71,28 @@ public record ResolvedPythonPackages(
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                     Path relativePath = path().relativize(dir);
                     if (!relativePath.toString().isEmpty()) {
-                        ZipEntry dirEntry = new ZipEntry(relativePath.toString().replace("\\", "/") + "/");
-                        zos.putNextEntry(dirEntry);
-                        zos.closeEntry();
+                        String entryName = relativePath.toString().replace("\\", "/") + "/";
+                        TarArchiveEntry dirEntry = new TarArchiveEntry(dir.toFile(), entryName);
+                        // Preserve POSIX permissions if supported
+                        setPosixPermission(dir, dirEntry);
+                        taos.putArchiveEntry(dirEntry);
+                        taos.closeArchiveEntry();
                     }
                     return FileVisitResult.CONTINUE;
                 }
+
+                private static void setPosixPermission(Path file, TarArchiveEntry tarEntry) {
+                    // Preserve POSIX permissions if supported
+                    try {
+                        Set<PosixFilePermission> perms = Files.getPosixFilePermissions(file);
+                        tarEntry.setMode(UnixModeToPosixFilePermissions.fromPosixFilePermissions(perms));
+                    } catch (UnsupportedOperationException | IOException ignore) {
+                        // Skipping unix file permission
+                    }
+                }
             });
         }
+
         return tempFile.toFile();
     }
 

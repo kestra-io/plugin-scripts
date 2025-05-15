@@ -3,6 +3,9 @@ package io.kestra.plugin.scripts.python.internals;
 import io.kestra.core.exceptions.KestraRuntimeException;
 import io.kestra.core.runners.WorkingDir;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.slf4j.Logger;
 
 import java.io.BufferedReader;
@@ -26,8 +29,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 /**
  * Service for resolving python and installing packages.
@@ -108,22 +109,25 @@ public class PythonDependenciesResolver {
      */
     public ResolvedPythonPackages getPythonLibs(final String version, final String hash, final InputStream stream) throws IOException {
         final Path workingDirPath = workingDir.path();
-        try (ZipInputStream zis = new ZipInputStream(stream)) {
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-                var fileName = entry.getName();
 
+        try (
+            GzipCompressorInputStream gzis = new GzipCompressorInputStream(stream);
+            TarArchiveInputStream tais = new TarArchiveInputStream(gzis)
+        ) {
+            TarArchiveEntry entry;
+            while ((entry = tais.getNextEntry()) != null) {
+                String entryName = entry.getName();
                 Path outputPath;
-                if (entry.getName().equals(ResolvedPythonPackages.REQUIREMENTS_TXT)) {
-                    fileName = getRequirementTxtFilename(hash);
-                    outputPath = workingDirPath.resolve(fileName).normalize();
+
+                if (entryName.equals(ResolvedPythonPackages.REQUIREMENTS_TXT)) {
+                    outputPath = workingDirPath.resolve(getRequirementTxtFilename(hash)).normalize();
                 } else {
-                    outputPath = workingDirPath.resolve(WORKING_DIR_ADDITIONAL_PYTHON_LIB).resolve(fileName).normalize();
+                    outputPath = workingDirPath.resolve(WORKING_DIR_ADDITIONAL_PYTHON_LIB).resolve(entryName).normalize();
                 }
 
-                // Prevent zip-slip vulnerability
+                // Prevent tar-slip vulnerability
                 if (!outputPath.startsWith(workingDirPath)) {
-                    logger.trace("Skipping entry '{}'", entry.getName());
+                    logger.trace("Skipping entry '{}'", entryName);
                     continue;
                 }
 
@@ -132,12 +136,17 @@ public class PythonDependenciesResolver {
                 } else {
                     Files.createDirectories(outputPath.getParent());
                     try (OutputStream os = Files.newOutputStream(outputPath)) {
-                        zis.transferTo(os);
+                        tais.transferTo(os);
+                    }
+                    try {
+                        Files.setPosixFilePermissions(outputPath, UnixModeToPosixFilePermissions.toPosixPermissions(entry.getMode()));
+                    } catch (UnsupportedOperationException | IOException e) {
+                        // File system does not support POSIX permissions (e.g., Windows)
                     }
                 }
-                zis.closeEntry();
             }
         }
+
         return new ResolvedPythonPackages(
             workingDir.resolve(Path.of(WORKING_DIR_ADDITIONAL_PYTHON_LIB)),
             workingDir.resolve(Path.of(getRequirementTxtFilename(hash))),
