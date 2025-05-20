@@ -9,6 +9,7 @@ import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
+import io.kestra.core.tenant.TenantService;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.go.Commands;
 import io.kestra.plugin.scripts.go.Script;
@@ -45,7 +46,7 @@ public class CommandsTest {
         var receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         var goScript = storageInterface.put(
-            null,
+            TenantService.MAIN_TENANT,
             null,
             new URI("/file/storage/go_script.go"),
             IOUtils.toInputStream("""
@@ -90,7 +91,7 @@ public class CommandsTest {
     void should_create_output_csv() throws Exception {
 
         var goScript = storageInterface.put(
-            null,
+            TenantService.MAIN_TENANT,
             null,
             new URI("/file/storage/go_script.go"),
             IOUtils.toInputStream("""
@@ -137,7 +138,7 @@ public class CommandsTest {
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getOutputFiles().containsKey(outputFile), is(true));
 
-        var outputCsvInputStream = storageInterface.get(null, null, run.getOutputFiles().get(outputFile));
+        var outputCsvInputStream = storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get(outputFile));
         assertThat(CharStreams.toString(new InputStreamReader(outputCsvInputStream)), is("""
             Name,Age
             Alice,25
