@@ -2,6 +2,7 @@ package io.kestra.plugin.scripts.jvm;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.serializers.JacksonMapper;
+import io.kestra.core.tenant.TenantService;
 import io.kestra.plugin.scripts.jvm.FileTransform;
 import io.kestra.core.junit.annotations.KestraTest;
 import org.junit.jupiter.api.Test;
@@ -58,7 +59,7 @@ public abstract class FileTransformTest {
         ));
 
         URI source = storageInterface.put(
-            null,
+            TenantService.MAIN_TENANT,
             null,
             new URI("/" + IdUtils.create()),
             new FileInputStream(tempFile)
@@ -141,7 +142,7 @@ public abstract class FileTransformTest {
         FileSerde.write(output, map);
 
         URI source = storageInterface.put(
-            null,
+            TenantService.MAIN_TENANT,
             null,
             new URI("/" + IdUtils.create()),
             new FileInputStream(tempFile)
