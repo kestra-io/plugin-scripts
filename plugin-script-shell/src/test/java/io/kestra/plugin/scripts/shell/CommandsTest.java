@@ -174,14 +174,14 @@ class CommandsTest {
         assertThat(run.getVars().get("extract"), is("I'm here"));
         assertThat(run.getOutputFiles().size(), is(2));
 
-        InputStream get = storageInterface.get(null, null, run.getOutputFiles().get("file.xml"));
+        InputStream get = storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("file.xml"));
 
         assertThat(
             CharStreams.toString(new InputStreamReader(get)),
             is("1\n3\n")
         );
 
-        get = storageInterface.get(null, null, run.getOutputFiles().get("sub/dir/file.csv"));
+        get = storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("sub/dir/file.csv"));
 
         assertThat(
             CharStreams.toString(new InputStreamReader(get)),
