@@ -67,7 +67,9 @@ class CommandsTest {
         assertThat(run.getStdOutLineCount(), is(1));
         assertThat(run.getStdErrLineCount(), is(0));
 
-        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("Hello World"));
+        synchronized (logs) {
+            TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("Hello World"));
+        }
         receive.blockLast();
         assertThat(logs.stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("[1]")).count(), is(1L));
     }
