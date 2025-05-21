@@ -106,7 +106,7 @@ public abstract class FileTransformTest {
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());
         FileTransform.Output runOutput = task.run(runContext);
 
-        BufferedReader inputStream = new BufferedReader(new InputStreamReader(storageInterface.get(null, null, runOutput.getUri())));
+        BufferedReader inputStream = new BufferedReader(new InputStreamReader(storageInterface.get(TenantService.MAIN_TENANT, null, runOutput.getUri())));
         List<Object> result = new ArrayList<>();
         FileSerde.reader(inputStream, result::add);
 
@@ -153,7 +153,7 @@ public abstract class FileTransformTest {
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());
         io.kestra.plugin.scripts.jvm.FileTransform.Output runOutput = task.run(runContext);
 
-        BufferedReader inputStream = new BufferedReader(new InputStreamReader(storageInterface.get(null, null, runOutput.getUri())));
+        BufferedReader inputStream = new BufferedReader(new InputStreamReader(storageInterface.get(TenantService.MAIN_TENANT, null, runOutput.getUri())));
         List<Object> result = new ArrayList<>();
         FileSerde.reader(inputStream, result::add);
 
