@@ -40,10 +40,10 @@ class ScriptTest {
         bash = Script.builder()
             .id("unit-test")
             .type(Script.class.getName())
-            .beforeCommands(Property.of(List.of(
+            .beforeCommands(Property.ofValue(List.of(
                 "gem install date"
             )))
-            .script(Property.of("""
+            .script(Property.ofValue("""
                 require 'date'
                 puts Date.new(2012,12,25).strftime('%F')
                 STDERR.puts Date.jd(2451944).strftime('%F')

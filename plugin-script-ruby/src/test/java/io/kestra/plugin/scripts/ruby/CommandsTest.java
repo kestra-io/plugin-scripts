@@ -57,7 +57,7 @@ class CommandsTest {
         Commands bash = Commands.builder()
             .id("unit-test")
             .type(Script.class.getName())
-            .commands(Property.of(List.of("ruby " + put.toString())))
+            .commands(Property.ofValue(List.of("ruby " + put.toString())))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());

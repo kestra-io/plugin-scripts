@@ -66,7 +66,7 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .commands(Property.of(List.of("echo 0", "echo 1", ">&2 echo 2", ">&2 echo 3")))
+            .commands(Property.ofValue(List.of("echo 0", "echo 1", ">&2 echo 2", ">&2 echo 3")))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -85,7 +85,7 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .commands(Property.of(List.of("echo 1 1>&2", "exit 66", "echo 2")))
+            .commands(Property.ofValue(List.of("echo 1 1>&2", "exit 66", "echo 2")))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -106,8 +106,8 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .failFast(Property.of(true))
-            .commands(Property.of(List.of("unknown", "echo 1")))
+            .failFast(Property.ofValue(true))
+            .commands(Property.ofValue(List.of("unknown", "echo 1")))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -128,8 +128,8 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .failFast(Property.of(false))
-            .commands(Property.of(List.of("unknown", "echo 1")))
+            .failFast(Property.ofValue(false))
+            .commands(Property.ofValue(List.of("unknown", "echo 1")))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -198,7 +198,7 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .commands(Property.of(List.of(
+            .commands(Property.ofValue(List.of(
                 "echo '::{\"outputs\": {\"extract\":null}}::'"
             )))
             .build();
@@ -223,12 +223,12 @@ class CommandsTest {
             .id("unit-test")
             .type(Commands.class.getName())
             .docker(DockerOptions.builder()
-                .pullPolicy(Property.of(PullPolicy.IF_NOT_PRESENT))
+                .pullPolicy(Property.ofValue(PullPolicy.IF_NOT_PRESENT))
                 .image("alpine:3.15.6")
                 .build()
             )
             .runner(RunnerType.DOCKER)
-            .commands(Property.of(List.of("pwd")))
+            .commands(Property.ofValue(List.of("pwd")))
             .build();
 
 
@@ -251,12 +251,12 @@ class CommandsTest {
             .id("unit-test")
             .type(Commands.class.getName())
             .docker(DockerOptions.builder()
-                .pullPolicy(Property.of(PullPolicy.IF_NOT_PRESENT))
+                .pullPolicy(Property.ofValue(PullPolicy.IF_NOT_PRESENT))
                 .image("alpine:999.15.6")
                 .build()
             )
             .runner(RunnerType.DOCKER)
-            .commands(Property.of(List.of("pwd")))
+            .commands(Property.ofValue(List.of("pwd")))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());

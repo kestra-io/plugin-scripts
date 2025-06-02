@@ -65,7 +65,7 @@ public class Script extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "golang";
 
     @Builder.Default
-    protected Property<String> containerImage = Property.of(DEFAULT_IMAGE);
+    protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command such as `go run go_script.go`, use the `Commands` task instead."
@@ -102,7 +102,7 @@ public class Script extends AbstractExecScript {
             .withInterpreter(this.interpreter)
             .withBeforeCommands(beforeCommands)
             .withBeforeCommandsWithOptions(true)
-            .withCommands(Property.of(List.of(
+            .withCommands(Property.ofValue(List.of(
                 String.join(" ", "go run", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
             )))
             .run();

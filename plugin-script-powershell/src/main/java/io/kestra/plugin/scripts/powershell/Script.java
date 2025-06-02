@@ -70,7 +70,7 @@ public class Script extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/powershell:latest";
 
     @Builder.Default
-    protected Property<String> containerImage = Property.of(DEFAULT_IMAGE);
+    protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
@@ -82,7 +82,7 @@ public class Script extends AbstractExecScript {
     @Schema(
         title = "Which interpreter to use."
     )
-    protected Property<List<String>> interpreter = Property.of(List.of("pwsh", "-NoProfile", "-NonInteractive", "-Command"));
+    protected Property<List<String>> interpreter = Property.ofValue(List.of("pwsh", "-NoProfile", "-NonInteractive", "-Command"));
 
     @Override
     protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
@@ -109,8 +109,8 @@ public class Script extends AbstractExecScript {
         TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
         return commands
             .withInterpreter(this.interpreter)
-            .withBeforeCommands(Property.of(getBeforeCommandsWithOptions(runContext)))
-            .withCommands(Property.of((List.of(
+            .withBeforeCommands(Property.ofValue(getBeforeCommandsWithOptions(runContext)))
+            .withCommands(Property.ofValue((List.of(
                 commands.getTaskRunner().toAbsolutePath(runContext, commands, ".\\" + relativeScriptPath, os)
             ))))
             .withTargetOS(os)

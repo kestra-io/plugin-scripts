@@ -54,7 +54,7 @@ public class Commands extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "node";
 
     @Builder.Default
-    protected Property<String> containerImage = Property.of(DEFAULT_IMAGE);
+    protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
         title = "The commands to run."
