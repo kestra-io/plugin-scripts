@@ -18,12 +18,12 @@ import java.util.List;
 public abstract class AbstractPythonExecScript extends AbstractExecScript implements PythonBasedPlugin {
 
     @Builder.Default
-    protected Property<String> containerImage = Property.of(DEFAULT_IMAGE);
+    protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     protected Property<List<String>> dependencies;
 
     protected Property<String> pythonVersion;
 
-    protected Property<Boolean> dependencyCacheEnabled = Property.of(true);
+    protected Property<Boolean> dependencyCacheEnabled = Property.ofValue(true);
 
 }

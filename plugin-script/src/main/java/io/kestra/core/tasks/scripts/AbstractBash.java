@@ -44,7 +44,7 @@ public abstract class AbstractBash extends Task {
         title = "The task runner."
     )
     @NotNull
-    protected Property<RunnerType> runner = Property.of(RunnerType.PROCESS);
+    protected Property<RunnerType> runner = Property.ofValue(RunnerType.PROCESS);
 
     @Schema(
         title = "Docker options when using the `DOCKER` runner."
@@ -57,7 +57,7 @@ public abstract class AbstractBash extends Task {
         title = "Interpreter to use when launching the process."
     )
     @NotNull
-    protected Property<String> interpreter = Property.of("/bin/sh");
+    protected Property<String> interpreter = Property.ofValue("/bin/sh");
 
     @Builder.Default
     @Schema(
@@ -73,7 +73,7 @@ public abstract class AbstractBash extends Task {
             "Setting this to `true` helps catch cases where a command fails and the script continues to run anyway."
     )
     @NotNull
-    protected Property<Boolean> exitOnFailed = Property.of(true);
+    protected Property<Boolean> exitOnFailed = Property.ofValue(true);
 
     @Schema(
         title = "[Deprecated] The list of files that will be uploaded to Kestra's internal storage.",
@@ -221,7 +221,7 @@ public abstract class AbstractBash extends Task {
         );
 
         var taskRunner = switch (runContext.render(this.runner).as(RunnerType.class).orElseThrow()) {
-            case DOCKER -> Docker.from(this.getDockerOptions()).toBuilder().fileHandlingStrategy(Property.of(Docker.FileHandlingStrategy.MOUNT)).build();
+            case DOCKER -> Docker.from(this.getDockerOptions()).toBuilder().fileHandlingStrategy(Property.ofValue(Docker.FileHandlingStrategy.MOUNT)).build();
             case PROCESS -> Process.instance();
         };
 

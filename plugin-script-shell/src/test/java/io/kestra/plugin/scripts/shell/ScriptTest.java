@@ -63,7 +63,7 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script(Property.of("""
+            .script(Property.ofValue("""
                 echo 0
                 echo 1
                 >&2 echo 2
@@ -86,9 +86,9 @@ class ScriptTest {
             .id("unit-test")
             .type(Script.class.getName())
             .docker(dockerOptions)
-            .interpreter(Property.of(List.of("/bin/bash", "-c")))
+            .interpreter(Property.ofValue(List.of("/bin/bash", "-c")))
             .runner(runner)
-            .script(Property.of("""
+            .script(Property.ofValue("""
                 for i in {1..2000}
                 do
                    echo "$i"
@@ -113,14 +113,14 @@ class ScriptTest {
             .docker(DockerOptions.builder()
                 .image("ubuntu")
                 .credentials(Credentials.builder()
-                    .registry(Property.of("own.registry"))
-                    .username(Property.of(username))
-                    .password(Property.of("doe"))
+                    .registry(Property.ofValue("own.registry"))
+                    .username(Property.ofValue(username))
+                    .password(Property.ofValue("doe"))
                     .build()
                 )
                 .build()
             )
-            .script(Property.of("""
+            .script(Property.ofValue("""
                     echo '::{"outputs":{"config":'$(cat config.json)'}}::'
                 """))
             .build();
@@ -149,9 +149,9 @@ class ScriptTest {
             .inputFiles(Map.of(
                 "test/application.yml", internalFiles("/test/" + IdUtils.create() + ".yml").toString()
             ))
-            .outputFiles(Property.of(
+            .outputFiles(Property.ofValue(
                 List.of("out/**")))
-            .script(Property.of("""
+            .script(Property.ofValue("""
                 mkdir out
                 cat test/application.yml > out/bla.yml
             """))

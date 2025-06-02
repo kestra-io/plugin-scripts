@@ -99,7 +99,7 @@ public class Script extends AbstractExecScript {
     private static final String DEFAULT_IMAGE = "ubuntu";
 
     @Builder.Default
-    protected Property<String> containerImage = Property.of(DEFAULT_IMAGE);
+    protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
@@ -127,7 +127,7 @@ public class Script extends AbstractExecScript {
             .withInterpreter(this.interpreter)
             .withBeforeCommands(beforeCommands)
             .withBeforeCommandsWithOptions(true)
-            .withCommands(Property.of(List.of(commandsWrapper.render(runContext, this.script))))
+            .withCommands(Property.ofValue(List.of(commandsWrapper.render(runContext, this.script))))
             .withTargetOS(os)
             .run();
     }

@@ -44,7 +44,7 @@ public class ScriptTest {
             .id("go_script")
             .type(Script.class.getName())
             .allowWarning(true)
-            .script(Property.of("""
+            .script(Property.ofValue("""
                     package main
                     import "fmt"
                     func main() {
@@ -72,7 +72,7 @@ public class ScriptTest {
             .id("go_script")
             .type(Script.class.getName())
             .allowWarning(true)
-            .script(Property.of("""
+            .script(Property.ofValue("""
                     package main
                     import (
                         "os"
@@ -88,8 +88,8 @@ public class ScriptTest {
                         defer file.Close()
                     }
                 """))
-            .outputFiles(Property.of(List.of(outputFile)))
-            .beforeCommands(Property.of(List.of(
+            .outputFiles(Property.ofValue(List.of(outputFile)))
+            .beforeCommands(Property.ofValue(List.of(
                 "go mod init go_script",
                 "go get github.com/go-gota/gota",
                 "go mod tidy"

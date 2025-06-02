@@ -60,7 +60,7 @@ abstract class AbstractBashTest {
     @Test
     void files() throws Exception {
         Bash bash = configure(Bash.builder()
-            .outputFiles(Property.of(Arrays.asList("xml", "csv")))
+            .outputFiles(Property.ofValue(Arrays.asList("xml", "csv")))
             .inputFiles(ImmutableMap.of("files/in/in.txt", "I'm here"))
             .commands(new String[]{
                 "echo '::{\"outputs\": {\"extract\":\"'$(cat files/in/in.txt)'\"}}::'",
@@ -97,7 +97,7 @@ abstract class AbstractBashTest {
     @Test
     void outputDirs() throws Exception {
         Bash bash = configure(Bash.builder()
-            .outputDirs(Property.of(Arrays.asList("xml", "csv")))
+            .outputDirs(Property.ofValue(Arrays.asList("xml", "csv")))
             .inputFiles(ImmutableMap.of("files/in/in.txt", "I'm here"))
             .commands(new String[]{
                 "echo 1 >> {{ outputDirs.xml }}/file1.txt",
@@ -162,7 +162,7 @@ abstract class AbstractBashTest {
     void dontStopOnFirstFailed() throws Exception {
         Bash bash = configure(Bash.builder()
             .commands(new String[]{"unknown", "echo 1"})
-            .exitOnFailed(Property.of(false))
+            .exitOnFailed(Property.ofValue(false))
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -182,7 +182,7 @@ abstract class AbstractBashTest {
         commands.add("source {{workingDir}}/test.sh && tst");
 
         Bash bash = configure(Bash.builder()
-            .interpreter(Property.of("/bin/bash"))
+            .interpreter(Property.ofValue("/bin/bash"))
             .commands(commands.toArray(String[]::new))
             .inputFiles(files)
         ).build();
@@ -213,10 +213,10 @@ abstract class AbstractBashTest {
         commands.add("cat fscontent.txt > {{ outputFiles.out }} ");
 
         Bash bash = configure(Bash.builder()
-            .interpreter(Property.of("/bin/bash"))
+            .interpreter(Property.ofValue("/bin/bash"))
             .commands(commands.toArray(String[]::new))
             .inputFiles(files)
-            .outputFiles(Property.of(Collections.singletonList("out")))
+            .outputFiles(Property.ofValue(Collections.singletonList("out")))
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -256,10 +256,10 @@ abstract class AbstractBashTest {
         commands.add("cat 1.yml 2.yml > {{ outputFiles.out }} ");
 
         Bash bash = configure(Bash.builder()
-            .interpreter(Property.of("/bin/bash"))
+            .interpreter(Property.ofValue("/bin/bash"))
             .commands(commands.toArray(String[]::new))
             .inputFiles(JacksonMapper.ofJson().writeValueAsString(files))
-            .outputFiles(Property.of(Collections.singletonList("out")))
+            .outputFiles(Property.ofValue(Collections.singletonList("out")))
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());

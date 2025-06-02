@@ -39,10 +39,10 @@ class ScriptTest {
         Script bash = Script.builder()
             .id("unit-test")
             .type(Script.class.getName())
-            .beforeCommands(Property.of(List.of(
+            .beforeCommands(Property.ofValue(List.of(
                 "Rscript -e 'install.packages(\"lubridate\")'"
             )))
-            .script(Property.of("""
+            .script(Property.ofValue("""
                 library(lubridate)
                 ymd("20100604");
                 mdy("06-04-2011");

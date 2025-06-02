@@ -68,11 +68,11 @@ public class CommandsTest {
             .type(Script.class.getName())
             .allowWarning(true)
             .inputFiles(inputFiles)
-            .beforeCommands(Property.of(List.of(
+            .beforeCommands(Property.ofValue(List.of(
                 "go mod init go_commands",
                 "go mod tidy"
             )))
-            .commands(Property.of(List.of("go run go_script.go")))
+            .commands(Property.ofValue(List.of("go run go_script.go")))
             .build();
 
         var runContext = TestsUtils.mockRunContext(runContextFactory, commands, ImmutableMap.of());
@@ -124,12 +124,12 @@ public class CommandsTest {
             .type(Script.class.getName())
             .allowWarning(true)
             .inputFiles(inputFiles)
-            .outputFiles(Property.of(List.of(outputFile)))
-            .beforeCommands(Property.of(List.of(
+            .outputFiles(Property.ofValue(List.of(outputFile)))
+            .beforeCommands(Property.ofValue(List.of(
                 "go mod init go_commands",
                 "go mod tidy"
             )))
-            .commands(Property.of(List.of("go run go_script.go")))
+            .commands(Property.ofValue(List.of("go run go_script.go")))
             .build();
 
         var runContext = TestsUtils.mockRunContext(runContextFactory, commands, ImmutableMap.of());
