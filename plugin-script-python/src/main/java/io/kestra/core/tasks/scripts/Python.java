@@ -146,19 +146,43 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
     @Builder.Default
     protected Boolean virtualEnv = true;
 
+    @Schema(
+        title = "Use uv for virtual environment and dependency installation",
+        description = "If true, uses uv (https://github.com/astral-sh/uv) for venv and pip install instead of python/pip."
+    )
+    @PluginProperty
+    @Builder.Default
+    protected Boolean useUv = false;
+
     protected String virtualEnvCommand(RunContext runContext, List<String> requirements) throws IllegalVariableEvaluationException {
         List<String> renderer = new ArrayList<>();
 
         if (runContext.render(this.exitOnFailed).as(Boolean.class).orElseThrow()) {
             renderer.add("set -o errexit");
         }
-        renderer.add(this.pythonPath + " -m venv --system-site-packages " + workingDirectory + " > /dev/null");
 
-        if (requirements != null) {
-            renderer.addAll(Arrays.asList(
+        // renderer.add(this.pythonPath + " -m venv --system-site-packages " + workingDirectory + " > /dev/null");
+
+        // if (requirements != null) {
+        //     renderer.addAll(Arrays.asList(
+        //         "./bin/pip install pip --upgrade > /dev/null",
+        //         "./bin/pip install " + runContext.render(String.join(" ", requirements), additionalVars) + " > /dev/null"));
+        // }
+
+        if (Boolean.TRUE.equals(this.useUv)) {
+            renderer.add("uv venv --system-site-packages .venv > /dev/null");
+            if (requirements != null && !requirements.isEmpty()) {
+                renderer.add("./.venv/bin/uv pip install " + runContext.render(String.join(" ", requirements), additionalVars) + " > /dev/null");
+            }
+        } else {
+        renderer.add(this.pythonPath + " -m venv --system-site-packages " + workingDirectory + " > /dev/null");
+            if (requirements != null && !requirements.isEmpty()) {
+                renderer.addAll(Arrays.asList(
                 "./bin/pip install pip --upgrade > /dev/null",
                 "./bin/pip install " + runContext.render(String.join(" ", requirements), additionalVars) + " > /dev/null"));
+            }
         }
+
 
         return String.join("\n", renderer);
     }
@@ -218,7 +242,13 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
             for (String command : commands) {
                 String argsString = args == null ? "" : " " + runContext.render(String.join(" ", args), additionalVars);
 
-                renderer.add(runContext.render(command, additionalVars) + argsString);
+                String renderedCommand = runContext.render(command, additionalVars) + argsString;
+                if (Boolean.TRUE.equals(this.useUv) && renderedCommand.startsWith("./bin/python")) {
+                    renderedCommand = renderedCommand.replace("./bin/python", "./.venv/bin/python");
+                }
+                
+                // renderer.add(runContext.render(command, additionalVars) + argsString);
+                renderer.add(renderedCommand);
             }
 
             return String.join("\n", renderer);
