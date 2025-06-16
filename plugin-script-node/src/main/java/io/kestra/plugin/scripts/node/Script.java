@@ -125,15 +125,15 @@ import java.util.Map;
             namespace: company.team
 
             tasks:
-            - id: node
+              - id: node
                 type: io.kestra.plugin.scripts.node.Script
                 beforeCommands:
-                - npm i @kestra-io/libs
+                  - npm i @kestra-io/libs
                 script: |
-                const Kestra = require('@kestra-io/libs');
-                Kestra.outputs({test: 'hello world'});
+                  const Kestra = require('@kestra-io/libs');
+                  Kestra.outputs({test: 'hello world'});
 
-            - id: get_outputs
+              - id: get_outputs
                 type: io.kestra.plugin.core.log.Log
                 message: "{{ outputs.node.vars.test }}"
             """
