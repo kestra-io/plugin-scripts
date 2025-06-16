@@ -55,7 +55,7 @@ class CommandsTest {
 
         Commands task = Commands.builder()
             .id("unit-test")
-            .type(Script.class.getName())
+            .type(Commands.class.getName())
             .commands(Property.of(List.of("python " + put.toString())))
             .build();
 
