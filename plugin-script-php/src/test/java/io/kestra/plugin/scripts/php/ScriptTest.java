@@ -1,6 +1,7 @@
-package io.kestra.plugin.scripts.r;
+package io.kestra.plugin.scripts.php;
 
 import com.google.common.collect.ImmutableMap;
+import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.queues.QueueFactoryInterface;
@@ -9,7 +10,6 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.core.junit.annotations.KestraTest;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.junit.jupiter.api.Test;
@@ -19,11 +19,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 
 @KestraTest
-class ScriptTest {
+public class ScriptTest {
+
     @Inject
     RunContextFactory runContextFactory;
 
@@ -36,30 +36,25 @@ class ScriptTest {
         List<LogEntry> logs = new ArrayList<>();
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
-        Script rScript = Script.builder()
+        Script phpScript = Script.builder()
             .id("unit-test")
             .type(Script.class.getName())
-            .beforeCommands(Property.of(List.of(
-                "Rscript -e 'install.packages(\"lubridate\")'"
-            )))
-            .script(Property.of("""
-                library(lubridate)
-                ymd("20100604");
-                mdy("06-04-2011");
-                dmy("04/06/2012")"""
-            ))
+            .script(Property.ofValue("""
+                #!/usr/bin/php
+                <?php
+                echo "Hello, World!\\n";
+                ?>"""))
             .build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, rScript, ImmutableMap.of());
-        ScriptOutput run = rScript.run(runContext);
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, phpScript, ImmutableMap.of());
+        ScriptOutput run = phpScript.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
-        assertThat(run.getStdOutLineCount(), greaterThan(1));
-        assertThat(run.getStdErrLineCount(), greaterThan(1));
+        assertThat(run.getStdOutLineCount(), is(1));
+        assertThat(run.getStdErrLineCount(), is(0));
 
-        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("2012-06-04"));
+        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("Hello, World!"));
         receive.blockLast();
-        assertThat(logs.stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("2010-06-04")).count(), is(1L));
-        assertThat(logs.stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("2011-06-04")).count(), is(1L));
+        assertThat(logs.stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("Hello, World!")).count(), is(1L));
     }
 }

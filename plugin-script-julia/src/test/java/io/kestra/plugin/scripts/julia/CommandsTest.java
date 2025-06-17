@@ -1,6 +1,7 @@
 package io.kestra.plugin.scripts.julia;
 
 import com.google.common.collect.ImmutableMap;
+import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.queues.QueueFactoryInterface;
@@ -11,7 +12,6 @@ import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.tenant.TenantService;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.core.junit.annotations.KestraTest;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.apache.commons.io.IOUtils;
@@ -53,14 +53,14 @@ class CommandsTest {
             )
         );
 
-        Commands bash = Commands.builder()
+        Commands juliaCommands = Commands.builder()
             .id("unit-test")
-            .type(Script.class.getName())
+            .type(Commands.class.getName())
             .commands(Property.of(List.of("julia " + put.toString())))
             .build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptOutput run = bash.run(runContext);
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, juliaCommands, ImmutableMap.of());
+        ScriptOutput run = juliaCommands.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getStdOutLineCount(), is(0));

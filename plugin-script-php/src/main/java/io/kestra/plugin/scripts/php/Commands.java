@@ -1,11 +1,9 @@
-package io.kestra.plugin.scripts.node;
+package io.kestra.plugin.scripts.php;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
-import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
-import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
@@ -17,7 +15,6 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
-import jakarta.validation.constraints.NotEmpty;
 
 @SuperBuilder
 @ToString
@@ -25,36 +22,36 @@ import jakarta.validation.constraints.NotEmpty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Node.js commands from the CLI.",
+    title = "Execute PHP commands from the CLI.",
     description = "Note that instead of adding the script using the inputFiles property, you can also add the script from the embedded VS Code editor and point to its location by path. If you do so, make sure to enable Namespace Files by setting the enabled flag of the namespaceFiles property to true."
 )
 @Plugin(examples = {
     @Example(
         full = true,
-        title = "Install required npm packages, create a Node.js script and execute it.",
+        title = "Create a PHP script and execute it.",
         code = """
-            id: nodejs_commands
+            id: php_commands
             namespace: company.team
 
             tasks:
               - id: commands
-                type: io.kestra.plugin.scripts.node.Commands
+                type: io.kestra.plugin.scripts.php.Commands
                 inputFiles:
-                  main.js: |
-                    const colors = require("colors");
-                    console.log(colors.red("Hello"));
-                beforeCommands:
-                  - npm install colors
+                  main.php: |
+                    #!/usr/bin/php
+                    <?php
+                    echo "Hello, World!\\n";
+                    ?>
                 commands:
-                  - node main.js
+                  - php main.php
             """
     )
 })
 public class Commands extends AbstractExecScript {
-    private static final String DEFAULT_IMAGE = "node";
+    private static final String DEFAULT_IMAGE = "php";
 
     @Builder.Default
-    protected Property<String> containerImage = Property.of(DEFAULT_IMAGE);
+    protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
         title = "The commands to run."
