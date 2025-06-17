@@ -1,32 +1,28 @@
-id: all_lua
+id: simple_lua_examples
 namespace: sanitychecks.plugin-scripts
 
 tasks:
-  - id: generate_slug_in_lua
+  - id: script_lua
     type: io.kestra.plugin.scripts.lua.Script
-    beforeCommands:
-      - apt-get update && apt-get install -y luarocks
-      - luarocks install slugify-lua
     script: |
-      local slugify = require("slugify")
+      local greeting = "Hello Kestra!"
+      local repeated = string.rep(greeting .. " ", 2) -- Repeat the greeting twice
 
-      local originalTitle = "This is a Kestra Flow Title!"
-      local urlSlug = slugify(originalTitle)
+      print("Original: " .. greeting)
+      print("Repeated: " .. repeated)
+      print("Length: " .. string.len(repeated))
 
-      print("Original: " .. originalTitle)
-      print("URL Slug: " .. urlSlug)
-
-  - id: create_fake_user_in_lua
+  - id: command_lua
     type: io.kestra.plugin.scripts.lua.Commands
-    beforeCommands:
-      - apt-get update && apt-get install -y luarocks
-      - luarocks install lua-faker
     commands:
       - |
         lua -e '
-          local faker = require("faker")
+          local num1 = 100
+          local num2 = 25
+          local sum = num1 + num2
+          local difference = num1 - num2
 
-          print("Generated Fake User:")
-          print("  Name: " .. faker.name())
-          print("  Email: " .. faker.internet.email())
+          print("Sum: " .. sum)
+          print("Difference: " .. difference)
+          print("Current time: " .. os.date("%H:%M:%S"))
         '

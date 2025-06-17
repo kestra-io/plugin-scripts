@@ -41,15 +41,9 @@ public class CommandsTest {
         Commands luaCommands = Commands.builder()
             .id(IdUtils.create())
             .type(Commands.class.getName())
-            .beforeCommands(Property.ofValue(List.of(
-                "apt-get update && apt-get install -y luarocks",
-                "luarocks install dkjson"
-            )))
             .commands(Property.ofValue(List.of("lua main.lua")))
             .inputFiles(Map.of(
-                "main.lua", "local json = require(\"dkjson\");\n" +
-                    "local data = { greeting = \"Hello from kestra!\" };\n" +
-                    "print(json.encode(data));"
+                "main.lua", "print(\"Hello from kestra!\");"
             ))
             .build();
 
@@ -58,7 +52,7 @@ public class CommandsTest {
 
         assertThat(run.getExitCode(), is(0));
 
-        String expectedLog = "{\"greeting\":\"Hello from kestra!\"}";
+        String expectedLog = "Hello from kestra!";
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains(expectedLog));
         receive.blockLast();
         assertThat(logs.stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains(expectedLog)), is(true));

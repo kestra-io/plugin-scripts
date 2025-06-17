@@ -34,7 +34,7 @@ import java.util.List;
     )
 })
 public class Commands extends AbstractExecScript {
-    private static final String DEFAULT_IMAGE = "lua";
+    private static final String DEFAULT_IMAGE = "nickblah/lua";
 
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
