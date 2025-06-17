@@ -57,14 +57,14 @@ class CommandsTest {
             )
         );
 
-        Commands bash = Commands.builder()
+        Commands powershellCommands = Commands.builder()
             .id("unit-test")
-            .type(Script.class.getName())
+            .type(Commands.class.getName())
             .commands(Property.of(List.of("pwsh " + put.toString())))
             .build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptOutput run = bash.run(runContext);
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, powershellCommands, ImmutableMap.of());
+        ScriptOutput run = powershellCommands.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getStdOutLineCount(), greaterThan(1));
@@ -77,28 +77,28 @@ class CommandsTest {
 
     @Test
     void shouldExitOnFirstError() {
-        Commands bash = Commands.builder()
+        Commands powershellCommands = Commands.builder()
             .id("unit-test")
-            .type(Script.class.getName())
+            .type(Commands.class.getName())
             .commands(Property.of(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\"")))
             .failFast(Property.of(true))
             .build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        Assertions.assertThrows(RunnableTaskException.class, () ->  bash.run(runContext));
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, powershellCommands, ImmutableMap.of());
+        Assertions.assertThrows(RunnableTaskException.class, () ->  powershellCommands.run(runContext));
     }
 
     @Test
     void shouldNotExitOnFirstError() throws Exception {
-        Commands bash = Commands.builder()
+        Commands powershellCommands = Commands.builder()
             .id("unit-test")
-            .type(Script.class.getName())
+            .type(Commands.class.getName())
             .commands(Property.of(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\"")))
             .failFast(Property.of(false))
             .build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptOutput run = bash.run(runContext);
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, powershellCommands, ImmutableMap.of());
+        ScriptOutput run = powershellCommands.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getStdOutLineCount(), is(1));

@@ -26,24 +26,24 @@ import java.util.List;
         @Example(
             full = true,
             title = "Extract data from an API, add a column, and store it as a downloadable CSV file.",
-            code = """     
+            code = """
                 id: etl_api_to_csv
                 namespace: company.team
-                
+
                 tasks:
                   - id: download
                     type: io.kestra.plugin.fs.http.Download
                     uri: https://gorest.co.in/public/v2/users
-                
+
                   - id: ion_to_json
                     type: io.kestra.plugin.serdes.json.JsonToIon
                     from: "{{ outputs.download.uri }}"
                     newLine: false
-                
+
                   - id: write_json
                     type: io.kestra.plugin.serdes.json.IonToJson
                     from: "{{ outputs.ion_to_json.uri }}"
-                
+
                   - id: add_column
                     type: io.kestra.plugin.scripts.jython.FileTransform
                     from: "{{ outputs.write_json.uri }}"
@@ -51,12 +51,12 @@ import java.util.List;
                       from datetime import datetime
                       logger.info('row: {}', row)
                       row['inserted_at'] = datetime.utcnow()
-                
+
                   - id: csv
                     type: io.kestra.plugin.serdes.csv.IonToCsv
                     from: "{{ outputs.add_column.uri }}"
                 """
-        ),           
+        ),
         @Example(
             title = "Transform with file from internal storage.",
             full = true,
@@ -67,14 +67,14 @@ import java.util.List;
                 inputs:
                   - id: file
                     type: FILE
-                
+
                 tasks:
                   - id: file_transform
                     type: io.kestra.plugin.scripts.jython.FileTransform
                     from: "{{ inputs.file }}"
                     script: |
                       logger.info('row: {}', row)
-                
+
                       if row['name'] == 'richard':
                         row = None
                       else:
@@ -107,23 +107,23 @@ import java.util.List;
             code = """
                 id: jython_file_transform
                 namespace: company.team
-                
+
                 inputs:
                   - id: json
                     type: JSON
                     defaults: {"name": "john"}
-                
+
                 tasks:
                   - id: file_transform
                     type: io.kestra.plugin.scripts.jython.FileTransform
                     from: "{{ inputs.json }}"
                     script: |
                       logger.info('row: {}', row)
-                
+
                       if row['name'] == 'richard':
                         row = None
-                      else: 
-                        row['email'] = row['name'] + '@kestra.io'
+                      else:
+                        row['lemail'] = row['name'] + '@kestra.io'
                 """
         )
     }
