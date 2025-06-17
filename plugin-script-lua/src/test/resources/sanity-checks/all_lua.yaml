@@ -1,0 +1,32 @@
+id: all_lua
+namespace: sanitychecks.plugin-scripts
+
+tasks:
+  - id: generate_slug_in_lua
+    type: io.kestra.plugin.scripts.lua.Script
+    beforeCommands:
+      - apt-get update && apt-get install -y luarocks
+      - luarocks install slugify-lua
+    script: |
+      local slugify = require("slugify")
+
+      local originalTitle = "This is a Kestra Flow Title!"
+      local urlSlug = slugify(originalTitle)
+
+      print("Original: " .. originalTitle)
+      print("URL Slug: " .. urlSlug)
+
+  - id: create_fake_user_in_lua
+    type: io.kestra.plugin.scripts.lua.Commands
+    beforeCommands:
+      - apt-get update && apt-get install -y luarocks
+      - luarocks install lua-faker
+    commands:
+      - |
+        lua -e '
+          local faker = require("faker")
+
+          print("Generated Fake User:")
+          print("  Name: " .. faker.name())
+          print("  Email: " .. faker.internet.email())
+        '
