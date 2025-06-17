@@ -2,12 +2,12 @@ id: all_deno
 namespace: sanitychecks.plugin-scripts
 
 tasks:
-  - id: simple_inline_deno_script
+  - id: script_deno
     type: io.kestra.plugin.scripts.deno.Script
     script:
       - console.log("First Kestra task ran successfully.");
 
-  - id: deno_with_imports_and_permissions
+  - id: command_deno
     type: io.kestra.plugin.scripts.deno.Commands
     commands:
       - deno run --allow-net main.ts
