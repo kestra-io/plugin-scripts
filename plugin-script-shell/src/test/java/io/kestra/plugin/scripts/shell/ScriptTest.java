@@ -59,7 +59,7 @@ class ScriptTest {
     @MethodSource("source")
     void script(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Script bash = Script.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
@@ -83,7 +83,7 @@ class ScriptTest {
     @MethodSource("source")
     void massLog(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Script bash = Script.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(Script.class.getName())
             .docker(dockerOptions)
             .interpreter(Property.of(List.of("/bin/bash", "-c")))
@@ -108,7 +108,7 @@ class ScriptTest {
     @Test
     void overwrite() throws Exception {
         Function<String, Script> function = (String username) -> Script.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(Script.class.getName())
             .docker(DockerOptions.builder()
                 .image("ubuntu")
@@ -144,7 +144,7 @@ class ScriptTest {
     @Test
     void inputOutputFiles() throws Exception {
         Script bash = Script.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(Script.class.getName())
             .inputFiles(Map.of(
                 "test/application.yml", internalFiles("/test/" + IdUtils.create() + ".yml").toString()

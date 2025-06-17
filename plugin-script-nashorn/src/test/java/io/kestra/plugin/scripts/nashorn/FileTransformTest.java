@@ -3,13 +3,14 @@ package io.kestra.plugin.scripts.nashorn;
 
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.property.Property;
+import io.kestra.core.utils.IdUtils;
 
 @KestraTest
 class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
     @Override
     protected FileTransform task(String source) {
         return FileTransform.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(FileTransform.class.getName())
             .from(source)
             .script(Property.of("logger.info('row: {}', row)\n" +
@@ -25,7 +26,7 @@ class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
     @Override
     protected io.kestra.plugin.scripts.jvm.FileTransform multipleRows(String source) {
         return FileTransform.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(FileTransform.class.getName())
             .from(source)
             .script(Property.of("rows = [1, 2, row, {\"action\": \"insert\"}]\n"))

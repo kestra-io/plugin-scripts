@@ -8,6 +8,7 @@ import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
+import io.kestra.core.utils.IdUtils;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.bun.Commands;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
@@ -39,7 +40,7 @@ public class CommandsTest {
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         var bunCommands = Commands.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(Commands.class.getName())
             .beforeCommands(Property.ofValue(List.of("bun add cowsay")))
             .commands(Property.ofValue(List.of("bun run index.ts")))

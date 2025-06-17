@@ -10,6 +10,7 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.tenant.TenantService;
+import io.kestra.core.utils.IdUtils;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import jakarta.inject.Inject;
@@ -63,7 +64,7 @@ class CommandsTest {
         );
 
         Commands jbangCommands = Commands.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(Commands.class.getName())
             .commands(Property.of(List.of("jbang --quiet " + put.toString())))
             .build();

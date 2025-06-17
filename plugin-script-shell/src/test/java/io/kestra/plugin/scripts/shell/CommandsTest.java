@@ -2,22 +2,22 @@ package io.kestra.plugin.scripts.shell;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
+import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
-import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.tenant.TenantService;
+import io.kestra.core.utils.IdUtils;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.runner.docker.PullPolicy;
-import io.kestra.core.junit.annotations.KestraTest;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.apache.commons.io.IOUtils;
@@ -62,7 +62,7 @@ class CommandsTest {
     @MethodSource("source")
     void task(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Commands bash = Commands.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
@@ -81,7 +81,7 @@ class CommandsTest {
     @MethodSource("source")
     void failed(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Commands bash = Commands.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
@@ -102,7 +102,7 @@ class CommandsTest {
     @MethodSource("source")
     void stopOnFirstFailed(RunnerType runner, DockerOptions dockerOptions) {
         Commands bash = Commands.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
@@ -124,7 +124,7 @@ class CommandsTest {
     @MethodSource("source")
     void dontStopOnFirstFailed(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Commands bash = Commands.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
@@ -151,7 +151,7 @@ class CommandsTest {
         );
 
         Commands bash = Commands.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
@@ -194,7 +194,7 @@ class CommandsTest {
     @MethodSource("source")
     void nullOutputs(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Commands bash = Commands.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
@@ -220,7 +220,7 @@ class CommandsTest {
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         Commands bash = Commands.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(Commands.class.getName())
             .docker(DockerOptions.builder()
                 .pullPolicy(Property.of(PullPolicy.IF_NOT_PRESENT))
@@ -248,7 +248,7 @@ class CommandsTest {
     @Test
     void invalidImage() {
         Commands bash = Commands.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(Commands.class.getName())
             .docker(DockerOptions.builder()
                 .pullPolicy(Property.of(PullPolicy.IF_NOT_PRESENT))
@@ -269,7 +269,7 @@ class CommandsTest {
     @MethodSource("source")
     void workingDir(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Commands bash = Commands.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)

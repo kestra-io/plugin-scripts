@@ -2,6 +2,7 @@ package io.kestra.plugin.scripts.jython;
 
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.property.Property;
+import io.kestra.core.utils.IdUtils;
 import io.kestra.plugin.scripts.jvm.FileTransform;
 
 @KestraTest
@@ -9,7 +10,7 @@ class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
     @Override
     protected FileTransform task(String source) {
         return io.kestra.plugin.scripts.jython.FileTransform.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(io.kestra.plugin.scripts.jython.FileTransform.class.getName())
             .from(source)
             .script(Property.of("logger.info('row: {}', row)\n" +
@@ -24,7 +25,7 @@ class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
     @Override
     protected FileTransform multipleRows(String source) {
         return io.kestra.plugin.scripts.jython.FileTransform.builder()
-            .id("unit-test")
+            .id(IdUtils.create())
             .type(io.kestra.plugin.scripts.jython.FileTransform.class.getName())
             .from(source)
             .script(Property.of("rows = [1, 2 , row, {\"action\": \"insert\"}]\n"))
