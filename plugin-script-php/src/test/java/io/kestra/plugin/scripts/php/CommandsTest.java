@@ -1,6 +1,7 @@
-package io.kestra.plugin.scripts.node;
+package io.kestra.plugin.scripts.php;
 
 import com.google.common.collect.ImmutableMap;
+import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.queues.QueueFactoryInterface;
@@ -11,7 +12,6 @@ import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.tenant.TenantService;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.core.junit.annotations.KestraTest;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.apache.commons.io.IOUtils;
@@ -27,7 +27,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 @KestraTest
-class CommandsTest {
+public class CommandsTest {
+
     @Inject
     RunContextFactory runContextFactory;
 
@@ -43,31 +44,35 @@ class CommandsTest {
         List<LogEntry> logs = new ArrayList<>();
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
-        URI put = storageInterface.put(
+        var phpScript = storageInterface.put(
             TenantService.MAIN_TENANT,
             null,
             new URI("/file/storage/get.yml"),
             IOUtils.toInputStream(
-                "console.log('hello there!');",
+                """
+                    #!/usr/bin/php
+                    <?php
+                    echo "Hello, World!\\n";
+                    ?>""",
                 StandardCharsets.UTF_8
             )
         );
 
-        Commands nodeCommands = Commands.builder()
+        var phpCommands = Commands.builder()
             .id("unit-test")
             .type(Commands.class.getName())
-            .commands(Property.of(List.of("node " + put.toString())))
+            .commands(Property.ofValue(List.of("php " + phpScript.toString())))
             .build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, nodeCommands, ImmutableMap.of());
-        ScriptOutput run = nodeCommands.run(runContext);
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, phpCommands, ImmutableMap.of());
+        ScriptOutput run = phpCommands.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getStdOutLineCount(), is(1));
         assertThat(run.getStdErrLineCount(), is(0));
 
-        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains(put.getPath()));
+        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains(phpScript.getPath()));
         receive.blockLast();
-        assertThat(logs.stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("hello there!")).count(), is(1L));
+        assertThat(logs.stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("Hello, World!")).count(), is(1L));
     }
 }

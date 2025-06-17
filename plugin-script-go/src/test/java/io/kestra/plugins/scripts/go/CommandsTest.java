@@ -65,7 +65,7 @@ public class CommandsTest {
 
         var commands = Commands.builder()
             .id("go_commands")
-            .type(Script.class.getName())
+            .type(Commands.class.getName())
             .allowWarning(true)
             .inputFiles(inputFiles)
             .beforeCommands(Property.of(List.of(
@@ -121,7 +121,7 @@ public class CommandsTest {
 
         var commands = Commands.builder()
             .id("go_commands")
-            .type(Script.class.getName())
+            .type(Commands.class.getName())
             .allowWarning(true)
             .inputFiles(inputFiles)
             .outputFiles(Property.of(List.of(outputFile)))

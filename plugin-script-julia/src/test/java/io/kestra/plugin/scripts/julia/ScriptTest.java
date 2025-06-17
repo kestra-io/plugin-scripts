@@ -35,14 +35,14 @@ class ScriptTest {
         List<LogEntry> logs = new ArrayList<>();
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
-        Script bash = Script.builder()
+        Script juliaScript = Script.builder()
             .id("unit-test")
             .type(Script.class.getName())
             .script(Property.of("@info \"hello there!\""))
             .build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptOutput run = bash.run(runContext);
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, juliaScript, ImmutableMap.of());
+        ScriptOutput run = juliaScript.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getStdOutLineCount(), is(0));

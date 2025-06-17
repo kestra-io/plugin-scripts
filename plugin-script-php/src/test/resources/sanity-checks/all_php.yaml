@@ -1,0 +1,22 @@
+id: all_php
+namespace: sanitychecks.plugin-scripts
+
+tasks:
+  - id: script
+    type: io.kestra.plugin.scripts.php.Script
+    script: |
+      #!/usr/bin/php
+      <?php
+      echo "Hello, World!\n";
+      ?>
+
+  - id: commands
+    type: io.kestra.plugin.scripts.php.Commands
+    inputFiles:
+      main.php: |
+        #!/usr/bin/php
+        <?php
+        echo "Hello, World!\n";
+        ?>
+    commands:
+      - php main.php
