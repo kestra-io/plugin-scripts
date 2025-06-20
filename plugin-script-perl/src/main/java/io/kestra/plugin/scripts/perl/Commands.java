@@ -21,7 +21,7 @@ import java.util.List;
 @Plugin(examples = {
     @Example(
         full = true,
-        title = "Execute a simple Perl command.",
+        title = "Execute one or multiple Perl commands.",
         code = """
             id: perl_commands
             namespace: company.team
