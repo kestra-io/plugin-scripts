@@ -1,0 +1,22 @@
+id: all_perl
+namespace: sanitychecks.plugin-scripts
+
+tasks:
+  - id: simple_perl_script
+    type: io.kestra.plugin.scripts.perl.Script
+    script: |
+      print "First kestra perl task ran successfully.\\n";
+
+  - id: perl_with_deps
+    type: io.kestra.plugin.scripts.perl.Commands
+    beforeCommands:
+      - cpan App::cpanminus
+      - cpanm --notest JSON
+    commands:
+      - |-
+        perl -e '
+          use JSON;
+          my $json = "{\"name\":\"Kestra\",\"status\":\"ok\"}";
+          my $data = decode_json($json);
+          print "parsed json - Name: $data->{name}, status: $data->{status}\n";
+        '
