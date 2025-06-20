@@ -34,7 +34,7 @@ import java.util.List;
                 type: io.kestra.plugin.scripts.deno.Commands
                 inputFiles:
                   main.ts: |
-                    const response = await fetch("https://api.kestra.io/v1/ping");
+                    const response = await fetch("https://httpbin.org/status/200");
                     const data = await response.json();
                     console.log(data);
                 commands:
