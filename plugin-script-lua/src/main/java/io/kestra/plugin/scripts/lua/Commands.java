@@ -21,7 +21,7 @@ import java.util.List;
 @Plugin(examples = {
     @Example(
         full = true,
-        title = "Execute a simple Lua command.",
+        title = "Execute one or multiple Lua commands.",
         code = """
             id: lua_commands
             namespace: company.team
