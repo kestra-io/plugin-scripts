@@ -1,0 +1,28 @@
+id: simple_lua_examples
+namespace: sanitychecks.plugin-scripts
+
+tasks:
+  - id: script_lua
+    type: io.kestra.plugin.scripts.lua.Script
+    script: |
+      local greeting = "Hello Kestra!"
+      local repeated = string.rep(greeting .. " ", 2) -- Repeat the greeting twice
+
+      print("Original: " .. greeting)
+      print("Repeated: " .. repeated)
+      print("Length: " .. string.len(repeated))
+
+  - id: command_lua
+    type: io.kestra.plugin.scripts.lua.Commands
+    commands:
+      - |
+        lua -e '
+          local num1 = 100
+          local num2 = 25
+          local sum = num1 + num2
+          local difference = num1 - num2
+
+          print("Sum: " .. sum)
+          print("Difference: " .. difference)
+          print("Current time: " .. os.date("%H:%M:%S"))
+        '
