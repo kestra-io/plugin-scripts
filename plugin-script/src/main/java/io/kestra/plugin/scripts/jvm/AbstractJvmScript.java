@@ -14,6 +14,7 @@ import io.kestra.core.runners.RunContext;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
+@Deprecated
 public abstract class AbstractJvmScript extends Task {
     @Schema(
         title = "A full script."

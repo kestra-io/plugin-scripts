@@ -42,6 +42,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
         "If you set the `row` to `null`, the row will be skipped.\n" +
         "You can create a variable `rows` to return multiple rows for a single `row`.\n"
 )
+@Deprecated
 public abstract class FileTransform extends AbstractJvmScript implements RunnableTask<FileTransform.Output> {
     @NotNull
     @Schema(

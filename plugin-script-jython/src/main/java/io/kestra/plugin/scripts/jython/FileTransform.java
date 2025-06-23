@@ -19,7 +19,8 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Transform an ION file from Kestra's internal storage with a Jython script."
+    title = "Transform an ION file from Kestra's internal storage with a Jython script.",
+    description = "This task is deprecated, please use `io.kestra.plugin.graalvm.python.FileTransform` instead."
 )
 @Plugin(
     examples = {
@@ -128,6 +129,7 @@ import java.util.List;
         )
     }
 )
+@Deprecated
 public class FileTransform extends io.kestra.plugin.scripts.jvm.FileTransform {
     @Override
     public Output run(RunContext runContext) throws Exception {

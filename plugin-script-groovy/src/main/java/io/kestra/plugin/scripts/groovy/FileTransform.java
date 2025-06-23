@@ -1,5 +1,6 @@
 package io.kestra.plugin.scripts.groovy;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,10 @@ import java.util.List;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
+@Schema(
+    title = "Transform an ION file from Kestra's internal storage with a Groovy script.",
+    description = "This task is deprecated, please use `io.kestra.plugin.graalvm.js.FileTransform`, `io.kestra.plugin.graalvm.python.FileTransform` or `io.kestra.plugin.graalvm.ruby.FileTransform` instead."
+)
 @Plugin(
     examples = {
         @Example(
@@ -29,14 +34,14 @@ import java.util.List;
                 inputs:
                   - id: file
                     type: FILE
-                
+
                 tasks:
                   - id: file_transform
                     type: io.kestra.plugin.scripts.groovy.FileTransform
                     from: "{{ inputs.file }}"
                     script: |
                       logger.info('row: {}', row)
-                
+
                       if (row.get('name') == 'richard') {
                         row = null
                       } else {
@@ -82,7 +87,7 @@ import java.util.List;
                     from: "{{ inputs.json }}"
                     script: |
                       logger.info('row: {}', row)
-                
+
                       if (row.get('name') == 'richard') {
                         row = null
                       } else {
@@ -96,28 +101,29 @@ import java.util.List;
             code = """
                 id: json_transform_using_jackson
                 namespace: company.team
-                
+
                 tasks:
                   - id: file_transform
                     type: io.kestra.plugin.scripts.groovy.FileTransform
                     from: "[{"name":"John Doe", "age":99, "embedded":{"foo":"bar"}}]"
                     script: |
                       import com.fasterxml.jackson.*
-                
+
                       def mapper = new databind.ObjectMapper();
                       def jsonStr = mapper.writeValueAsString(row);
                       logger.info('input in json str: {}', jsonStr)
-                
+
                       def typeRef = new core.type.TypeReference<HashMap<String,Object>>() {};
-                
+
                       data = mapper.readValue(jsonStr, typeRef);
-                
+
                       logger.info('json object: {}', data);
                       logger.info('embedded field: {}', data.embedded.foo)
                 """
         )
     }
 )
+@Deprecated
 public class FileTransform extends io.kestra.plugin.scripts.jvm.FileTransform {
     @Override
     public Output run(RunContext runContext) throws Exception {
