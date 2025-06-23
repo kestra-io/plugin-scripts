@@ -30,6 +30,7 @@ import javax.script.*;
         "\n" +
         "The stdOut & stdErr is not captured, so you must use `logger`.\n"
 )
+@Deprecated
 public abstract class Eval extends AbstractJvmScript implements RunnableTask<Eval.Output> {
     @Schema(
         title = "A list of output variables that will be usable in outputs."

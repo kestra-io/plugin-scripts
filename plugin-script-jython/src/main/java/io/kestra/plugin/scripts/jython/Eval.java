@@ -13,7 +13,8 @@ import io.kestra.core.runners.RunContext;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Jython script."
+    title = "Execute a Jython script.",
+    description = "This task is deprecated, please use `io.kestra.plugin.graalvm.js.Eval` instead."
 )
 @Plugin(
     examples = {
@@ -33,19 +34,20 @@ import io.kestra.core.runners.RunContext;
                       from io.kestra.core.models.executions.metrics import Counter
                       import tempfile
                       from java.io import File
-                      
+
                       logger.info('executionId: {}', runContext.render('{{ execution.id }}'))
                       runContext.metric(Counter.of('total', 666, 'name', 'bla'))
-                      
+
                       map = {'test': 'here'}
                       tempFile = tempfile.NamedTemporaryFile()
                       tempFile.write('555\\n666\\n')
-                      
+
                       out = runContext.storage().putFile(File(tempFile.name)
                 """
         )
     }
 )
+@Deprecated
 public class Eval extends io.kestra.plugin.scripts.jvm.Eval {
     @Override
     public Eval.Output run(RunContext runContext) throws Exception {

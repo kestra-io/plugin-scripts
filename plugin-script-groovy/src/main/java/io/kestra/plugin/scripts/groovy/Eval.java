@@ -13,31 +13,32 @@ import io.kestra.core.runners.RunContext;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Groovy script."
+    title = "Execute a Groovy script.",
+    description = "This task is deprecated, please use `io.kestra.plugin.graalvm.js.Eval`, `io.kestra.plugin.graalvm.python.Eval` or `io.kestra.plugin.graalvm.ruby.Eval` instead."
 )
 @Plugin(
     examples = {
         @Example(
             full = true,
             title = "Make an API call and pass request body to a Groovy script.",
-            code = """     
+            code = """
                 id: api_request_to_groovy
                 namespace: company.team
-            
+
                 tasks:
                   - id: request
                     type: io.kestra.plugin.core.http.Request
                     uri: "https://dummyjson.com/products/1"
-            
+
                   - id: groovy
                     type: io.kestra.plugin.scripts.groovy.Eval
                     script: |
                       logger.info('{{ outputs.request.body }}')
-            
+
                   - id: download
                     type: io.kestra.plugin.core.http.Download
                     uri: "https://dummyjson.com/products/1"
-            
+
                   - id: run_context_groovy
                     type: io.kestra.plugin.scripts.groovy.Eval
                     script: |
@@ -46,7 +47,7 @@ import io.kestra.core.runners.RunContext;
                       InputStream istream = runContext.storage().getFile(uri)
                       logger.info('Content: {}', istream.text)
                   """
-            ),        
+            ),
         @Example(
             code = """
                 id: groovy_eval
@@ -60,20 +61,21 @@ import io.kestra.core.runners.RunContext;
                       - map
                     script: |
                       import io.kestra.core.models.executions.metrics.Counter
-                      
+
                       logger.info('executionId: {}', runContext.render('{{ execution.id }}'))
                       runContext.metric(Counter.of('total', 666, 'name', 'bla'))
-                      
+
                       map = Map.of('test', 'here')
                       File tempFile = runContext.workingDir().createTempFile().toFile()
                       var output = new FileOutputStream(tempFile)
                       output.write('555\\n666\\n'.getBytes())
-                      
+
                       out = runContext.storage().putFile(tempFile
                 """
         )
     }
 )
+@Deprecated
 public class Eval extends io.kestra.plugin.scripts.jvm.Eval {
     @Override
     public Eval.Output run(RunContext runContext) throws Exception {

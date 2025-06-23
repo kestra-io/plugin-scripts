@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.function.Supplier;
 import javax.script.*;
 
+@Deprecated
 public abstract class ScriptEngineService {
     public static CompiledScript scripts(RunContext runContext, String engineName, String script, ClassLoader classLoader) throws ScriptException {
         Logger logger = runContext.logger();
