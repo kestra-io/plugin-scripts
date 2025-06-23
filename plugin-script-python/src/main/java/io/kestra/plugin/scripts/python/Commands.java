@@ -3,6 +3,7 @@ package io.kestra.plugin.scripts.python;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.RunContext;
@@ -12,6 +13,7 @@ import io.kestra.plugin.scripts.python.internals.PythonEnvironmentManager;
 import io.kestra.plugin.scripts.python.internals.PythonEnvironmentManager.ResolvedPythonEnvironment;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -280,6 +282,14 @@ public class Commands extends AbstractPythonExecScript {
     @NotNull
     protected Property<List<String>> commands;
 
+    @Schema(
+      title = "Use uv for virtual environment and dependency installation",
+      description = "If true, uses uv (https://github.com/astral-sh/uv) for venv and pip install instead of python/pip."
+    )
+    @PluginProperty
+    @Builder.Default
+    protected Boolean useUv = false;
+
     @Override
     protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
         var builder = original.toBuilder();
@@ -294,7 +304,7 @@ public class Commands extends AbstractPythonExecScript {
     public ScriptOutput run(RunContext runContext) throws Exception {
         TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
 
-        PythonEnvironmentManager pythonEnvironmentManager = new PythonEnvironmentManager(runContext, this);
+        PythonEnvironmentManager pythonEnvironmentManager = new PythonEnvironmentManager(runContext, this, useUv);
         ResolvedPythonEnvironment pythonEnvironment = pythonEnvironmentManager.setup(containerImage, taskRunner, runner);
 
         Map<String, String> env = new HashMap<>();
