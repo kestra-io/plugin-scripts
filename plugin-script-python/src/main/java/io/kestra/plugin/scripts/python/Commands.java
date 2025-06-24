@@ -34,10 +34,11 @@ import java.util.Map;
     @Example(
         full = true,
         title = """
-        Execute a Python script in a Conda virtual environment. First, add the following script in the embedded Code Editor and name it `etl_script.py`:
+        Execute a Python script in a uv virtual environment. First, add the following script as a Namespace File in the embedded Code Editor and name it `etl_script.py`:
 
         ```python
         import argparse
+        import requests
 
         parser = argparse.ArgumentParser()
 
@@ -46,15 +47,21 @@ import java.util.Map;
         args = parser.parse_args()
         result = args.num * 2
         print(result)
+        print(f"Requests version: {requests.__version__}")
         ```
 
-        Then, make sure to set the `enabled` flag of the `namespaceFiles` property to `true` to enable [namespace files](https://kestra.io/docs/developer-guide/namespace-files). By default, setting to `true` injects all Namespace files; we `include` only the `etl_script.py` file as that is the only file we require from namespace files.
+        Then, make sure to set the `enabled` flag of the `namespaceFiles` property to `true` to enable [namespace files](https://kestra.io/docs/concepts/namespace-files). By default, setting this to `true` injects all Namespace files; we `include` only the `etl_script.py` file as that is the only file we need for this task.
 
-        This flow uses a `io.kestra.plugin.core.runner.Process` Task Runner and Conda virtual environment for process isolation and dependency management. However, note that, by default, Kestra runs tasks in a Docker container (i.e. a Docker task runner), and you can use the `taskRunner` property to customize many options, as well as `containerImage` to choose the Docker image to use.
+        This flow uses a `io.kestra.plugin.core.runner.Process` Task Runner and a virtual environment for process isolation and dependency management. However, note that, by default, Kestra runs tasks in a Docker container (i.e. a Docker Task Runner), and you can use the `taskRunner` property to customize many options, as well as `containerImage` to choose the Docker image to use.
         """,
         code = """
               id: python_venv
               namespace: company.team
+              
+              inputs:
+                - id: nr
+                  type: INT
+                  defaults: 21
 
               tasks:
                 - id: python
@@ -66,9 +73,10 @@ import java.util.Map;
                   taskRunner:
                     type: io.kestra.plugin.core.runner.Process
                   beforeCommands:
-                    - conda activate myCondaEnv
+                    - uv venv --python 3.13
+                    - uv pip install requests                    
                   commands:
-                    - python etl_script.py
+                    - python etl_script.py --num {{inputs.nr}}
               """
     ),
     @Example(
@@ -128,7 +136,7 @@ import java.util.Map;
     ),
     @Example(
         full = true,
-        title = "Run a Python command that can takes an input using an environment variable",
+        title = "Run a Python command that takes an environment variable as input",
         code = """
             id: python_input_as_env_variable
             namespace: company.team
@@ -248,7 +256,7 @@ import java.util.Map;
     ),
     @Example(
         full = true,
-        title = "Create a python script and execute it in a virtual environment",
+        title = "Create a Python script and execute it in a venv virtual environment",
         code = """
             id: script_in_venv
             namespace: company.team
