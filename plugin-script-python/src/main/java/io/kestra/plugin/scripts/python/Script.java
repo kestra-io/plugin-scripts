@@ -4,6 +4,7 @@ import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.property.Property;
+import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.RunContext;
@@ -288,7 +289,7 @@ import java.util.Map;
         )
     }
 )
-public class Script extends AbstractPythonExecScript {
+public class Script extends AbstractPythonExecScript implements RunnableTask<ScriptOutput> {
 
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
