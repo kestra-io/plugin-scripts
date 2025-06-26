@@ -4,6 +4,7 @@ import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.property.Property;
+import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
@@ -57,7 +58,7 @@ import java.util.Map;
         code = """
               id: python_venv
               namespace: company.team
-              
+
               inputs:
                 - id: nr
                   type: INT
@@ -74,7 +75,7 @@ import java.util.Map;
                     type: io.kestra.plugin.core.runner.Process
                   beforeCommands:
                     - uv venv --python 3.13
-                    - uv pip install requests                    
+                    - uv pip install requests
                   commands:
                     - python etl_script.py --num {{inputs.nr}}
               """
@@ -280,7 +281,7 @@ import java.util.Map;
             """
     )
 })
-public class Commands extends AbstractPythonExecScript {
+public class Commands extends AbstractPythonExecScript implements RunnableTask<ScriptOutput> {
 
     @Schema(
         title = "The commands to run."
