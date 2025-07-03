@@ -46,8 +46,9 @@ import java.util.Map;
                 tasks:
                   - id: python
                     type: io.kestra.plugin.scripts.python.Script
-                    beforeCommands:
-                      - pip install requests
+                    dependencies:
+                      - requests
+                      - kestra
                     script: |
                       from kestra import Kestra
                       import requests
@@ -68,8 +69,9 @@ import java.util.Map;
                 tasks:
                   - id: run_python
                     type: io.kestra.plugin.scripts.python.Script
-                    beforeCommands:
-                      - pip install requests kestra
+                    dependencies:
+                      - requests
+                      - kestra
                     script: |
                       import requests
                       import json
@@ -272,8 +274,8 @@ import java.util.Map;
                 tasks:
                   - id: generate_output
                     type: io.kestra.plugin.scripts.python.Script
-                    beforeCommands:
-                      - pip install kestra
+                    dependencies:
+                      - kestra
                     script: |
                       from kestra import Kestra
 
