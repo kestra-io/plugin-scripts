@@ -46,8 +46,9 @@ import java.util.Map;
                 tasks:
                   - id: python
                     type: io.kestra.plugin.scripts.python.Script
-                    beforeCommands:
-                      - pip install requests
+                    dependencies:
+                      - requests
+                      - kestra
                     script: |
                       from kestra import Kestra
                       import requests
@@ -68,8 +69,8 @@ import java.util.Map;
                 tasks:
                   - id: run_python
                     type: io.kestra.plugin.scripts.python.Script
-                    beforeCommands:
-                      - pip install requests kestra
+                    dependencies:
+                      - requests
                     script: |
                       import requests
                       import json
@@ -90,6 +91,8 @@ import java.util.Map;
                   - id: python_logger
                     type: io.kestra.plugin.scripts.python.Script
                     allowFailure: true
+                    dependencies
+                      - kestra
                     script: |
                       import time
                       from kestra import Kestra
@@ -163,6 +166,8 @@ import java.util.Map;
                     containerImage: ghcr.io/kestra-io/pydata:latest
                     outputFiles:
                       - "clean_dataset.csv"
+                    dependencies:
+                      - pandas
                     script: |
                       import pandas as pd
                       df = pd.read_csv("https://huggingface.co/datasets/kestra/datasets/raw/main/csv/messy_dataset.csv")
@@ -207,6 +212,8 @@ import java.util.Map;
                     type: io.kestra.plugin.scripts.python.Script
                     description: Fetch the pokemon detail and compare its experience
                     containerImage: ghcr.io/kestra-io/pydata:latest
+                    dependencies:
+                      - requests
                     script: |
                       import requests
                       import json
@@ -241,8 +248,8 @@ import java.util.Map;
 
                   - id: get_total_rows
                     type: io.kestra.plugin.scripts.python.Script
-                    beforeCommands:
-                      - pip install pandas
+                    dependencies:
+                      - pandas
                     inputFiles:
                       input.csv: "{{ outputs.download_file.uri }}"
                     script: |
@@ -272,8 +279,8 @@ import java.util.Map;
                 tasks:
                   - id: generate_output
                     type: io.kestra.plugin.scripts.python.Script
-                    beforeCommands:
-                      - pip install kestra
+                    dependencies:
+                      - kestra
                     script: |
                       from kestra import Kestra
 
