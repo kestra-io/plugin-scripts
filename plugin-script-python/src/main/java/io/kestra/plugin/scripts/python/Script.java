@@ -71,7 +71,6 @@ import java.util.Map;
                     type: io.kestra.plugin.scripts.python.Script
                     dependencies:
                       - requests
-                      - kestra
                     script: |
                       import requests
                       import json
