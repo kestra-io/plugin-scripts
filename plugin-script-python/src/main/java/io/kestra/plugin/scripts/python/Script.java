@@ -91,6 +91,8 @@ import java.util.Map;
                   - id: python_logger
                     type: io.kestra.plugin.scripts.python.Script
                     allowFailure: true
+                    dependencies
+                      - kestra
                     script: |
                       import time
                       from kestra import Kestra
@@ -164,6 +166,8 @@ import java.util.Map;
                     containerImage: ghcr.io/kestra-io/pydata:latest
                     outputFiles:
                       - "clean_dataset.csv"
+                    dependencies:
+                      - pandas
                     script: |
                       import pandas as pd
                       df = pd.read_csv("https://huggingface.co/datasets/kestra/datasets/raw/main/csv/messy_dataset.csv")
@@ -208,6 +212,8 @@ import java.util.Map;
                     type: io.kestra.plugin.scripts.python.Script
                     description: Fetch the pokemon detail and compare its experience
                     containerImage: ghcr.io/kestra-io/pydata:latest
+                    dependencies:
+                      - requests
                     script: |
                       import requests
                       import json
@@ -242,8 +248,8 @@ import java.util.Map;
 
                   - id: get_total_rows
                     type: io.kestra.plugin.scripts.python.Script
-                    beforeCommands:
-                      - pip install pandas
+                    dependencies:
+                      - pandas
                     inputFiles:
                       input.csv: "{{ outputs.download_file.uri }}"
                     script: |
