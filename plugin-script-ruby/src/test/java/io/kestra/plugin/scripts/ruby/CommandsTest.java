@@ -56,8 +56,8 @@ class CommandsTest {
 
         Commands rubyCommands = Commands.builder()
             .id("unit-test")
-            .type(Commands.class.getName())
-            .commands(Property.of(List.of("ruby " + put.toString())))
+            .type(Script.class.getName())
+            .commands(Property.ofValue(List.of("ruby " + put.toString())))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, rubyCommands, ImmutableMap.of());

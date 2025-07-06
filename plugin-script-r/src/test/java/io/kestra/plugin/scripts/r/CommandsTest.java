@@ -56,8 +56,8 @@ class CommandsTest {
 
         Commands rCommands = Commands.builder()
             .id("unit-test")
-            .type(Commands.class.getName())
-            .commands(Property.of(List.of("Rscript " + put.toString())))
+            .type(Script.class.getName())
+            .commands(Property.ofValue(List.of("Rscript " + put.toString())))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, rCommands, ImmutableMap.of());

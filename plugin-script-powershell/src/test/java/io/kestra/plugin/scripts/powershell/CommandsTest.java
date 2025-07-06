@@ -59,8 +59,8 @@ class CommandsTest {
 
         Commands powershellCommands = Commands.builder()
             .id("unit-test")
-            .type(Commands.class.getName())
-            .commands(Property.of(List.of("pwsh " + put.toString())))
+            .type(Script.class.getName())
+            .commands(Property.ofValue(List.of("pwsh " + put.toString())))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, powershellCommands, ImmutableMap.of());
@@ -79,9 +79,9 @@ class CommandsTest {
     void shouldExitOnFirstError() {
         Commands powershellCommands = Commands.builder()
             .id("unit-test")
-            .type(Commands.class.getName())
-            .commands(Property.of(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\"")))
-            .failFast(Property.of(true))
+            .type(Script.class.getName())
+            .commands(Property.ofValue(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\"")))
+            .failFast(Property.ofValue(true))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, powershellCommands, ImmutableMap.of());
@@ -92,9 +92,9 @@ class CommandsTest {
     void shouldNotExitOnFirstError() throws Exception {
         Commands powershellCommands = Commands.builder()
             .id("unit-test")
-            .type(Commands.class.getName())
-            .commands(Property.of(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\"")))
-            .failFast(Property.of(false))
+            .type(Script.class.getName())
+            .commands(Property.ofValue(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\"")))
+            .failFast(Property.ofValue(false))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, powershellCommands, ImmutableMap.of());

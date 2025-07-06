@@ -55,8 +55,8 @@ class CommandsTest {
 
         Commands juliaCommands = Commands.builder()
             .id("unit-test")
-            .type(Commands.class.getName())
-            .commands(Property.of(List.of("julia " + put.toString())))
+            .type(Script.class.getName())
+            .commands(Property.ofValue(List.of("julia " + put.toString())))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, juliaCommands, ImmutableMap.of());

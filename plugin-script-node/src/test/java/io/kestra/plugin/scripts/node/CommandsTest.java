@@ -55,8 +55,8 @@ class CommandsTest {
 
         Commands nodeCommands = Commands.builder()
             .id("unit-test")
-            .type(Commands.class.getName())
-            .commands(Property.of(List.of("node " + put.toString())))
+            .type(Script.class.getName())
+            .commands(Property.ofValue(List.of("node " + put.toString())))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, nodeCommands, ImmutableMap.of());

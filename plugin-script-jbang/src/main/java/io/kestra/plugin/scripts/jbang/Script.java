@@ -109,7 +109,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     private static final String DEFAULT_IMAGE = "jbangdev/jbang-action";
 
     @Builder.Default
-    private Property<String> containerImage = Property.of(DEFAULT_IMAGE);
+    private Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `jbang hello.java` or an executable JAR, use the `Commands` task instead."
@@ -123,7 +123,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     )
     @Builder.Default
     @NotNull
-    private Property<String> extension = Property.of(".java");
+    private Property<String> extension = Property.ofValue(".java");
 
     @Schema(
         title = "Whether JBang should be quit.",
@@ -131,7 +131,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     )
     @NotNull
     @Builder.Default
-    private Property<Boolean> quiet = Property.of(true);
+    private Property<Boolean> quiet = Property.ofValue(true);
 
 
     @Override
@@ -163,7 +163,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
             .withInterpreter(this.interpreter)
             .withBeforeCommands(beforeCommands)
             .withBeforeCommandsWithOptions(true)
-            .withCommands(Property.of(List.of(
+            .withCommands(Property.ofValue(List.of(
                 String.join(" ", "jbang", runContext.render(quiet).as(Boolean.class).orElseThrow() ? "--quiet" : "", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
             )))
             .run();

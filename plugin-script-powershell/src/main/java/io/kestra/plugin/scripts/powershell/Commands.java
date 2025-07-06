@@ -53,7 +53,7 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
     private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/powershell:latest";
 
     @Builder.Default
-    protected Property<String> containerImage = Property.of(DEFAULT_IMAGE);
+    protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
         title = "The commands to run."
@@ -65,7 +65,7 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
     @Schema(
         title = "Which interpreter to use."
     )
-    protected Property<List<String>> interpreter = Property.of(List.of("pwsh", "-NoProfile", "-NonInteractive", "-Command"));
+    protected Property<List<String>> interpreter = Property.ofValue(List.of("pwsh", "-NoProfile", "-NonInteractive", "-Command"));
 
     @Override
     protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
@@ -86,7 +86,7 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
 
         return this.commands(runContext)
             .withInterpreter(this.interpreter)
-            .withBeforeCommands(Property.of(getBeforeCommandsWithOptions(runContext)))
+            .withBeforeCommands(Property.ofValue(getBeforeCommandsWithOptions(runContext)))
             .withCommands(commands)
             .withTargetOS(os)
             .run();

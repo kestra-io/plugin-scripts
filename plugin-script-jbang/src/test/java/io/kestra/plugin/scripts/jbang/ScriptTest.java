@@ -39,7 +39,7 @@ class ScriptTest {
         Script jbangScript = Script.builder()
             .id("unit-test")
             .type(Script.class.getName())
-            .script(Property.of("""
+            .script(Property.ofValue("""
                 class helloworld {
                     public static void main(String[] args) {
                         if(args.length==0) {

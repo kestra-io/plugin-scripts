@@ -102,14 +102,14 @@ public class Node extends AbstractBash implements RunnableTask<io.kestra.core.ta
         title = "The node interpreter to use.",
         description = "Set the node interpreter path to use."
     )
-    private final Property<String> nodePath = Property.of("node");
+    private final Property<String> nodePath = Property.ofValue("node");
 
     @Builder.Default
     @Schema(
         title = "The npm binary to use.",
         description = "Set the npm binary path for node dependencies setup."
     )
-    private final Property<String> npmPath = Property.of("npm");
+    private final Property<String> npmPath = Property.ofValue("npm");
 
     @Schema(
         title = "Node command args.",
