@@ -10,7 +10,7 @@ class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
     protected FileTransform task(String source) {
         return io.kestra.plugin.scripts.jython.FileTransform.builder()
             .id("unit-test")
-            .type(Eval.class.getName())
+            .type(io.kestra.plugin.scripts.jython.FileTransform.class.getName())
             .from(source)
             .script(Property.ofValue("logger.info('row: {}', row)\n" +
                 "if row['name'] == 'richard': \n" +
@@ -25,7 +25,7 @@ class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
     protected FileTransform multipleRows(String source) {
         return io.kestra.plugin.scripts.jython.FileTransform.builder()
             .id("unit-test")
-            .type(Eval.class.getName())
+            .type(io.kestra.plugin.scripts.jython.FileTransform.class.getName())
             .from(source)
             .script(Property.ofValue("rows = [1, 2 , row, {\"action\": \"insert\"}]\n"))
             .build();

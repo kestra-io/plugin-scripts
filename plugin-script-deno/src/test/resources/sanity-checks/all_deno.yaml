@@ -1,0 +1,20 @@
+id: all_deno
+namespace: sanitychecks.plugin-scripts
+
+tasks:
+  - id: script_deno
+    type: io.kestra.plugin.scripts.deno.Script
+    script:
+      - console.log("First Kestra task ran successfully.");
+
+  - id: command_deno
+    type: io.kestra.plugin.scripts.deno.Commands
+    commands:
+      - deno run --allow-net main.ts
+    inputFiles:
+      main.ts: |
+        import { blue, bold } from "https://deno.land/std@0.224.0/fmt/colors.ts";
+
+        console.log(
+          bold(blue("Second Kestra task: ran successfully."))
+        );

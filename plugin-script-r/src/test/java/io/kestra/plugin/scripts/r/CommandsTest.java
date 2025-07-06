@@ -1,6 +1,7 @@
 package io.kestra.plugin.scripts.r;
 
 import com.google.common.collect.ImmutableMap;
+import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.queues.QueueFactoryInterface;
@@ -11,7 +12,6 @@ import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.tenant.TenantService;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.core.junit.annotations.KestraTest;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.apache.commons.io.IOUtils;
@@ -54,14 +54,14 @@ class CommandsTest {
             )
         );
 
-        Commands bash = Commands.builder()
+        Commands rCommands = Commands.builder()
             .id("unit-test")
             .type(Script.class.getName())
             .commands(Property.ofValue(List.of("Rscript " + put.toString())))
             .build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptOutput run = bash.run(runContext);
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, rCommands, ImmutableMap.of());
+        ScriptOutput run = rCommands.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getStdOutLineCount(), is(1));

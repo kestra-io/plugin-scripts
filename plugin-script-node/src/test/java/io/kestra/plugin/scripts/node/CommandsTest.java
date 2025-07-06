@@ -53,14 +53,14 @@ class CommandsTest {
             )
         );
 
-        Commands bash = Commands.builder()
+        Commands nodeCommands = Commands.builder()
             .id("unit-test")
             .type(Script.class.getName())
             .commands(Property.ofValue(List.of("node " + put.toString())))
             .build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptOutput run = bash.run(runContext);
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, nodeCommands, ImmutableMap.of());
+        ScriptOutput run = nodeCommands.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getStdOutLineCount(), is(1));

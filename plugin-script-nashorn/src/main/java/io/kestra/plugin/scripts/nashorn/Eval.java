@@ -13,7 +13,8 @@ import io.kestra.core.runners.RunContext;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Nashorn (JavaScript) script."
+    title = "Execute a Nashorn (JavaScript) script.",
+    description = "This task is deprecated, please use `io.kestra.plugin.graalvm.js.Eval` instead."
 )
 @Plugin(
     examples = {
@@ -33,20 +34,21 @@ import io.kestra.core.runners.RunContext;
                       var Counter = Java.type('io.kestra.core.models.executions.metrics.Counter');
                       var File = Java.type('java.io.File');
                       var FileOutputStream = Java.type('java.io.FileOutputStream');
-                      
+
                       logger.info('executionId: {}', runContext.render('{{ execution.id }}'));
                       runContext.metric(Counter.of('total', 666, 'name', 'bla'));
-                      
+
                       map = {'test': 'here'}
                       var tempFile = runContext.workingDir().createTempFile().toFile()
                       var output = new FileOutputStream(tempFile)
                       output.write('555\\n666\\n'.getBytes())
-                      
+
                       out = runContext.storage().putFile(tempFile)"
                 """
         )
     }
 )
+@Deprecated
 public class Eval extends io.kestra.plugin.scripts.jvm.Eval {
     @Override
     public Eval.Output run(RunContext runContext) throws Exception {

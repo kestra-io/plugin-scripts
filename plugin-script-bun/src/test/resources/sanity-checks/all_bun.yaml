@@ -1,0 +1,20 @@
+id: all_bun
+namespace: sanitychecks.plugin-scripts
+
+tasks:
+  - id: bun_with_dependencies
+    type: io.kestra.plugin.scripts.bun.Script
+    beforeCommands:
+      - bun add cowsay
+    script: |
+      import { say } from "cowsay";
+      console.log(say({ text: "Kestra orchestrates everything!" }));
+
+  - id: bun_commands_with_deps
+    type: io.kestra.plugin.scripts.bun.Commands
+    beforeCommands:
+      - bun add chalk
+    env:
+      FORCE_COLOR: "1"
+    commands:
+      - "bun -e \"import chalk from 'chalk'; console.log(chalk.blue('Hello from kestra!'));\""

@@ -17,7 +17,8 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Transform an ION file from Kestra's internal storage with a Nashorn (JavaScript) script."
+    title = "Transform an ION file from Kestra's internal storage with a Nashorn (JavaScript) script.",
+    description = "This task is deprecated, please use `io.kestra.plugin.graalvm.js.FileTransform` instead."
 )
 @Plugin(
     examples = {
@@ -34,7 +35,7 @@ import java.util.List;
                     from: "{{ outputs['avro-to-gcs'] }}"
                     script: |
                       logger.info('row: {}', row)
-                
+
                       if (row['name'] === 'richard') {
                         row = null
                       } else {
@@ -75,7 +76,7 @@ import java.util.List;
                     from: "[{\"name":\"jane\"}, {\"name\":\"richard\"}]"
                     script: |
                       logger.info('row: {}', row)
-                
+
                       if (row['name'] === 'richard') {
                         row = null
                       } else {
@@ -85,6 +86,7 @@ import java.util.List;
         )
     }
 )
+@Deprecated
 public class FileTransform extends io.kestra.plugin.scripts.jvm.FileTransform {
     @Override
     public Output run(RunContext runContext) throws Exception {

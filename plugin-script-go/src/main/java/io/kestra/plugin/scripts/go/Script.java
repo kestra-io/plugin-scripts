@@ -4,6 +4,7 @@ import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.property.Property;
+import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.RunContext;
@@ -61,7 +62,7 @@ import java.util.List;
             """
     )
 })
-public class Script extends AbstractExecScript {
+public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "golang";
 
     @Builder.Default

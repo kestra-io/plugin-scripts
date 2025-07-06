@@ -62,14 +62,14 @@ class CommandsTest {
             )
         );
 
-        Commands bash = Commands.builder()
+        Commands jbangCommands = Commands.builder()
             .id("unit-test")
             .type(Commands.class.getName())
             .commands(Property.ofValue(List.of("jbang --quiet " + put.toString())))
             .build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptOutput run = bash.run(runContext);
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, jbangCommands, ImmutableMap.of());
+        ScriptOutput run = jbangCommands.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getStdOutLineCount(), is(1));

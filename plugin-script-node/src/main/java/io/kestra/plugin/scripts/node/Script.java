@@ -5,6 +5,7 @@ import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
+import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.FilesService;
@@ -125,15 +126,15 @@ import java.util.Map;
             namespace: company.team
 
             tasks:
-            - id: node
+              - id: node
                 type: io.kestra.plugin.scripts.node.Script
                 beforeCommands:
-                - npm i @kestra-io/libs
+                  - npm i @kestra-io/libs
                 script: |
-                const Kestra = require('@kestra-io/libs');
-                Kestra.outputs({test: 'hello world'});
+                  const Kestra = require('@kestra-io/libs');
+                  Kestra.outputs({test: 'hello world'});
 
-            - id: get_outputs
+              - id: get_outputs
                 type: io.kestra.plugin.core.log.Log
                 message: "{{ outputs.node.vars.test }}"
             """
@@ -166,7 +167,7 @@ import java.util.Map;
             """
     )
 })
-public class Script extends AbstractExecScript {
+public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "node";
 
     @Builder.Default

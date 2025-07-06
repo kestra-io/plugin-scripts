@@ -4,6 +4,7 @@ import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.property.Property;
+import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.RunContext;
@@ -45,8 +46,9 @@ import java.util.Map;
                 tasks:
                   - id: python
                     type: io.kestra.plugin.scripts.python.Script
-                    beforeCommands:
-                      - pip install requests
+                    dependencies:
+                      - requests
+                      - kestra
                     script: |
                       from kestra import Kestra
                       import requests
@@ -67,8 +69,8 @@ import java.util.Map;
                 tasks:
                   - id: run_python
                     type: io.kestra.plugin.scripts.python.Script
-                    beforeCommands:
-                      - pip install requests kestra
+                    dependencies:
+                      - requests
                     script: |
                       import requests
                       import json
@@ -89,6 +91,8 @@ import java.util.Map;
                   - id: python_logger
                     type: io.kestra.plugin.scripts.python.Script
                     allowFailure: true
+                    dependencies
+                      - kestra
                     script: |
                       import time
                       from kestra import Kestra
@@ -162,6 +166,8 @@ import java.util.Map;
                     containerImage: ghcr.io/kestra-io/pydata:latest
                     outputFiles:
                       - "clean_dataset.csv"
+                    dependencies:
+                      - pandas
                     script: |
                       import pandas as pd
                       df = pd.read_csv("https://huggingface.co/datasets/kestra/datasets/raw/main/csv/messy_dataset.csv")
@@ -206,6 +212,8 @@ import java.util.Map;
                     type: io.kestra.plugin.scripts.python.Script
                     description: Fetch the pokemon detail and compare its experience
                     containerImage: ghcr.io/kestra-io/pydata:latest
+                    dependencies:
+                      - requests
                     script: |
                       import requests
                       import json
@@ -240,8 +248,8 @@ import java.util.Map;
 
                   - id: get_total_rows
                     type: io.kestra.plugin.scripts.python.Script
-                    beforeCommands:
-                      - pip install pandas
+                    dependencies:
+                      - pandas
                     inputFiles:
                       input.csv: "{{ outputs.download_file.uri }}"
                     script: |
@@ -271,8 +279,8 @@ import java.util.Map;
                 tasks:
                   - id: generate_output
                     type: io.kestra.plugin.scripts.python.Script
-                    beforeCommands:
-                      - pip install kestra
+                    dependencies:
+                      - kestra
                     script: |
                       from kestra import Kestra
 
@@ -288,7 +296,7 @@ import java.util.Map;
         )
     }
 )
-public class Script extends AbstractPythonExecScript {
+public class Script extends AbstractPythonExecScript implements RunnableTask<ScriptOutput> {
 
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."

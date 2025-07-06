@@ -36,7 +36,7 @@ class ScriptTest {
         List<LogEntry> logs = new ArrayList<>();
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
-        Script bash = Script.builder()
+        Script rScript = Script.builder()
             .id("unit-test")
             .type(Script.class.getName())
             .beforeCommands(Property.ofValue(List.of(
@@ -50,8 +50,8 @@ class ScriptTest {
             ))
             .build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptOutput run = bash.run(runContext);
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, rScript, ImmutableMap.of());
+        ScriptOutput run = rScript.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getStdOutLineCount(), greaterThan(1));
