@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -41,7 +42,7 @@ public class ScriptTest {
         var receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         var script = Script.builder()
-            .id("go_script")
+            .id("go-script-" + UUID.randomUUID())
             .type(Script.class.getName())
             .allowWarning(true)
             .script(Property.of("""

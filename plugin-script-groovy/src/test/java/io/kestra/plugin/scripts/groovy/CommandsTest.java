@@ -16,6 +16,7 @@ import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -36,7 +37,7 @@ public class CommandsTest {
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         var groovyCommands = Commands.builder()
-            .id("groovy-commands")
+            .id("groovy-commands-" + UUID.randomUUID())
             .type(Commands.class.getName())
             .allowWarning(true)
             .commands(Property.ofValue(List.of("groovy -e \"println 'I love Kestra!'\"")))

@@ -19,6 +19,7 @@ import reactor.core.publisher.Flux;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -39,7 +40,7 @@ public class CommandsTest {
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         var bunCommands = Commands.builder()
-            .id("unit-test")
+            .id("bun-script-" + UUID.randomUUID())
             .type(Commands.class.getName())
             .beforeCommands(Property.ofValue(List.of("bun add cowsay")))
             .commands(Property.ofValue(List.of("bun run index.ts")))
