@@ -2,7 +2,6 @@ package io.kestra.plugin.scripts.jvm;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.junit.annotations.KestraTest;
-import org.junit.jupiter.api.Test;
 import io.kestra.core.models.executions.AbstractMetricEntry;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.queues.QueueFactoryInterface;
@@ -10,13 +9,14 @@ import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.utils.TestsUtils;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import org.junit.jupiter.api.Test;
 import org.slf4j.event.Level;
+import reactor.core.publisher.Flux;
 
 import java.net.URI;
 import java.util.Map;
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import reactor.core.publisher.Flux;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;

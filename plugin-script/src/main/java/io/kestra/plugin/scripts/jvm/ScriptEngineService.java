@@ -5,9 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.slf4j.Logger;
 
+import javax.script.*;
 import java.util.HashMap;
 import java.util.function.Supplier;
-import javax.script.*;
 
 @Deprecated
 public abstract class ScriptEngineService {

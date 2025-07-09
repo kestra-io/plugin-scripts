@@ -16,6 +16,7 @@ import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -36,7 +37,7 @@ public class ScriptTest {
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         var groovyScript = Script.builder()
-            .id("groovy-script")
+            .id("groovy-script-" + UUID.randomUUID())
             .type(Script.class.getName())
             .allowWarning(true)
             .script(Property.ofValue("println(\"Kestra is amazing!\");"))
