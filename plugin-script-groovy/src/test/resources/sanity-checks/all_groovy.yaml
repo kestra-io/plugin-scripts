@@ -1,0 +1,42 @@
+id: all_groovy
+namespace: sanitychecks.plugin-scripts
+
+tasks:
+  - id: groovy_with_dependencies
+    type: io.kestra.plugin.scripts.groovy.Script
+    env:
+      GRAPE_ROOT: /tmp/grapes
+    script: |
+      @Grab('info.picocli:picocli:4.7.5')
+      import picocli.CommandLine
+
+      @CommandLine.Command(name = "hello")
+      class HelloWorld implements Runnable {
+          @CommandLine.Parameters(paramLabel = "NAME", defaultValue = "World")
+          String name
+
+          void run() {
+              println "Kestra orchestrates everything, ${name}!"
+          }
+      }
+
+      new CommandLine(new HelloWorld()).execute("Groovy")
+
+  - id: groovy_commands_with_deps
+    type: io.kestra.plugin.scripts.groovy.Commands
+    commands:
+      - |
+        groovy -e '
+          @Grab("info.picocli:picocli:4.7.5")
+          import picocli.CommandLine
+          @CommandLine.Command(name = "hello")
+          class HelloWorld implements Runnable {
+            @CommandLine.Parameters(paramLabel = "NAME", defaultValue = "Kestra")
+            String name
+            void run() {
+               println "Hello, $name!"
+            }
+          }
+
+          new CommandLine(new HelloWorld()).execute("Kestra")
+        '
