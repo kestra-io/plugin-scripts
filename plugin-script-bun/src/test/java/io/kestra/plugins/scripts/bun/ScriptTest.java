@@ -18,6 +18,7 @@ import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -38,7 +39,7 @@ public class ScriptTest {
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         Script bunScript = Script.builder()
-            .id("unit-test")
+            .id("bun-commands-" + UUID.randomUUID())
             .type(Script.class.getName())
             .script(Property.ofValue("console.log(\"Kestra is amazing!\");"))
             .build();

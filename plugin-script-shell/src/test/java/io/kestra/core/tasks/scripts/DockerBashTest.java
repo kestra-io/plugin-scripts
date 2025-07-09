@@ -1,12 +1,12 @@
 package io.kestra.core.tasks.scripts;
 
 import com.google.common.collect.ImmutableMap;
+import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.micronaut.context.annotation.Property;
-import io.kestra.core.junit.annotations.KestraTest;
 import org.junitpioneer.jupiter.RetryingTest;
 
 import java.nio.file.Files;

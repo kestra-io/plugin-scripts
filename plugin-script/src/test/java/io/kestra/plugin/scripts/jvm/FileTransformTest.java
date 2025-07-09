@@ -1,26 +1,21 @@
 package io.kestra.plugin.scripts.jvm;
 
 import com.google.common.collect.ImmutableMap;
-import io.kestra.core.serializers.JacksonMapper;
-import io.kestra.core.tenant.TenantService;
-import io.kestra.plugin.scripts.jvm.FileTransform;
 import io.kestra.core.junit.annotations.KestraTest;
-import org.junit.jupiter.api.Test;
 import io.kestra.core.models.executions.AbstractMetricEntry;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.serializers.FileSerde;
+import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.core.storages.StorageInterface;
-import io.kestra.core.utils.IdUtils;
+import io.kestra.core.tenant.TenantService;
 import io.kestra.core.utils.TestsUtils;
+import jakarta.inject.Inject;
+import org.junit.jupiter.api.Test;
 
 import java.io.*;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import jakarta.inject.Inject;
+import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
@@ -61,7 +56,7 @@ public abstract class FileTransformTest {
         URI source = storageInterface.put(
             TenantService.MAIN_TENANT,
             null,
-            new URI("/" + IdUtils.create()),
+            new URI("/" + UUID.randomUUID()),
             new FileInputStream(tempFile)
         );
 
@@ -144,7 +139,7 @@ public abstract class FileTransformTest {
         URI source = storageInterface.put(
             TenantService.MAIN_TENANT,
             null,
-            new URI("/" + IdUtils.create()),
+            new URI("/" + UUID.randomUUID()),
             new FileInputStream(tempFile)
         );
 

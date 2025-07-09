@@ -8,7 +8,6 @@ import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
-import io.kestra.core.utils.IdUtils;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.deno.Commands;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
@@ -19,6 +18,7 @@ import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -39,7 +39,7 @@ public class CommandsTest {
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         Commands commands = Commands.builder()
-            .id(IdUtils.create())
+            .id("deno-commands-" + UUID.randomUUID())
             .type(Commands.class.getName())
             .commands(Property.ofValue(List.of("deno eval \"console.log('Hello from Deno Command')\"")))
             .build();
