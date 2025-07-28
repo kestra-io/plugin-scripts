@@ -11,7 +11,7 @@ jar {
         attributes(
                 "X-Kestra-Name": project.name,
                 "X-Kestra-Title": "Windows Command Task",
-                "X-Kestra-Group": project.group + ".windows",
+                "X-Kestra-Group": project.group + ".scripts.windows",
                 "X-Kestra-Description": project.description,
                 "X-Kestra-Version": project.version
         )
