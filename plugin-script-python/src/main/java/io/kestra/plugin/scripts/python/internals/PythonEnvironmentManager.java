@@ -33,11 +33,11 @@ public class PythonEnvironmentManager {
     private final RunContext runContext;
     private final boolean isDependencyCacheEnabled;
     private final String pythonVersion;
-    private final boolean useUv;
+    private final PackageManagerType packageManager;
 
     public PythonEnvironmentManager(final RunContext runContext,
                                 final PythonBasedPlugin plugin) throws IllegalVariableEvaluationException {
-        this(runContext, plugin, false); // default useUv to false
+        this(runContext, plugin, PackageManagerType.UV);
     }
 
 
@@ -47,19 +47,25 @@ public class PythonEnvironmentManager {
      * @param plugin The plugin for which the environment will be managed.
      */
     public PythonEnvironmentManager(final RunContext runContext,
-                                    final PythonBasedPlugin plugin, final boolean useUv) throws IllegalVariableEvaluationException {
+                                    final PythonBasedPlugin plugin, final PackageManagerType packageManager) throws IllegalVariableEvaluationException {
         this.plugin = plugin;
         this.runContext = runContext;
         this.isDependencyCacheEnabled = runContext.render(this.plugin.getDependencyCacheEnabled()).as(Boolean.class).orElse(true);
         this.pythonVersion = runContext.render(this.plugin.getPythonVersion()).as(String.class).orElse(null);
-        this.useUv = useUv;
+        this.packageManager = packageManager != null ? packageManager : PackageManagerType.PIP;
     }
 
     public ResolvedPythonEnvironment setup(final Property<String> containerImage, final TaskRunner<?> taskRunner, final RunnerType runnerType) throws IllegalVariableEvaluationException, IOException {
         List<String> requirements = new ArrayList<>(runContext.render(plugin.getDependencies()).asList(String.class));
 
         final Path localCacheDir = getLocalCacheDir();
-        final PythonDependenciesResolver resolver = new PythonDependenciesResolver(runContext.logger(), runContext.workingDir(), localCacheDir,useUv);
+
+        final PythonDependenciesResolver resolver = new PythonDependenciesResolver(
+            runContext.logger(),
+            runContext.workingDir(),
+            localCacheDir,
+            packageManager
+        );
 
         final String targetPythonVersion = getTargetPythonVersion(containerImage, taskRunner, runnerType)
             .or(resolver::findLocalPythonVersion)

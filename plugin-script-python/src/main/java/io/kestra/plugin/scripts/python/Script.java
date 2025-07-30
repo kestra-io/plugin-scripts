@@ -230,7 +230,7 @@ import java.util.Map;
                               print("{{ inputs.pokemon}} is too young!")
                       else:
                           print(f"Failed to retrieve the webpage. Status code: {response.status_code}")
-                  """
+                """
         ),
         @Example(
             full = true,
@@ -265,7 +265,7 @@ import java.util.Map;
                       num_rows = len(df)
 
                       print(f"Number of rows: {num_rows}")
-                  """
+                """
         ),
         @Example(
             full = true,
@@ -292,7 +292,7 @@ import java.util.Map;
                     message:
                       - "Total Marks: {{ outputs.generate_output.vars.total_marks }}"
                       - "Average Marks: {{ outputs.generate_output.vars.average_marks }}"
-                  """
+                """
         )
     }
 )

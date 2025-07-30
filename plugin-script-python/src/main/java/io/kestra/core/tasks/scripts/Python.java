@@ -5,8 +5,10 @@ import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.scripts.python.internals.PackageManagerType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -55,7 +57,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
             code = """
                 id: python_flow
                 namespace: company.team
-                
+
                 tasks:
                   - id: python
                     type: io.kestra.core.tasks.scripts.Python
@@ -86,7 +88,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
             code = """
                 id: python_flow
                 namespace: company.team
-                
+
                 tasks:
                   - id: python
                     type: io.kestra.core.tasks.scripts.Python
@@ -147,12 +149,15 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
     protected Boolean virtualEnv = true;
 
     @Schema(
-        title = "Use uv for virtual environment and dependency installation",
-        description = "If true, uses uv (https://github.com/astral-sh/uv) for venv and pip install instead of python/pip."
+        title = "Package manager for Python dependencies",
+        description = "Package manager to use for installing Python dependencies. " +
+            "Options: 'pip' (default), 'uv'. " +
+            "UV automatically falls back to pip if not available.",
+        allowableValues = {"PIP", "UV"}
     )
     @PluginProperty
     @Builder.Default
-    protected Boolean useUv = false;
+    protected Property<PackageManagerType> packageManager = Property.ofValue(PackageManagerType.PIP);
 
     protected String virtualEnvCommand(RunContext runContext, List<String> requirements) throws IllegalVariableEvaluationException {
         List<String> renderer = new ArrayList<>();
@@ -161,15 +166,7 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
             renderer.add("set -o errexit");
         }
 
-        // renderer.add(this.pythonPath + " -m venv --system-site-packages " + workingDirectory + " > /dev/null");
-
-        // if (requirements != null) {
-        //     renderer.addAll(Arrays.asList(
-        //         "./bin/pip install pip --upgrade > /dev/null",
-        //         "./bin/pip install " + runContext.render(String.join(" ", requirements), additionalVars) + " > /dev/null"));
-        // }
-
-        if (Boolean.TRUE.equals(this.useUv)) {
+        if (PackageManagerType.UV.equals(runContext.render(packageManager).as(PackageManagerType.class).orElse(PackageManagerType.PIP))) {
             renderer.add("uv venv --system-site-packages .venv > /dev/null");
             if (requirements != null && !requirements.isEmpty()) {
                 renderer.add("./.venv/bin/uv pip install " + runContext.render(String.join(" ", requirements), additionalVars) + " > /dev/null");
@@ -243,10 +240,10 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
                 String argsString = args == null ? "" : " " + runContext.render(String.join(" ", args), additionalVars);
 
                 String renderedCommand = runContext.render(command, additionalVars) + argsString;
-                if (Boolean.TRUE.equals(this.useUv) && renderedCommand.startsWith("./bin/python")) {
+                if (PackageManagerType.UV.equals(runContext.render(packageManager).as(PackageManagerType.class).orElse(PackageManagerType.PIP)) && renderedCommand.startsWith("./bin/python")) {
                     renderedCommand = renderedCommand.replace("./bin/python", "./.venv/bin/python");
                 }
-                
+
                 // renderer.add(runContext.render(command, additionalVars) + argsString);
                 renderer.add(renderedCommand);
             }

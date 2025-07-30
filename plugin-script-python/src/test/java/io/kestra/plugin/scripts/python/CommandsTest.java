@@ -12,6 +12,7 @@ import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.tenant.TenantService;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+import io.kestra.plugin.scripts.python.internals.PackageManagerType;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.apache.commons.io.IOUtils;
@@ -73,59 +74,74 @@ class CommandsTest {
     }
 
     @Test
-    void taskWithUv() throws Exception {
+    void testPipPackageManager() throws Exception {
         List<LogEntry> logs = new ArrayList<>();
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
-    
-        String script = "import sys; print('uv test:', sys.version)";
-        URI put = storageInterface.put(
-            TenantService.MAIN_TENANT,
-            null,
-            new URI("/file/storage/uv_test.py"),
-            IOUtils.toInputStream(script, StandardCharsets.UTF_8)
-        );
-    
+
+        String script = "import requests, idna; print(f'requests: {requests.__version__}, idna: {idna.__version__}')";
+        URI put = storageInterface.put(TenantService.MAIN_TENANT, null, new URI("/file/storage/pip_test.py"), IOUtils.toInputStream(script, StandardCharsets.UTF_8));
+
         Commands task = Commands.builder()
-            .id("unit-test-uv")
-            .commands(Property.of(List.of("python " + put.toString())))
-            .useUv(true)
+            .id("test-pip")
+            .type(Commands.class.getName())
+            .commands(Property.ofValue(List.of("python " + put.toString())))
+            .packageManager(Property.ofValue(PackageManagerType.PIP))
+            .dependencies(Property.ofValue(List.of("requests", "idna")))
             .build();
-    
+
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());
         ScriptOutput run = task.run(runContext);
-    
+
         assertThat(run.getExitCode(), is(0));
-        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("uv test:"));
+        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("requests:"));
         receive.blockLast();
-        assertThat(logs.stream().anyMatch(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("uv test:")), is(true));
     }
-    
+
     @Test
-    void taskWithClassicPip() throws Exception {
+    void testUvPackageManager() throws Exception {
         List<LogEntry> logs = new ArrayList<>();
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
-    
-        String script = "import sys; print('classic pip test:', sys.version)";
-        URI put = storageInterface.put(
-            TenantService.MAIN_TENANT,
-            null,
-            new URI("/file/storage/classic_test.py"),
-            IOUtils.toInputStream(script, StandardCharsets.UTF_8)
-        );
-    
+
+        String script = "import requests; print(f'requests (UV): {requests.__version__}')";
+        URI put = storageInterface.put(TenantService.MAIN_TENANT, null, new URI("/file/storage/uv_test.py"), IOUtils.toInputStream(script, StandardCharsets.UTF_8));
+
         Commands task = Commands.builder()
-            .id("unit-test-classic")
-            .commands(Property.of(List.of("python " + put.toString())))
-            .useUv(false)
+            .id("test-uv")
+            .type(Commands.class.getName())
+            .commands(Property.ofValue(List.of("python " + put.toString())))
+            .dependencies(Property.ofValue(List.of("requests")))
+            .packageManager(Property.ofValue(PackageManagerType.UV))
             .build();
-    
+
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());
         ScriptOutput run = task.run(runContext);
-    
+
         assertThat(run.getExitCode(), is(0));
-        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("classic pip test:"));
+        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("uv test worked"));
         receive.blockLast();
-        assertThat(logs.stream().anyMatch(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("classic pip test:")), is(true));
     }
-    
+
+    @Test
+    void testBackwardCompatibility() throws Exception {
+        List<LogEntry> logs = new ArrayList<>();
+        Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
+
+        String script = "print('backward compatibility works')";
+        URI put = storageInterface.put(TenantService.MAIN_TENANT, null, new URI("/file/storage/compat_test.py"), IOUtils.toInputStream(script, StandardCharsets.UTF_8));
+
+        Commands task = Commands.builder()
+            .id("test-compat")
+            .type(Commands.class.getName())
+            .commands(Property.ofValue(List.of("python " + put.toString())))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());
+        ScriptOutput run = task.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("backward compatibility works"));
+        receive.blockLast();
+
+        assertThat(logs.stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains("backward compatibility works")), is(true));
+    }
 }
