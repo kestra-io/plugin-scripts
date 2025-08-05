@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts.julia;
+package io.kestra.plugin.scripts.groovy;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
@@ -12,6 +12,7 @@ import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
+import io.kestra.plugin.scripts.runner.docker.Docker;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -27,38 +28,54 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Julia script."
+    title = "Execute a Groovy script."
 )
 @Plugin(examples = {
     @Example(
+        title = "Create a Groovy script and execute it.",
         full = true,
-        title = "Create a Julia script, install required packages and execute it. Note that instead of defining the script inline, you could create the Julia script in the embedded VS Code editor and read its content using the `{{ read('your_script.jl') }}` function.",
         code = """
-            id: julia_script
+            id: groovy_script
             namespace: company.team
 
             tasks:
               - id: script
-                type: io.kestra.plugin.scripts.julia.Script
+                type: io.kestra.plugin.scripts.groovy.Script
                 script: |
-                  using DataFrames, CSV
-                  df = DataFrame(Name = ["Alice", "Bob", "Charlie"], Age = [25, 30, 35])
-                  CSV.write("output.csv", df)
-                outputFiles:
-                  - output.csv
-                beforeCommands:
-                  - julia -e 'using Pkg; Pkg.add("DataFrames"); Pkg.add("CSV")'
+                  println "Hello, World!"
             """
-    )
+    ),
+    @Example(
+        title = "Fetch data from an API and save it to a file.",
+        full = true,
+        code = """
+            id: groovy_api_fetch
+            namespace: company.team
+
+            tasks:
+              - id: groovy_script
+                type: io.kestra.plugin.scripts.groovy.Script
+                outputFiles:
+                  - users.json
+                script: |
+                  import groovy.json.JsonOutput
+
+                  def url = "https://jsonplaceholder.typicode.com/users"
+                  def users = new URL(url).text
+
+                  new File("users.json").write(JsonOutput.prettyPrint(users))
+                  println "Successfully fetched users and created users.json"
+            """
+    ),
 })
 public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
-    private static final String DEFAULT_IMAGE = "julia";
+    private static final String DEFAULT_IMAGE = "groovy";
 
     @Builder.Default
-    protected Property<String> containerImage = Property.of(DEFAULT_IMAGE);
+    protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command such as `julia myscript.jl`, use the `Commands` task instead."
+        title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file."
     )
     @NotNull
     protected Property<String> script;
@@ -70,6 +87,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
             builder.image(runContext.render(this.getContainerImage()).as(String.class).orElse(null));
         }
 
+        builder.user("root");
         return builder.build();
     }
 
@@ -78,23 +96,27 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         CommandsWrapper commands = this.commands(runContext);
 
         Map<String, String> inputFiles = FilesService.inputFiles(runContext, commands.getTaskRunner().additionalVars(runContext, commands), this.getInputFiles());
-        Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(".jl"));
+        Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(".groovy"));
         inputFiles.put(
             relativeScriptPath.toString(),
-            commands.render(runContext, script)
+            commands.render(runContext, this.script)
         );
         commands = commands.withInputFiles(inputFiles);
 
         TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
-
         return commands
-            .withTargetOS(os)
             .withInterpreter(this.interpreter)
             .withBeforeCommands(beforeCommands)
             .withBeforeCommandsWithOptions(true)
-            .withCommands(Property.of(List.of(
-                String.join(" ", "julia", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
+            .withTaskRunner(
+                // because of, we are mounting a volume and the uid running Docker is not 1000, so it should run as user root (-u root).
+                Docker.builder()
+                    .user("root")
+                    .build())
+            .withCommands(Property.ofValue(List.of(
+                String.join(" ", "groovy", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
             )))
+            .withTargetOS(os)
             .run();
     }
 }

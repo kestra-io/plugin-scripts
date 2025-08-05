@@ -11,6 +11,7 @@ import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+
 import java.util.List;
 
 @SuperBuilder

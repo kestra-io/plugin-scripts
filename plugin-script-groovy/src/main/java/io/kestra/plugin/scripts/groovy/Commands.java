@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts.powershell;
+package io.kestra.plugin.scripts.groovy;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
@@ -15,7 +15,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-import java.util.Collections;
 import java.util.List;
 
 @SuperBuilder
@@ -24,33 +23,57 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute PowerShell commands.",
-    description = "Note that instead of adding the script using the inputFiles property, you can also add the script from the embedded VS Code editor and point to its location by path. If you do so, make sure to enable namespace files by setting the enabled flag of the namespaceFiles property to true."
+    title = "Execute Groovy commands from the CLI."
 )
 @Plugin(examples = {
     @Example(
         full = true,
-        title = "Execute PowerShell commands.",
+        title = "Execute a Groovy command.",
         code = """
-            id: execute_powershell_commands
+            id: groovy_commands
             namespace: company.team
 
             tasks:
-              - id: powershell
-                type: io.kestra.plugin.scripts.powershell.Commands
-                inputFiles:
-                  main.ps1: |
-                    'Hello, World!' | Write-Output
+              - id: commands
+                type: io.kestra.plugin.scripts.groovy.Commands
                 commands:
-                  - ./main.ps1
+                  - groovy --version
+            """
+    ),
+    @Example(
+        full = true,
+        title = "Run a Groovy script with dependencies managed by Grape.",
+        code = """
+            id: groovy_commands_with_dependencies
+            namespace: company.team
+
+            tasks:
+              - id: groovy_commands
+                type: io.kestra.plugin.scripts.groovy.Commands
+                commands:
+                  - |
+                    groovy -e '
+                      @Grab("info.picocli:picocli:4.7.5")
+                      import picocli.CommandLine
+                      @CommandLine.Command(name = "hello")
+                      class HelloWorld implements Runnable {
+                        @CommandLine.Parameters(paramLabel = "NAME", defaultValue = "Kestra")
+                        String name
+                        void run() {
+                           println "Hello, $name!"
+                        }
+                      }
+
+                      new CommandLine(new HelloWorld()).execute("Kestra")
+                    '
             """
     )
 })
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
-    private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/powershell:latest";
+    private static final String DEFAULT_IMAGE = "groovy";
 
     @Builder.Default
-    protected Property<String> containerImage = Property.of(DEFAULT_IMAGE);
+    protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
         title = "The commands to run."
@@ -58,22 +81,12 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
     @NotNull
     protected Property<List<String>> commands;
 
-    @Builder.Default
-    @Schema(
-        title = "Which interpreter to use."
-    )
-    protected Property<List<String>> interpreter = Property.of(List.of("pwsh", "-NoProfile", "-NonInteractive", "-Command"));
-
     @Override
     protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
         var builder = original.toBuilder();
         if (original.getImage() == null) {
-            builder.image(runContext.render(this.getContainerImage()).as(String.class).orElse(DEFAULT_IMAGE));
+            builder.image(runContext.render(this.getContainerImage()).as(String.class).orElse(null));
         }
-        if (original.getEntryPoint() == null) {
-            builder.entryPoint(Collections.emptyList());
-        }
-
         return builder.build();
     }
 
@@ -83,14 +96,10 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
 
         return this.commands(runContext)
             .withInterpreter(this.interpreter)
-            .withBeforeCommands(Property.of(getBeforeCommandsWithOptions(runContext)))
+            .withBeforeCommands(beforeCommands)
+            .withBeforeCommandsWithOptions(true)
             .withCommands(commands)
             .withTargetOS(os)
             .run();
-    }
-
-    @Override
-    protected List<String> getExitOnErrorCommands(RunContext runContext) throws IllegalVariableEvaluationException {
-        return List.of("$ErrorActionPreference = \"Stop\"");
     }
 }
