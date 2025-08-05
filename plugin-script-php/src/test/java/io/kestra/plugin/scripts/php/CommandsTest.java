@@ -22,6 +22,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -59,7 +60,7 @@ public class CommandsTest {
         );
 
         var phpCommands = Commands.builder()
-            .id("unit-test")
+            .id("php-commands-" + UUID.randomUUID())
             .type(Commands.class.getName())
             .commands(Property.ofValue(List.of("php " + phpScript.toString())))
             .build();

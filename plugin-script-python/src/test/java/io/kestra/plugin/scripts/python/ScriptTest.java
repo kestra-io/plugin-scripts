@@ -24,12 +24,11 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @KestraTest
@@ -51,7 +50,7 @@ class ScriptTest {
     @MethodSource("source")
     void task(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Script python = Script.builder()
-            .id("unit-test")
+            .id("python-script-" + UUID.randomUUID())
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
@@ -70,7 +69,7 @@ class ScriptTest {
     @MethodSource("source")
     void failed(RunnerType runner, DockerOptions dockerOptions) {
         Script python = Script.builder()
-            .id("test-python-task")
+            .id("python-script-failed-" + UUID.randomUUID())
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
@@ -90,7 +89,7 @@ class ScriptTest {
     @MethodSource("source")
     void requirements(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Script python = Script.builder()
-            .id("test-python-task")
+            .id("python-script-requirements-" + UUID.randomUUID())
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
@@ -115,7 +114,7 @@ class ScriptTest {
     @MethodSource("source")
     void shouldExecScriptGivenDependency(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Script python = Script.builder()
-            .id("test-python-task")
+            .id("python-script-deps-" + UUID.randomUUID())
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
@@ -157,7 +156,7 @@ class ScriptTest {
         );
 
         Script python = Script.builder()
-            .id("test-python-task")
+            .id("python-script-inputs-" + UUID.randomUUID())
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
@@ -179,7 +178,7 @@ class ScriptTest {
     @MethodSource("source")
     void multiline(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Script python = Script.builder()
-            .id("unit-test")
+            .id("python-script-multiline-" + UUID.randomUUID())
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
@@ -205,7 +204,7 @@ class ScriptTest {
     @MethodSource("source")
     void emptyScript(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Script python = Script.builder()
-            .id("unit-test")
+            .id("python-empty-script-" + UUID.randomUUID())
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
@@ -226,7 +225,7 @@ class ScriptTest {
     @MethodSource("source")
     void kestraLibs(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Script python = Script.builder()
-            .id("test-python-task")
+            .id("python-kestra-libs-" + UUID.randomUUID())
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)

@@ -1,10 +1,10 @@
 package io.kestra.plugin.scripts.powershell;
 
 import com.google.common.collect.ImmutableMap;
+import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
-import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
@@ -13,7 +13,6 @@ import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.tenant.TenantService;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.core.junit.annotations.KestraTest;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.apache.commons.io.IOUtils;
@@ -25,6 +24,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -58,7 +58,7 @@ class CommandsTest {
         );
 
         Commands powershellCommands = Commands.builder()
-            .id("unit-test")
+            .id("powershell-commands-" + UUID.randomUUID())
             .type(Commands.class.getName())
             .commands(Property.of(List.of("pwsh " + put.toString())))
             .build();
@@ -78,7 +78,7 @@ class CommandsTest {
     @Test
     void shouldExitOnFirstError() {
         Commands powershellCommands = Commands.builder()
-            .id("unit-test")
+            .id("powershell-should-exit-" + UUID.randomUUID())
             .type(Commands.class.getName())
             .commands(Property.of(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\"")))
             .failFast(Property.of(true))
@@ -91,7 +91,7 @@ class CommandsTest {
     @Test
     void shouldNotExitOnFirstError() throws Exception {
         Commands powershellCommands = Commands.builder()
-            .id("unit-test")
+            .id("powershell-should-not-exit-" + UUID.randomUUID())
             .type(Commands.class.getName())
             .commands(Property.of(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\"")))
             .failFast(Property.of(false))

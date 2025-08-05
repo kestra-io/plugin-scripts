@@ -12,7 +12,6 @@ import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.tenant.TenantService;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.go.Commands;
-import io.kestra.plugin.scripts.go.Script;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.apache.commons.io.IOUtils;
@@ -24,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -64,7 +64,7 @@ public class CommandsTest {
         inputFiles.put("go_script.go", goScript.toString());
 
         var commands = Commands.builder()
-            .id("go_commands")
+            .id("go-commands-" + UUID.randomUUID())
             .type(Commands.class.getName())
             .allowWarning(true)
             .inputFiles(inputFiles)
