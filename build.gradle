@@ -8,6 +8,7 @@ plugins {
     id "com.github.ben-manes.versions" version "0.52.0"
     id 'net.researchgate.release' version '3.1.0'
     id "com.vanniktech.maven.publish" version "0.33.0"
+    id "io.kestra.gradle.inject-bom-versions" version "1.0.0"
 }
 
 def isBuildSnapshot = version.toString().endsWith("-SNAPSHOT")
@@ -178,6 +179,7 @@ subprojects { Project subproject ->
     apply plugin: "com.adarshr.test-logger"
     apply plugin: "signing"
     apply plugin: "com.vanniktech.maven.publish"
+    apply plugin: "io.kestra.gradle.inject-bom-versions"
 
     if (subproject.path != ":plugin-script") {
         apply plugin: "com.github.johnrengelman.shadow"
