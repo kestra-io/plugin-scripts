@@ -49,7 +49,7 @@ import lombok.experimental.SuperBuilder;
                       URI uri = new URI(runContext.variables.outputs.download.uri)
                       InputStream istream = runContext.storage().getFile(uri)
                       logger.info('Content: {}', istream.text)
-                  """
+                """
             ),
         @Example(
             code = """
