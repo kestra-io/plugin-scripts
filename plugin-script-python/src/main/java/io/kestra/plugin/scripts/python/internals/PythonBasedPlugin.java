@@ -18,20 +18,20 @@ public interface PythonBasedPlugin extends Plugin {
     @Schema(
         title = "The script dependencies."
     )
-    @PluginProperty(beta = true)
+    @PluginProperty
     Property<List<String>> getDependencies();
 
     @Schema(
         title = "The version of Python to use for the script.",
-        description = "If no version is explicitly specified, the task will attempt to extract the version from the configured container image or from the local python installation depending on configured task runner. If it cannot determine the version, the task will default to Python '"+ DEFAULT_PYTHON_VERSION +" '"
+        description = "If no version is explicitly specified, the task will attempt to extract the version from the configured container image or from the local python installation depending on configured task runner. If it cannot determine the version, the task will default to Python '" + DEFAULT_PYTHON_VERSION + " '"
     )
-    @PluginProperty(beta = true)
+    @PluginProperty
     Property<String> getPythonVersion();
 
     @Schema(
         title = "Enable Python dependency caching",
         description = "When enabled, Python dependencies will be cached across task executions. This locks dependency versions and speeds up subsequent runs by avoiding redundant installations."
     )
-    @PluginProperty(beta = true)
+    @PluginProperty
     Property<Boolean> getDependencyCacheEnabled();
 }
