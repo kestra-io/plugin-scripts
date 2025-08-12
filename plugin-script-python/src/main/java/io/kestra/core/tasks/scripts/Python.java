@@ -244,7 +244,6 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
                     renderedCommand = renderedCommand.replace("./bin/python", "./.venv/bin/python");
                 }
 
-                // renderer.add(runContext.render(command, additionalVars) + argsString);
                 renderer.add(renderedCommand);
             }
 
