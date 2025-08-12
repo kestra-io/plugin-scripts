@@ -69,6 +69,11 @@ import java.util.Map;
                   type: io.kestra.plugin.scripts.python.Commands
                   namespaceFiles:
                     enabled: true
+                    folderPerNamespace: true
+                    namespaces:
+                      - company
+                      - company.team
+                      - company.team.project # Explicitly name all namespaces to include; by default only the flow namespace is loaded.
                     include:
                       - etl_script.py
                   taskRunner:
