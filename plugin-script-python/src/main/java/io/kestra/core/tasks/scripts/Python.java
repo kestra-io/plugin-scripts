@@ -5,8 +5,10 @@ import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.scripts.python.internals.PackageManagerType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -55,7 +57,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
             code = """
                 id: python_flow
                 namespace: company.team
-                
+
                 tasks:
                   - id: python
                     type: io.kestra.core.tasks.scripts.Python
@@ -86,7 +88,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
             code = """
                 id: python_flow
                 namespace: company.team
-                
+
                 tasks:
                   - id: python
                     type: io.kestra.core.tasks.scripts.Python
@@ -146,18 +148,35 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
     @Builder.Default
     protected Boolean virtualEnv = true;
 
+    @Schema(
+        title = "Package manager for Python dependencies",
+        description = "Package manager to use for installing Python dependencies. " +
+            "Options: 'UV' (default), 'PIP'. ",
+        allowableValues = {"PIP", "UV"}
+    )
+    @Builder.Default
+    protected Property<PackageManagerType> packageManager = Property.ofValue(PackageManagerType.PIP);
+
     protected String virtualEnvCommand(RunContext runContext, List<String> requirements) throws IllegalVariableEvaluationException {
         List<String> renderer = new ArrayList<>();
+        var rPackageManager = PackageManagerType.UV.equals(runContext.render(packageManager).as(PackageManagerType.class).orElse(PackageManagerType.UV));
 
         if (runContext.render(this.exitOnFailed).as(Boolean.class).orElseThrow()) {
             renderer.add("set -o errexit");
         }
-        renderer.add(this.pythonPath + " -m venv --system-site-packages " + workingDirectory + " > /dev/null");
 
-        if (requirements != null) {
-            renderer.addAll(Arrays.asList(
+        if (rPackageManager) {
+            renderer.add("uv venv --system-site-packages .venv > /dev/null");
+            if (requirements != null && !requirements.isEmpty()) {
+                renderer.add("./.venv/bin/uv pip install " + runContext.render(String.join(" ", requirements), additionalVars) + " > /dev/null");
+            }
+        } else {
+            renderer.add(this.pythonPath + " -m venv --system-site-packages " + workingDirectory + " > /dev/null");
+            if (requirements != null && !requirements.isEmpty()) {
+                renderer.addAll(Arrays.asList(
                 "./bin/pip install pip --upgrade > /dev/null",
                 "./bin/pip install " + runContext.render(String.join(" ", requirements), additionalVars) + " > /dev/null"));
+            }
         }
 
         return String.join("\n", renderer);
@@ -202,6 +221,7 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
         Map<String, String> finalInputFiles = this.finalInputFiles(runContext);
+        var rPackageManager = PackageManagerType.UV.equals(runContext.render(packageManager).as(PackageManagerType.class).orElse(PackageManagerType.UV));
 
         if (!finalInputFiles.containsKey("main.py") && this.commands.size() == 1 && this.commands.get(0).equals("./bin/python main.py")) {
             throw new Exception("Invalid input files structure, expecting inputFiles property to contain at least a main.py key with python code value.");
@@ -218,7 +238,12 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
             for (String command : commands) {
                 String argsString = args == null ? "" : " " + runContext.render(String.join(" ", args), additionalVars);
 
-                renderer.add(runContext.render(command, additionalVars) + argsString);
+                String renderedCommand = runContext.render(command, additionalVars) + argsString;
+                if (rPackageManager && renderedCommand.startsWith("./bin/python")) {
+                    renderedCommand = renderedCommand.replace("./bin/python", "./.venv/bin/python");
+                }
+
+                renderer.add(renderedCommand);
             }
 
             return String.join("\n", renderer);
