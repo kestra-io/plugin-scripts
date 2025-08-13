@@ -1,8 +1,11 @@
 package io.kestra.plugin.scripts.python;
 
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
+import io.kestra.plugin.scripts.python.internals.PackageManagerType;
 import io.kestra.plugin.scripts.python.internals.PythonBasedPlugin;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,4 +29,14 @@ public abstract class AbstractPythonExecScript extends AbstractExecScript implem
 
     protected Property<Boolean> dependencyCacheEnabled = Property.of(true);
 
+    @Schema(
+        title = "Package manager for Python dependencies",
+        description = "Package manager to use for installing Python dependencies. " +
+            "Options: 'uv' (default), 'pip'. " +
+            "UV automatically falls back to PIP if not available.",
+        allowableValues = {"PIP", "UV"}
+    )
+    @PluginProperty
+    @Builder.Default
+    protected Property<PackageManagerType> packageManager = Property.ofValue(PackageManagerType.UV);
 }
