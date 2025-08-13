@@ -279,6 +279,7 @@ import java.util.Map;
                 tasks:
                   - id: generate_output
                     type: io.kestra.plugin.scripts.python.Script
+                    packageManager: PIP
                     dependencies:
                       - kestra
                     script: |
