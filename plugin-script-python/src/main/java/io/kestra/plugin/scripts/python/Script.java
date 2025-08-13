@@ -271,8 +271,9 @@ import java.util.Map;
                 tasks:
                   - id: generate_output
                     type: io.kestra.plugin.scripts.python.Script
-                    beforeCommands:
-                      - pip install kestra
+                    packageManager: PIP
+                    dependencies:
+                      - kestra
                     script: |
                       from kestra import Kestra
 

@@ -40,36 +40,42 @@ public class PythonDependenciesResolver {
     private static final String PATH_ENV = System.getenv("PATH");
     private static final String WORKING_DIR_ADDITIONAL_PYTHON_LIB = ".kestra_additional_python_lib";
 
-    private final Logger logger;
-    private final WorkingDir workingDir;
+    protected final Logger logger;
+    protected final WorkingDir workingDir;
     private final Path localCacheDir;
     private String uvCmd;
+    private final PackageManagerType packageManagerType;
 
     /**
      * Creates a new {@link PythonDependenciesResolver} instance.
      *
+     * @param logger The logger instance.
      * @param workingDir The {@link WorkingDir}.
+     * @param localCacheDir The local cache directory.
+     * @param packageManagerType The package manager type to use.
      */
-    public PythonDependenciesResolver(final Logger logger, final WorkingDir workingDir, final Path localCacheDir) {
+    public PythonDependenciesResolver(final Logger logger, final WorkingDir workingDir, final Path localCacheDir, final PackageManagerType packageManagerType) {
         this.workingDir = Objects.requireNonNull(workingDir, "workingDir cannot be null");
         this.logger = Objects.requireNonNull(logger, "logger cannot be null");
         this.localCacheDir = Objects.requireNonNull(localCacheDir, "localCacheDir cannot be null");
+        this.packageManagerType = Objects.requireNonNull(packageManagerType, "packageManagerType cannot be null");
     }
 
     /**
-     * Gets the path for the python interpreter.
+     * Gets the path for the Python interpreter.
      *
-     * @param version The python version.
-     * @return The path to the python interpreter.
+     * Uses different logic based on the `packageManager` property.
+     * - If packageManager is 'UV': attempts to find and install the specified Python version.
+     * - If packageManager is 'PIP': tries to find a system-wide Python interpreter.
+     *
+     * @param version The desired Python version (may be null).
+     * @return The path to the Python interpreter.
+     * @throws KestraRuntimeException If a suitable interpreter cannot be found or installed.
      */
     public String getPythonPath(final String version) {
-        Optional<String> pythonPath = findPython(version);
-        if (pythonPath.isEmpty()) {
-            installPython(version);
-            pythonPath = findPython(version);
-        }
-        return pythonPath.orElseThrow(() -> new KestraRuntimeException("Could not find or install Python '" + version + "'path"));
+        return packageManagerType.getPythonPath(this, version);
     }
+
 
     /**
      * Finds the version of the local Python installation.
@@ -78,6 +84,24 @@ public class PythonDependenciesResolver {
      *         if Python is installed and the version can be determined; otherwise, an empty {@link Optional}
      */
     public Optional<String> findLocalPythonVersion() {
+        if (packageManagerType == PackageManagerType.PIP) {
+            logger.debug("Find local python version using system python");
+            try {
+                ExecExitStatus execExitStatus = execCommandAndGetStdOut(List.of("python3", "--version"));
+                if (execExitStatus.isSuccess()) {
+                    return execExitStatus.stdOuts().stream().findFirst()
+                        .map(version -> version.replaceFirst("Python ", ""));
+                }
+                return Optional.empty();
+            } catch (IOException | InterruptedException e) {
+                if (e instanceof InterruptedException) {
+                    Thread.currentThread().interrupt();
+                }
+                logger.debug("Failed to get python version", e);
+                return Optional.empty();
+            }
+        }
+
         Optional<String> python = findPython(null);
         if (python.isPresent()) {
             logger.debug("Find local python version");
@@ -155,64 +179,25 @@ public class PythonDependenciesResolver {
         );
     }
 
-    private static String getRequirementTxtFilename(String hash) {
+    protected static String getRequirementTxtFilename(String hash) {
         // Prefix with 'hash' to avoid file name collision
         return hash + "-" + ResolvedPythonPackages.REQUIREMENTS_TXT;
     }
 
     public ResolvedPythonPackages getPythonLibs(final String version, final String hash, final List<String> requirements) throws IOException {
-        final String pythonPath = getPythonPath(version);
         final Path pythonLibDir = workingDir.resolve(Path.of(WORKING_DIR_ADDITIONAL_PYTHON_LIB));
 
-        Path in = createRequirementInFileAndGetPath(version, hash, requirements);
-
-        logger.debug("Compiling dependencies");
-        Path req = workingDir.createFile(getRequirementTxtFilename(hash));
-
-        try {
-            execCommandAndGetStdOut(
-                List.of(getUvCmd(), "pip", "compile",
-                    "--quiet",
-                    "--no-color",
-                    "--no-config",
-                    "--no-header",
-                    "--strip-extras",
-                    "--output-file", req.toString(),
-                    "--python", pythonPath,
-                    "--cache-dir", getUvCacheDir(),
-                    in.toString()
-                )
-            );
-        } catch (IOException | InterruptedException e) {
-            if (e instanceof InterruptedException)  {
-                Thread.currentThread().interrupt();
+        if (!packageManagerType.isAvailable(this)) {
+            if (packageManagerType == PackageManagerType.UV) {
+                logger.warn("UV not available, falling back to PIP");
+                PackageManagerType fallback = PackageManagerType.PIP;
+                String pythonPath = fallback.getPythonPath(this, version);
+                return fallback.installPackages(this, pythonPath, version, hash, requirements, pythonLibDir);
             }
-            throw new KestraRuntimeException("Failed to wait for 'uv pip compile' command. Error " + e.getMessage());
         }
 
-        logger.debug("Installing packages");
-        try {
-            execCommandAndGetStdOut(
-                List.of(getUvCmd(), "pip", "install",
-                    "--quiet",
-                    "--no-color",
-                    "--no-config",
-                    "--link-mode", "copy",
-                    "--reinstall",
-                    "--index-strategy", "unsafe-best-match",
-                    "--target=" + pythonLibDir,
-                    "--requirement=" + req,
-                    "--python", pythonPath,
-                    "--cache-dir", getUvCacheDir()
-                )
-            );
-        } catch (IOException | InterruptedException e) {
-            if (e instanceof InterruptedException)  {
-                Thread.currentThread().interrupt();
-            }
-            throw new KestraRuntimeException("Failed to wait for uv pip install command. Error " + e.getMessage());
-        }
-        return new ResolvedPythonPackages(pythonLibDir, req, hash, version);
+        String pythonPath = getPythonPath(version);
+        return packageManagerType.installPackages(this, pythonPath, version, hash, requirements, pythonLibDir);
     }
 
     public Path createRequirementInFileAndGetPath(String version, String hash, List<String> requirements) throws IOException {
@@ -252,7 +237,7 @@ public class PythonDependenciesResolver {
         return inReqList;
     }
 
-    private ExecExitStatus execCommandAndGetStdOut(List<String> command) throws IOException, InterruptedException {
+    protected ExecExitStatus execCommandAndGetStdOut(List<String> command) throws IOException, InterruptedException {
         return execCommandAndGetStdOut(command, null);
     }
 
@@ -282,7 +267,7 @@ public class PythonDependenciesResolver {
         return new ExecExitStatus(exitCode, outs);
     }
 
-    private String getUvCmd() {
+    protected String getUvCmd() {
         if (this.uvCmd != null) {
             return this.uvCmd;
         }
@@ -346,18 +331,24 @@ public class PythonDependenciesResolver {
                 }
             }
         }
+
         if (version != null) {
             logger.debug("Use uv: {}", version);
+            return this.uvCmd;
+        } else {
+            throw new KestraRuntimeException(
+                "'uv' command could not be found or installed. " +
+                "Please ensure 'uv' is available in PATH or installable on this worker."
+            );
         }
-        return this.uvCmd;
     }
 
-    private String getUvVersion(String uvCmd) throws IOException, InterruptedException {
+    protected String getUvVersion(String uvCmd) throws IOException, InterruptedException {
         ExecExitStatus execStatus = execCommandAndGetStdOut(List.of(uvCmd, "--version"), null);
         return execStatus.isSuccess() ? execStatus.stdOuts.getFirst() : null;
     }
 
-    private boolean installPython(String version) {
+    protected boolean installPython(String version) {
         logger.debug("Installing Python '{}' environment", version);
 
         // Only use managed Python installations; never use system Python installations
@@ -391,7 +382,7 @@ public class PythonDependenciesResolver {
         return exec.isSuccess();
     }
 
-    private Optional<String> findPython(final String version) {
+    protected Optional<String> findPython(final String version) {
 
         List<String> command;
         if (version != null) {
@@ -438,7 +429,7 @@ public class PythonDependenciesResolver {
         return localCacheDir.resolve("python").toString();
     }
 
-    private String getUvCacheDir() {
+    protected String getUvCacheDir() {
         return localCacheDir.resolve("uv").toString();
     }
 
