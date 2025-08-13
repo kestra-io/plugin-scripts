@@ -32,9 +32,11 @@ public abstract class AbstractPythonExecScript extends AbstractExecScript implem
     @Schema(
         title = "Package manager for Python dependencies",
         description = "Package manager to use for installing Python dependencies. " +
-            "Options: 'UV' (default), 'PIP'. ",
+            "Options: 'uv' (default), 'pip'. " +
+            "UV automatically falls back to PIP if not available.",
         allowableValues = {"PIP", "UV"}
     )
+    @PluginProperty
     @Builder.Default
     protected Property<PackageManagerType> packageManager = Property.ofValue(PackageManagerType.UV);
 }

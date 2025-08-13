@@ -54,9 +54,9 @@ public class PythonDependenciesResolver {
     /**
      * Gets the path for the Python interpreter.
      *
-     * Uses different logic based on the `useUv` flag.
-     * - If useUv is true: attempts to find and install the specified Python version.
-     * - If useUv is false: tries to find a system-wide Python interpreter.
+     * Uses different logic based on the `packageManager` property.
+     * - If packageManager is 'UV': attempts to find and install the specified Python version.
+     * - If packageManager is 'PIP': tries to find a system-wide Python interpreter.
      *
      * @param version The desired Python version (may be null).
      * @return The path to the Python interpreter.

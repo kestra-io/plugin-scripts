@@ -3,7 +3,6 @@ package io.kestra.plugin.scripts.python;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
-import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
@@ -15,7 +14,6 @@ import io.kestra.plugin.scripts.python.internals.PythonEnvironmentManager;
 import io.kestra.plugin.scripts.python.internals.PythonEnvironmentManager.ResolvedPythonEnvironment;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -256,7 +254,7 @@ import java.util.Map;
                                 }
                             }
                           }
-                """
+              """
     ),
     @Example(
         full = true,
@@ -267,6 +265,7 @@ import java.util.Map;
             tasks:
               - id: python
                 type: io.kestra.plugin.scripts.python.Commands
+                packageManager: UV
                 inputFiles:
                   main.py: |
                     import requests
