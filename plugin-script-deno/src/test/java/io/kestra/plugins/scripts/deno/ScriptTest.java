@@ -16,9 +16,9 @@ import jakarta.inject.Named;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -35,7 +35,7 @@ public class ScriptTest {
 
     @Test
     void script() throws Exception {
-        List<LogEntry> logs = new ArrayList<>();
+        List<LogEntry> logs = new CopyOnWriteArrayList<>();
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         Script script = Script.builder()
@@ -52,6 +52,6 @@ public class ScriptTest {
         String expectedLog = "Hello from deno script.";
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains(expectedLog));
         receive.blockLast();
-        assertThat(logs.stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains(expectedLog)), is(true));
+        assertThat(List.copyOf(logs).stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains(expectedLog)), is(true));
     }
 }
