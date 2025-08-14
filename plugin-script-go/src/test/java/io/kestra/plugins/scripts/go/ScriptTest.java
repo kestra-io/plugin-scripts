@@ -17,9 +17,9 @@ import jakarta.inject.Named;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -38,14 +38,14 @@ public class ScriptTest {
 
     @Test
     void should_print_hello_there() throws Exception {
-        List<LogEntry> logs = new ArrayList<>();
+        List<LogEntry> logs = new CopyOnWriteArrayList<>();
         var receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         var script = Script.builder()
             .id("go-script-" + UUID.randomUUID())
             .type(Script.class.getName())
             .allowWarning(true)
-            .script(Property.of("""
+            .script(Property.ofValue("""
                     package main
                     import "fmt"
                     func main() {
@@ -63,7 +63,7 @@ public class ScriptTest {
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("hello there!"));
         receive.blockLast();
-        assertThat(logs.stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("hello there!")).count(), is(1L));
+        assertThat(List.copyOf(logs).stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("hello there!")).count(), is(1L));
     }
 
     @Test
@@ -73,7 +73,7 @@ public class ScriptTest {
             .id("go_script")
             .type(Script.class.getName())
             .allowWarning(true)
-            .script(Property.of("""
+            .script(Property.ofValue("""
                     package main
                     import (
                         "os"
@@ -89,8 +89,8 @@ public class ScriptTest {
                         defer file.Close()
                     }
                 """))
-            .outputFiles(Property.of(List.of(outputFile)))
-            .beforeCommands(Property.of(List.of(
+            .outputFiles(Property.ofValue(List.of(outputFile)))
+            .beforeCommands(Property.ofValue(List.of(
                 "go mod init go_script",
                 "go get github.com/go-gota/gota",
                 "go mod tidy"

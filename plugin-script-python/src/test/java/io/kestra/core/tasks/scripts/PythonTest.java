@@ -26,7 +26,6 @@ class PythonTest {
     @Inject
     RunContextFactory runContextFactory;
 
-
     @Test
     void run() throws Exception {
         RunContext runContext = runContextFactory.of();
@@ -61,7 +60,6 @@ class PythonTest {
         RunnableTaskException pythonException = assertThrows(RunnableTaskException.class, () -> {
             python.run(runContext);
         });
-
 
         assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) pythonException.getOutput()).getExitCode(), is(1));
         assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) pythonException.getOutput()).getStdOutLineCount(), is(0));

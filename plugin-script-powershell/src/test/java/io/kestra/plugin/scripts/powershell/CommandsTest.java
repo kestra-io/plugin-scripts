@@ -22,9 +22,9 @@ import reactor.core.publisher.Flux;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -44,7 +44,7 @@ class CommandsTest {
 
     @Test
     void task() throws Exception {
-        List<LogEntry> logs = new ArrayList<>();
+        List<LogEntry> logs = new CopyOnWriteArrayList<>();
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         URI put = storageInterface.put(
@@ -60,7 +60,7 @@ class CommandsTest {
         Commands powershellCommands = Commands.builder()
             .id("powershell-commands-" + UUID.randomUUID())
             .type(Commands.class.getName())
-            .commands(Property.of(List.of("pwsh " + put.toString())))
+            .commands(Property.ofValue(List.of("pwsh " + put.toString())))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, powershellCommands, ImmutableMap.of());
@@ -72,7 +72,7 @@ class CommandsTest {
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains(put.getPath()));
         receive.blockLast();
-        assertThat(logs.stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("FileVersion:")).count(), is(1L));
+        assertThat(List.copyOf(logs).stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("FileVersion:")).count(), is(1L));
     }
 
     @Test
@@ -80,12 +80,12 @@ class CommandsTest {
         Commands powershellCommands = Commands.builder()
             .id("powershell-should-exit-" + UUID.randomUUID())
             .type(Commands.class.getName())
-            .commands(Property.of(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\"")))
-            .failFast(Property.of(true))
+            .commands(Property.ofValue(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\"")))
+            .failFast(Property.ofValue(true))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, powershellCommands, ImmutableMap.of());
-        Assertions.assertThrows(RunnableTaskException.class, () ->  powershellCommands.run(runContext));
+        Assertions.assertThrows(RunnableTaskException.class, () -> powershellCommands.run(runContext));
     }
 
     @Test
@@ -93,8 +93,8 @@ class CommandsTest {
         Commands powershellCommands = Commands.builder()
             .id("powershell-should-not-exit-" + UUID.randomUUID())
             .type(Commands.class.getName())
-            .commands(Property.of(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\"")))
-            .failFast(Property.of(false))
+            .commands(Property.ofValue(List.of("Get-ChildItem -Path \"NonexistentPath\"", "echo \"This is a message\"")))
+            .failFast(Property.ofValue(false))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, powershellCommands, ImmutableMap.of());

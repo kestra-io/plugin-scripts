@@ -20,9 +20,9 @@ import reactor.core.publisher.Flux;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -41,7 +41,7 @@ class CommandsTest {
 
     @Test
     void task() throws Exception {
-        List<LogEntry> logs = new ArrayList<>();
+        List<LogEntry> logs = new CopyOnWriteArrayList<>();
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         URI put = storageInterface.put(
@@ -57,7 +57,7 @@ class CommandsTest {
         Commands nodeCommands = Commands.builder()
             .id("node-commands-" + UUID.randomUUID())
             .type(Commands.class.getName())
-            .commands(Property.of(List.of("node " + put.toString())))
+            .commands(Property.ofValue(List.of("node " + put.toString())))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, nodeCommands, ImmutableMap.of());
@@ -69,6 +69,6 @@ class CommandsTest {
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains(put.getPath()));
         receive.blockLast();
-        assertThat(logs.stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("hello there!")).count(), is(1L));
+        assertThat(List.copyOf(logs).stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("hello there!")).count(), is(1L));
     }
 }
