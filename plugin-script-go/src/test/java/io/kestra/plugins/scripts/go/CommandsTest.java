@@ -21,9 +21,9 @@ import org.junit.jupiter.api.Test;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -42,7 +42,7 @@ public class CommandsTest {
 
     @Test
     void should_print_hello_there() throws Exception {
-        List<LogEntry> logs = new ArrayList<>();
+        List<LogEntry> logs = new CopyOnWriteArrayList<>();
         var receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         var goScript = storageInterface.put(
@@ -68,11 +68,11 @@ public class CommandsTest {
             .type(Script.class.getName())
             .allowWarning(true)
             .inputFiles(inputFiles)
-            .beforeCommands(Property.of(List.of(
+            .beforeCommands(Property.ofValue(List.of(
                 "go mod init go_commands",
                 "go mod tidy"
             )))
-            .commands(Property.of(List.of("go run go_script.go")))
+            .commands(Property.ofValue(List.of("go run go_script.go")))
             .build();
 
         var runContext = TestsUtils.mockRunContext(runContextFactory, commands, ImmutableMap.of());
@@ -84,7 +84,7 @@ public class CommandsTest {
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("hello there!"));
         receive.blockLast();
-        assertThat(logs.stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("hello there!")).count(), is(1L));
+        assertThat(List.copyOf(logs).stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("hello there!")).count(), is(1L));
     }
 
     @Test
@@ -124,12 +124,12 @@ public class CommandsTest {
             .type(Script.class.getName())
             .allowWarning(true)
             .inputFiles(inputFiles)
-            .outputFiles(Property.of(List.of(outputFile)))
-            .beforeCommands(Property.of(List.of(
+            .outputFiles(Property.ofValue(List.of(outputFile)))
+            .beforeCommands(Property.ofValue(List.of(
                 "go mod init go_commands",
                 "go mod tidy"
             )))
-            .commands(Property.of(List.of("go run go_script.go")))
+            .commands(Property.ofValue(List.of("go run go_script.go")))
             .build();
 
         var runContext = TestsUtils.mockRunContext(runContextFactory, commands, ImmutableMap.of());

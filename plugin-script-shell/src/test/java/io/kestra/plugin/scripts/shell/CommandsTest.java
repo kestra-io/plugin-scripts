@@ -2,10 +2,10 @@ package io.kestra.plugin.scripts.shell;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
+import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
-import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
@@ -17,7 +17,6 @@ import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.runner.docker.PullPolicy;
-import io.kestra.core.junit.annotations.KestraTest;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.apache.commons.io.IOUtils;
@@ -31,8 +30,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -66,7 +65,7 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .commands(Property.of(List.of("echo 0", "echo 1", ">&2 echo 2", ">&2 echo 3")))
+            .commands(Property.ofValue(List.of("echo 0", "echo 1", ">&2 echo 2", ">&2 echo 3")))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -85,7 +84,7 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .commands(Property.of(List.of("echo 1 1>&2", "exit 66", "echo 2")))
+            .commands(Property.ofValue(List.of("echo 1 1>&2", "exit 66", "echo 2")))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -106,8 +105,8 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .failFast(Property.of(true))
-            .commands(Property.of(List.of("unknown", "echo 1")))
+            .failFast(Property.ofValue(true))
+            .commands(Property.ofValue(List.of("unknown", "echo 1")))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -128,8 +127,8 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .failFast(Property.of(false))
-            .commands(Property.of(List.of("unknown", "echo 1")))
+            .failFast(Property.ofValue(false))
+            .commands(Property.ofValue(List.of("unknown", "echo 1")))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -198,7 +197,7 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .commands(Property.of(List.of(
+            .commands(Property.ofValue(List.of(
                 "echo '::{\"outputs\": {\"extract\":null}}::'"
             )))
             .build();
@@ -216,21 +215,20 @@ class CommandsTest {
 
     @Test
     void pull() throws Exception {
-        List<LogEntry> logs = new ArrayList<>();
+        List<LogEntry> logs = new CopyOnWriteArrayList<>();
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         Commands bash = Commands.builder()
             .id("unit-test")
             .type(Commands.class.getName())
             .docker(DockerOptions.builder()
-                .pullPolicy(Property.of(PullPolicy.IF_NOT_PRESENT))
+                .pullPolicy(Property.ofValue(PullPolicy.IF_NOT_PRESENT))
                 .image("alpine:3.15.6")
                 .build()
             )
             .runner(RunnerType.DOCKER)
-            .commands(Property.of(List.of("pwd")))
+            .commands(Property.ofValue(List.of("pwd")))
             .build();
-
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
         ScriptOutput run = bash.run(runContext);
@@ -241,8 +239,7 @@ class CommandsTest {
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("Image pulled"));
         receive.blockLast();
-
-        assertThat(logs.stream().filter(m -> m.getMessage().contains("pulled")).count(), is(1L));
+        assertThat(List.copyOf(logs).stream().filter(m -> m.getMessage().contains("pulled")).count(), is(1L));
     }
 
     @Test
@@ -251,12 +248,12 @@ class CommandsTest {
             .id("unit-test")
             .type(Commands.class.getName())
             .docker(DockerOptions.builder()
-                .pullPolicy(Property.of(PullPolicy.IF_NOT_PRESENT))
+                .pullPolicy(Property.ofValue(PullPolicy.IF_NOT_PRESENT))
                 .image("alpine:999.15.6")
                 .build()
             )
             .runner(RunnerType.DOCKER)
-            .commands(Property.of(List.of("pwd")))
+            .commands(Property.ofValue(List.of("pwd")))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
