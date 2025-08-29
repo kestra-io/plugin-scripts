@@ -13,6 +13,7 @@ import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
+import java.io.InputStream;
 import java.time.Duration;
 import java.util.*;
 
@@ -251,6 +252,38 @@ class PythonTest {
         assertThat(PythonTest.<Duration>getMetrics(runContext, "timer2").getTags().size(), is(2));
         assertThat(PythonTest.<Duration>getMetrics(runContext, "timer2").getTags().get("tag1"), is("i"));
         assertThat(PythonTest.<Duration>getMetrics(runContext, "timer2").getTags().get("tag2"), is("destroy"));
+    }
+
+    @Test
+    void legacyFilesPropertyStillUploadsFiles() throws Exception {
+        RunContext runContext = runContextFactory.of();
+
+        Map<String, String> inputFiles = new HashMap<>();
+        inputFiles.put("main.py", """
+            with open("legacy1.txt", "w") as f:
+                f.write("one\\n")
+            with open("legacy2.txt", "w") as f:
+                f.write("two\\n")
+            """);
+
+        Python python = Python.builder()
+            .id("test-python-task")
+            .pythonPath("python3")
+            .inputFiles(inputFiles)
+            .files(Property.of(Arrays.asList("legacy1.txt", "legacy2.txt")))
+            .build();
+
+        ScriptOutput run = python.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+
+        try (InputStream file1 = runContext.storage().getFile(run.getOutputFiles().get("legacy1.txt"))) {
+            assertThat(new String(file1.readAllBytes()), is("one\n"));
+        }
+
+        try (InputStream file2 = runContext.storage().getFile(run.getOutputFiles().get("legacy2.txt"))) {
+            assertThat(new String(file2.readAllBytes()), is("two\n"));
+        }
     }
 
     @SuppressWarnings("unchecked")

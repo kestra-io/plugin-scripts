@@ -40,7 +40,6 @@ public class PythonEnvironmentManager {
         this(runContext, plugin, PackageManagerType.UV);
     }
 
-
     /**
      * Creates a new {@link PythonBasedPlugin} instance.
      *

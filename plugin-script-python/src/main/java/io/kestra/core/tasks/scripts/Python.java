@@ -223,7 +223,7 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
         Map<String, String> finalInputFiles = this.finalInputFiles(runContext);
         var rPackageManager = PackageManagerType.UV.equals(runContext.render(packageManager).as(PackageManagerType.class).orElse(PackageManagerType.UV));
 
-        if (!finalInputFiles.containsKey("main.py") && this.commands.size() == 1 && this.commands.get(0).equals("./bin/python main.py")) {
+        if (!finalInputFiles.containsKey("main.py") && this.commands.size() == 1 && this.commands.getFirst().equals("./bin/python main.py")) {
             throw new Exception("Invalid input files structure, expecting inputFiles property to contain at least a main.py key with python code value.");
         }
 

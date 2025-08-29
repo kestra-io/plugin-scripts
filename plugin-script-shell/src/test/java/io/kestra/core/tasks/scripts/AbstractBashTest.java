@@ -24,11 +24,9 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.time.Duration;
 import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -59,7 +57,7 @@ abstract class AbstractBashTest {
     @Test
     void files() throws Exception {
         Bash bash = configure(Bash.builder()
-            .outputFiles(Property.of(Arrays.asList("xml", "csv")))
+            .outputFiles(Property.ofValue(Arrays.asList("xml", "csv")))
             .inputFiles(ImmutableMap.of("files/in/in.txt", "I'm here"))
             .commands(new String[]{
                 "echo '::{\"outputs\": {\"extract\":\"'$(cat files/in/in.txt)'\"}}::'",
@@ -96,7 +94,7 @@ abstract class AbstractBashTest {
     @Test
     void outputDirs() throws Exception {
         Bash bash = configure(Bash.builder()
-            .outputDirs(Property.of(Arrays.asList("xml", "csv")))
+            .outputDirs(Property.ofValue(Arrays.asList("xml", "csv")))
             .inputFiles(ImmutableMap.of("files/in/in.txt", "I'm here"))
             .commands(new String[]{
                 "echo 1 >> {{ outputDirs.xml }}/file1.txt",
@@ -122,6 +120,7 @@ abstract class AbstractBashTest {
         get = storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("csv/file1.txt"));
         assertThat(CharStreams.toString(new InputStreamReader(get)), is("3\n"));
     }
+
     @Test
     @DisabledIfEnvironmentVariable(named = "GITHUB_WORKFLOW", matches = ".*")
     void failed() {
@@ -156,12 +155,13 @@ abstract class AbstractBashTest {
         assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getStdOutLineCount(), is(0));
         assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getStdErrLineCount(), is(1));
     }
+
     @Test
     @DisabledIfEnvironmentVariable(named = "GITHUB_WORKFLOW", matches = ".*")
     void dontStopOnFirstFailed() throws Exception {
         Bash bash = configure(Bash.builder()
             .commands(new String[]{"unknown", "echo 1"})
-            .exitOnFailed(Property.of(false))
+            .exitOnFailed(Property.ofValue(false))
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -181,7 +181,7 @@ abstract class AbstractBashTest {
         commands.add("source {{workingDir}}/test.sh && tst");
 
         Bash bash = configure(Bash.builder()
-            .interpreter(Property.of("/bin/bash"))
+            .interpreter(Property.ofValue("/bin/bash"))
             .commands(commands.toArray(String[]::new))
             .inputFiles(files)
         ).build();
@@ -212,10 +212,10 @@ abstract class AbstractBashTest {
         commands.add("cat fscontent.txt > {{ outputFiles.out }} ");
 
         Bash bash = configure(Bash.builder()
-            .interpreter(Property.of("/bin/bash"))
+            .interpreter(Property.ofValue("/bin/bash"))
             .commands(commands.toArray(String[]::new))
             .inputFiles(files)
-            .outputFiles(Property.of(Collections.singletonList("out")))
+            .outputFiles(Property.ofValue(Collections.singletonList("out")))
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -255,10 +255,10 @@ abstract class AbstractBashTest {
         commands.add("cat 1.yml 2.yml > {{ outputFiles.out }} ");
 
         Bash bash = configure(Bash.builder()
-            .interpreter(Property.of("/bin/bash"))
+            .interpreter(Property.ofValue("/bin/bash"))
             .commands(commands.toArray(String[]::new))
             .inputFiles(JacksonMapper.ofJson().writeValueAsString(files))
-            .outputFiles(Property.of(Collections.singletonList("out")))
+            .outputFiles(Property.ofValue(Collections.singletonList("out")))
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -328,28 +328,27 @@ abstract class AbstractBashTest {
         assertThat(run.getExitCode(), is(0));
     }
 
-    static void controlOutputs(RunContext runContext, ScriptOutput run) {
-        assertThat(run.getVars().get("test"), is("value"));
-        assertThat(run.getVars().get("int"), is(2));
-        assertThat(run.getVars().get("bool"), is(true));
-        assertThat(run.getVars().get("float"), is(3.65));
+    @Test
+    void legacyFilesPropertyStillUploadsFiles() throws Exception {
+        Bash bash = configure(Bash.builder()
+            .files(Property.ofValue(Arrays.asList("legacy1.txt", "legacy2.txt")))
+            .commands(new String[]{
+                "echo foo >> {{ outputFiles.legacy1.txt }}",
+                "echo bar >> {{ outputFiles.legacy2.txt }}"
+            })
+        ).build();
 
-        assertThat(AbstractBashTest.getMetrics(runContext, "count").getValue(), is(1D));
-        assertThat(AbstractBashTest.getMetrics(runContext, "count2").getValue(), is(2D));
-        assertThat(AbstractBashTest.getMetrics(runContext, "count2").getTags().size(), is(0));
-        assertThat(AbstractBashTest.getMetrics(runContext, "count").getTags().size(), is(2));
-        assertThat(AbstractBashTest.getMetrics(runContext, "count").getTags().get("tag1"), is("i"));
-        assertThat(AbstractBashTest.getMetrics(runContext, "count").getTags().get("tag2"), is("win"));
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
+        ScriptOutput run = bash.run(runContext);
 
-        assertThat(AbstractBashTest.<Duration>getMetrics(runContext, "timer1").getValue().getNano(), greaterThan(0));
-        assertThat(AbstractBashTest.<Duration>getMetrics(runContext, "timer1").getTags().size(), is(2));
-        assertThat(AbstractBashTest.<Duration>getMetrics(runContext, "timer1").getTags().get("tag1"), is("i"));
-        assertThat(AbstractBashTest.<Duration>getMetrics(runContext, "timer1").getTags().get("tag2"), is("lost"));
+        assertThat(run.getExitCode(), is(0));
+        assertThat(run.getStdErrLineCount(), is(0));
 
-        assertThat(AbstractBashTest.<Duration>getMetrics(runContext, "timer2").getValue().getNano(), greaterThan(100000000));
-        assertThat(AbstractBashTest.<Duration>getMetrics(runContext, "timer2").getTags().size(), is(2));
-        assertThat(AbstractBashTest.<Duration>getMetrics(runContext, "timer2").getTags().get("tag1"), is("i"));
-        assertThat(AbstractBashTest.<Duration>getMetrics(runContext, "timer2").getTags().get("tag2"), is("destroy"));
+        InputStream file1 = storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("legacy1.txt"));
+        assertThat(CharStreams.toString(new InputStreamReader(file1)), is("foo\n"));
+
+        InputStream file2 = storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("legacy2.txt"));
+        assertThat(CharStreams.toString(new InputStreamReader(file2)), is("bar\n"));
     }
 
     @SuppressWarnings("unchecked")

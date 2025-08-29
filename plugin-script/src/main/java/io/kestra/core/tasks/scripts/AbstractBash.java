@@ -19,17 +19,10 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
-
-import static io.kestra.core.utils.Rethrow.throwBiConsumer;
-import static io.kestra.core.utils.Rethrow.throwConsumer;
 
 @SuperBuilder
 @ToString
@@ -76,7 +69,7 @@ public abstract class AbstractBash extends Task {
 
     @Schema(
         title = "[Deprecated] The list of files that will be uploaded to Kestra's internal storage.",
-        description ="Use `outputFiles` instead.",
+        description = "Use `outputFiles` instead.",
         deprecated = true
     )
     @Deprecated
@@ -142,10 +135,8 @@ public abstract class AbstractBash extends Task {
 
     protected List<String> finalInterpreter(RunContext runContext) throws IllegalVariableEvaluationException {
         List<String> interpreters = new ArrayList<>();
-
         interpreters.add(runContext.render(this.interpreter).as(String.class).orElse(null));
         interpreters.addAll(Arrays.asList(this.interpreterArgs));
-
         return interpreters;
     }
 
@@ -163,54 +154,24 @@ public abstract class AbstractBash extends Task {
     }
 
     protected io.kestra.core.tasks.scripts.ScriptOutput run(RunContext runContext, Supplier<String> commandsSupplier) throws Exception {
-        List<String> allOutputs = new ArrayList<>();
-
         if (this.workingDirectory == null) {
             this.workingDirectory = runContext.workingDir().path();
         }
 
         additionalVars.put("workingDir", workingDirectory.toAbsolutePath().toString());
 
-        // deprecated properties
-        var renderedOutputFiles = runContext.render(this.outputFiles).asList(String.class);
-        if (!renderedOutputFiles.isEmpty()) {
-            allOutputs.addAll(renderedOutputFiles);
-        }
+        List<String> allOutputs = new ArrayList<>();
+        allOutputs.addAll(runContext.render(this.outputFiles).asList(String.class));
+        allOutputs.addAll(runContext.render(this.files).asList(String.class));
 
-        if (!renderedOutputFiles.isEmpty()) {
-            allOutputs.addAll(renderedOutputFiles);
-        }
-
-        var renderedFiles = runContext.render(this.files).asList(String.class);
-        if (!renderedFiles.isEmpty()) {
-            allOutputs.addAll(renderedFiles);
-        }
-
-        Map<String, String> outputFiles = PluginUtilsService.createOutputFiles(
-            workingDirectory,
-            allOutputs,
-            additionalVars
-        );
+        List<String> rOutputDirs = runContext.render(this.outputDirs).asList(String.class);
+        PluginUtilsService.createOutputFiles(workingDirectory, rOutputDirs, additionalVars, true);
 
         PluginUtilsService.createInputFiles(
             runContext,
             workingDirectory,
             this.finalInputFiles(runContext, additionalVars),
             additionalVars
-        );
-
-        List<String> allOutputDirs = new ArrayList<>();
-
-        var renderedOutputDirs = runContext.render(this.outputDirs).asList(String.class);
-        if (!renderedOutputDirs.isEmpty()) {
-            allOutputDirs.addAll(renderedOutputDirs);
-        }
-
-        Map<String, String> outputDirs = PluginUtilsService.createOutputFiles(
-            workingDirectory,
-            allOutputDirs,
-            additionalVars,
-            true
         );
 
         List<String> commandsArgs = ScriptService.scriptCommands(
@@ -220,52 +181,28 @@ public abstract class AbstractBash extends Task {
         );
 
         var taskRunner = switch (runContext.render(this.runner).as(RunnerType.class).orElseThrow()) {
-            case DOCKER -> Docker.from(this.getDockerOptions()).toBuilder().fileHandlingStrategy(Property.of(Docker.FileHandlingStrategy.MOUNT)).build();
+            case DOCKER -> Docker.from(this.getDockerOptions())
+                .toBuilder()
+                .fileHandlingStrategy(Property.of(Docker.FileHandlingStrategy.MOUNT))
+                .build();
             case PROCESS -> Process.instance();
         };
 
         ScriptOutput run = new CommandsWrapper(runContext)
             .withEnv(this.finalEnv(runContext))
             .withTaskRunner(taskRunner)
+            .withOutputFiles(allOutputs)
             .withCommands(new Property<>(JacksonMapper.ofJson().writeValueAsString(commandsArgs)))
             .addAdditionalVars(this.additionalVars)
             .run();
 
-        // upload output files
-        Map<String, URI> uploaded = new HashMap<>();
-
-        // outputFiles
-        outputFiles
-            .forEach(throwBiConsumer((k, v) -> uploaded.put(k, runContext.storage().putFile(new File(runContext.render(v, additionalVars))))));
-
-        // outputDirs
-        outputDirs
-            .forEach(throwBiConsumer((k, v) -> {
-                try (Stream<Path> walk = Files.walk(new File(runContext.render(v, additionalVars)).toPath())) {
-                    walk
-                        .filter(Files::isRegularFile)
-                        .forEach(throwConsumer(path -> {
-                            String filename = Path.of(
-                                k,
-                                Path.of(runContext.render(v, additionalVars)).relativize(path).toString()
-                            ).toString();
-
-                            uploaded.put(
-                                filename,
-                                runContext.storage().putFile(path.toFile(), filename)
-                            );
-                        }));
-                }
-            }));
-
-        // output
         return io.kestra.core.tasks.scripts.ScriptOutput.builder()
             .exitCode(run.getExitCode())
             .stdOutLineCount(run.getStdOutLineCount())
             .stdErrLineCount(run.getStdErrLineCount())
             .vars(run.getVars())
-            .files(uploaded)
-            .outputFiles(uploaded)
+            .files(run.getOutputFiles())
+            .outputFiles(run.getOutputFiles())
             .build();
     }
 }
