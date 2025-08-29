@@ -220,11 +220,15 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
-        Map<String, String> finalInputFiles = this.finalInputFiles(runContext);
         var rPackageManager = PackageManagerType.UV.equals(runContext.render(packageManager).as(PackageManagerType.class).orElse(PackageManagerType.UV));
 
-        if (!finalInputFiles.containsKey("main.py") && this.commands.size() == 1 && this.commands.getFirst().equals("./bin/python main.py")) {
-            throw new Exception("Invalid input files structure, expecting inputFiles property to contain at least a main.py key with python code value.");
+        if (this.inputFiles == null ||
+            (this.inputFiles instanceof Map && !((Map<?, ?>) this.inputFiles).containsKey("main.py")) ||
+            (this.inputFiles instanceof String && !this.inputFiles.toString().contains("main.py"))) {
+
+            if (this.commands != null && this.commands.size() == 1 && this.commands.getFirst().equals("./bin/python main.py")) {
+                throw new Exception("Invalid input files structure, expecting inputFiles property to contain at least a main.py key with python code value.");
+            }
         }
 
         return run(runContext, throwSupplier(() -> {
