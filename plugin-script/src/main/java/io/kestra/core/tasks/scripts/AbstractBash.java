@@ -189,14 +189,8 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
         if (!rFiles.isEmpty()) {
             allOutputs.addAll(rFiles);
         }
-
-//        Map<String, String> outputFiles = PluginUtilsService.createOutputFiles(
-//            workingDirectory,
-//            allOutputs,
-//            additionalVars
-//        );
-
-        PluginUtilsService.createOutputFiles(
+        
+        Map<String, String> outputFilePaths = PluginUtilsService.createOutputFiles(
             workingDirectory,
             allOutputs,
             additionalVars
@@ -216,14 +210,7 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
             allOutputDirs.addAll(rOutputDirs);
         }
 
-//        Map<String, String> outputDirs = PluginUtilsService.createOutputFiles(
-//            workingDirectory,
-//            allOutputDirs,
-//            additionalVars,
-//            true
-//        );
-
-        PluginUtilsService.createOutputFiles(
+        Map<String, String> outputDirPaths = PluginUtilsService.createOutputFiles(
             workingDirectory,
             allOutputDirs,
             additionalVars,
@@ -250,41 +237,55 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
             .addAdditionalVars(this.additionalVars)
             .run();
 
-//        // upload output files
-//        Map<String, URI> uploaded = new HashMap<>();
-//
-//        // outputFiles
-//        outputFiles
-//            .forEach(throwBiConsumer((k, v) -> uploaded.put(k, runContext.storage().putFile(new File(runContext.render(v, additionalVars))))));
-//
-//        // outputDirs
-//        outputDirs
-//            .forEach(throwBiConsumer((k, v) -> {
-//                try (Stream<Path> walk = Files.walk(new File(runContext.render(v, additionalVars)).toPath())) {
-//                    walk
-//                        .filter(Files::isRegularFile)
-//                        .forEach(throwConsumer(path -> {
-//                            String filename = Path.of(
-//                                k,
-//                                Path.of(runContext.render(v, additionalVars)).relativize(path).toString()
-//                            ).toString();
-//
-//                            uploaded.put(
-//                                filename,
-//                                runContext.storage().putFile(path.toFile(), filename)
-//                            );
-//                        }));
-//                }
-//            }));
+        // upload output files to storage
+        Map<String, URI> uploaded = new HashMap<>();
 
-        // output
+        // upload regular output files
+        outputFilePaths.forEach(throwBiConsumer((key, filePath) -> {
+            File file = new File(runContext.render(filePath, additionalVars));
+            if (file.exists() && file.isFile()) {
+                uploaded.put(key, runContext.storage().putFile(file));
+            } else {
+                runContext.logger().debug("Output file not found or is not a file: {}", file.getAbsolutePath());
+            }
+        }));
+
+        // upload files from deprecated output directories
+        outputDirPaths.forEach(throwBiConsumer((key, dirPath) -> {
+            File dir = new File(runContext.render(dirPath, additionalVars));
+            if (dir.exists() && dir.isDirectory()) {
+                try (Stream<Path> walk = Files.walk(dir.toPath())) {
+                    walk
+                        .filter(Files::isRegularFile)
+                        .forEach(throwConsumer(path -> {
+                            String filename = Path.of(
+                                key,
+                                dir.toPath().relativize(path).toString()
+                            ).toString();
+
+                            uploaded.put(
+                                filename,
+                                runContext.storage().putFile(path.toFile(), filename)
+                            );
+                        }));
+                } catch (IOException e) {
+                    runContext.logger().warn("Failed to walk directory: {}", dir.getAbsolutePath(), e);
+                }
+            }
+        }));
+
+        // include files that CommandsWrapper may have uploaded
+        if (run.getOutputFiles() != null) {
+            uploaded.putAll(run.getOutputFiles());
+        }
+
         return io.kestra.core.tasks.scripts.ScriptOutput.builder()
             .exitCode(run.getExitCode())
             .stdOutLineCount(run.getStdOutLineCount())
             .stdErrLineCount(run.getStdErrLineCount())
             .vars(run.getVars())
-            .files(run.getOutputFiles())
-            .outputFiles(run.getOutputFiles())
+            .files(uploaded)
+            .outputFiles(uploaded)
             .build();
     }
 }
