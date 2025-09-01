@@ -3,6 +3,7 @@ package io.kestra.core.tasks.scripts;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
+import io.kestra.core.models.tasks.OutputFilesInterface;
 import io.kestra.core.models.tasks.Task;
 import io.kestra.core.models.tasks.runners.PluginUtilsService;
 import io.kestra.core.models.tasks.runners.ScriptService;
@@ -38,7 +39,7 @@ import static io.kestra.core.utils.Rethrow.throwConsumer;
 @Getter
 @NoArgsConstructor
 @Deprecated
-public abstract class AbstractBash extends Task {
+public abstract class AbstractBash extends Task implements OutputFilesInterface {
     @Builder.Default
     @Schema(
         title = "The task runner."
@@ -77,7 +78,7 @@ public abstract class AbstractBash extends Task {
 
     @Schema(
         title = "[Deprecated] The list of files that will be uploaded to Kestra's internal storage.",
-        description ="Use `outputFiles` instead.",
+        description = "Use `outputFiles` instead.",
         deprecated = true
     )
     @Deprecated
@@ -101,13 +102,14 @@ public abstract class AbstractBash extends Task {
     protected Property<List<String>> outputFiles;
 
     @Schema(
-        title = "List of output directories that will be uploaded to Kestra's internal storage.",
-        description = "List of keys that will generate temporary directories.\n" +
+        title = "[Deprecated] List of output directories that will be uploaded to Kestra's internal storage.",
+        description = "Use `outputFiles` instead. List of keys that will generate temporary directories.\n" +
             "This property can be used with a special variable named `outputDirs.key`.\n" +
             "If you add a file with `[\"myDir\"]`, you can use the special var `echo 1 >> {[ outputDirs.myDir }}/file1.txt` " +
             "and `echo 2 >> {[ outputDirs.myDir }}/file2.txt`, and both the files will be uploaded to Kestra's internal storage. " +
             "You can reference them in other tasks using `{{ outputs.taskId.outputFiles['myDir/file1.txt'] }}`."
     )
+    @Deprecated
     protected Property<List<String>> outputDirs;
 
     @Schema(
@@ -160,8 +162,8 @@ public abstract class AbstractBash extends Task {
     }
 
     protected Map<String, String> finalEnv(RunContext runContext) throws IOException, IllegalVariableEvaluationException {
-        var renderedEnv = runContext.render(this.env).asMap(String.class, String.class);
-        return !renderedEnv.isEmpty() ? new HashMap<>(renderedEnv) : new HashMap<>();
+        var rEnv = runContext.render(this.env).asMap(String.class, String.class);
+        return !rEnv.isEmpty() ? new HashMap<>(rEnv) : new HashMap<>();
     }
 
     protected io.kestra.core.tasks.scripts.ScriptOutput run(RunContext runContext, Supplier<String> commandsSupplier) throws Exception {
@@ -173,22 +175,24 @@ public abstract class AbstractBash extends Task {
 
         additionalVars.put("workingDir", workingDirectory.toAbsolutePath().toString());
 
+        runContext.logger().info("Running script with working directory: {}", workingDirectory.toAbsolutePath());
+
+        var rOutputFiles = runContext.render(this.outputFiles).asList(String.class);
+        if (!rOutputFiles.isEmpty()) {
+            allOutputs.addAll(rOutputFiles);
+        }
+
         // deprecated properties
-        var renderedOutputFiles = runContext.render(this.outputFiles).asList(String.class);
-        if (!renderedOutputFiles.isEmpty()) {
-            allOutputs.addAll(renderedOutputFiles);
+        var rOutputsFiles = runContext.render(this.outputsFiles).asList(String.class);
+        if (!rOutputsFiles.isEmpty()) {
+            allOutputs.addAll(rOutputsFiles);
         }
-
-        if (!renderedOutputFiles.isEmpty()) {
-            allOutputs.addAll(renderedOutputFiles);
+        var rFiles = runContext.render(this.files).asList(String.class);
+        if (!rFiles.isEmpty()) {
+            allOutputs.addAll(rFiles);
         }
-
-        var renderedFiles = runContext.render(this.files).asList(String.class);
-        if (!renderedFiles.isEmpty()) {
-            allOutputs.addAll(renderedFiles);
-        }
-
-        Map<String, String> outputFiles = PluginUtilsService.createOutputFiles(
+        
+        Map<String, String> outputFilePaths = PluginUtilsService.createOutputFiles(
             workingDirectory,
             allOutputs,
             additionalVars
@@ -203,12 +207,12 @@ public abstract class AbstractBash extends Task {
 
         List<String> allOutputDirs = new ArrayList<>();
 
-        var renderedOutputDirs = runContext.render(this.outputDirs).asList(String.class);
-        if (!renderedOutputDirs.isEmpty()) {
-            allOutputDirs.addAll(renderedOutputDirs);
+        var rOutputDirs = runContext.render(this.outputDirs).asList(String.class);
+        if (!rOutputDirs.isEmpty()) {
+            allOutputDirs.addAll(rOutputDirs);
         }
 
-        Map<String, String> outputDirs = PluginUtilsService.createOutputFiles(
+        Map<String, String> outputDirPaths = PluginUtilsService.createOutputFiles(
             workingDirectory,
             allOutputDirs,
             additionalVars,
@@ -222,7 +226,8 @@ public abstract class AbstractBash extends Task {
         );
 
         var taskRunner = switch (runContext.render(this.runner).as(RunnerType.class).orElseThrow()) {
-            case DOCKER -> Docker.from(this.getDockerOptions()).toBuilder().fileHandlingStrategy(Property.of(Docker.FileHandlingStrategy.MOUNT)).build();
+            case DOCKER ->
+                Docker.from(this.getDockerOptions()).toBuilder().fileHandlingStrategy(Property.of(Docker.FileHandlingStrategy.MOUNT)).build();
             case PROCESS -> Process.instance();
         };
 
@@ -231,26 +236,34 @@ public abstract class AbstractBash extends Task {
             .withWarningOnStdErr(runContext.render(this.warningOnStdErr).as(Boolean.class).orElseThrow())
             .withTaskRunner(taskRunner)
             .withCommands(new Property<>(JacksonMapper.ofJson().writeValueAsString(commandsArgs)))
+            .withOutputFiles(allOutputs)
             .addAdditionalVars(this.additionalVars)
             .run();
 
-        // upload output files
+        // upload output files to storage
         Map<String, URI> uploaded = new HashMap<>();
 
-        // outputFiles
-        outputFiles
-            .forEach(throwBiConsumer((k, v) -> uploaded.put(k, runContext.storage().putFile(new File(runContext.render(v, additionalVars))))));
+        // upload regular output files
+        outputFilePaths.forEach(throwBiConsumer((key, filePath) -> {
+            File file = new File(runContext.render(filePath, additionalVars));
+            if (file.exists() && file.isFile()) {
+                uploaded.put(key, runContext.storage().putFile(file));
+            } else {
+                runContext.logger().debug("Output file not found or is not a file: {}", file.getAbsolutePath());
+            }
+        }));
 
-        // outputDirs
-        outputDirs
-            .forEach(throwBiConsumer((k, v) -> {
-                try (Stream<Path> walk = Files.walk(new File(runContext.render(v, additionalVars)).toPath())) {
+        // upload files from deprecated output directories
+        outputDirPaths.forEach(throwBiConsumer((key, dirPath) -> {
+            File dir = new File(runContext.render(dirPath, additionalVars));
+            if (dir.exists() && dir.isDirectory()) {
+                try (Stream<Path> walk = Files.walk(dir.toPath())) {
                     walk
                         .filter(Files::isRegularFile)
                         .forEach(throwConsumer(path -> {
                             String filename = Path.of(
-                                k,
-                                Path.of(runContext.render(v, additionalVars)).relativize(path).toString()
+                                key,
+                                dir.toPath().relativize(path).toString()
                             ).toString();
 
                             uploaded.put(
@@ -258,10 +271,17 @@ public abstract class AbstractBash extends Task {
                                 runContext.storage().putFile(path.toFile(), filename)
                             );
                         }));
+                } catch (IOException e) {
+                    runContext.logger().warn("Failed to walk directory: {}", dir.getAbsolutePath(), e);
                 }
-            }));
+            }
+        }));
 
-        // output
+        // include files that CommandsWrapper may have uploaded
+        if (run.getOutputFiles() != null) {
+            uploaded.putAll(run.getOutputFiles());
+        }
+
         return io.kestra.core.tasks.scripts.ScriptOutput.builder()
             .exitCode(run.getExitCode())
             .stdOutLineCount(run.getStdOutLineCount())
