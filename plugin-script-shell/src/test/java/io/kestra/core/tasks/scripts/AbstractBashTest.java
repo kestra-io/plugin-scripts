@@ -169,12 +169,7 @@ abstract class AbstractBashTest {
     void useInputFilesFromKestraFs() throws Exception {
         URL resource = AbstractBashTest.class.getClassLoader().getResource("application.yml");
 
-        URI put = storageInterface.put(
-            TenantService.MAIN_TENANT,
-            null,
-            new URI("/file/storage/get.yml"),
-            new FileInputStream(Objects.requireNonNull(resource).getFile())
-        );
+        URI put = putUnique(storageInterface, resource);
 
         Map<String, String> files = new HashMap<>();
         files.put("test.sh", "cat fscontent.txt");
@@ -204,19 +199,9 @@ abstract class AbstractBashTest {
     void useInputFilesAsVariable() throws Exception {
         URL resource = AbstractBashTest.class.getClassLoader().getResource("application.yml");
 
-        URI put1 = storageInterface.put(
-            TenantService.MAIN_TENANT,
-            null,
-            new URI("/file/storage/get.yml"),
-            new FileInputStream(Objects.requireNonNull(resource).getFile())
-        );
+        URI put1 = putUnique(storageInterface, resource);
 
-        URI put2 = storageInterface.put(
-            TenantService.MAIN_TENANT,
-            null,
-            new URI("/file/storage/get.yml"),
-            new FileInputStream(Objects.requireNonNull(resource).getFile())
-        );
+        URI put2 = putUnique(storageInterface, resource);
 
         Map<String, String> files = new HashMap<>();
         files.put("1.yml", put1.toString());
@@ -246,12 +231,7 @@ abstract class AbstractBashTest {
     void preventRelativeFile() throws Exception {
         URL resource = AbstractBashTest.class.getClassLoader().getResource("application.yml");
 
-        URI put = storageInterface.put(
-            TenantService.MAIN_TENANT,
-            null,
-            new URI("/file/storage/get.yml"),
-            new FileInputStream(Objects.requireNonNull(resource).getFile())
-        );
+        URI put = putUnique(storageInterface, resource);
 
         assertThrows(IllegalArgumentException.class, () -> {
             Bash bash = configure(Bash.builder()
@@ -330,5 +310,15 @@ abstract class AbstractBashTest {
             .filter(abstractMetricEntry -> abstractMetricEntry.getName().equals(name))
             .findFirst()
             .orElseThrow();
+    }
+
+    private static URI putUnique(StorageInterface storage, URL resource) throws Exception {
+        String name = "test-" + UUID.randomUUID() + ".yml";
+        return storage.put(
+            TenantService.MAIN_TENANT,
+            null,
+            new URI("/file/storage/tests/" + name),
+            new FileInputStream(Objects.requireNonNull(resource).getFile())
+        );
     }
 }

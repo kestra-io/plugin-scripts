@@ -146,7 +146,7 @@ class CommandsTest {
         URI put = storageInterface.put(
             TenantService.MAIN_TENANT,
             null,
-            new URI("/file/storage/get.yml"),
+            new URI("/file/storage/tests/scripts/shell/get.yml"),
             IOUtils.toInputStream("I'm here", StandardCharsets.UTF_8)
         );
 

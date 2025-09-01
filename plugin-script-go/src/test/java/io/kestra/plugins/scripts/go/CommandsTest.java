@@ -93,7 +93,7 @@ public class CommandsTest {
         var goScript = storageInterface.put(
             TenantService.MAIN_TENANT,
             null,
-            new URI("/file/storage/go_script.go"),
+            new URI("/file/storage/csv_output/go_script.go"),
             IOUtils.toInputStream("""
                     package main
                     import (

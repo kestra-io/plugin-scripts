@@ -48,7 +48,7 @@ class CommandsTest {
         URI put = storageInterface.put(
             TenantService.MAIN_TENANT,
             null,
-            new URI("/file/storage/get.yml"),
+            new URI("/file/storage/tests/scripts/python/get.yml"),
             IOUtils.toInputStream(
                 "print('hello there!')",
                 StandardCharsets.UTF_8

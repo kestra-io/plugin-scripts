@@ -48,7 +48,7 @@ public class CommandsTest {
         var phpScript = storageInterface.put(
             TenantService.MAIN_TENANT,
             null,
-            new URI("/file/storage/get.yml"),
+            new URI("/file/storage/tests/scripts/php/get.yml"),
             IOUtils.toInputStream(
                 """
                     #!/usr/bin/php
