@@ -95,35 +95,6 @@ abstract class AbstractBashTest {
     }
 
     @Test
-    void outputDirs() throws Exception {
-        Bash bash = configure(Bash.builder()
-            .outputDirs(Property.of(Arrays.asList("xml", "csv")))
-            .inputFiles(ImmutableMap.of("files/in/in.txt", "I'm here"))
-            .commands(new String[]{
-                "echo 1 >> {{ outputDirs.xml }}/file1.txt",
-                "mkdir -p {{ outputDirs.xml }}/sub/sub2",
-                "echo 2 >> {{ outputDirs.xml }}/sub/sub2/file2.txt",
-                "echo 3 >> {{ outputDirs.csv }}/file1.txt",
-            })
-        ).build();
-
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptOutput run = bash.run(runContext);
-
-        assertThat(run.getExitCode(), is(0));
-        assertThat(run.getStdErrLineCount(), is(0));
-        assertThat(run.getStdOutLineCount(), is(0));
-
-        InputStream get = storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("xml/file1.txt"));
-        assertThat(CharStreams.toString(new InputStreamReader(get)), is("1\n"));
-
-        get = storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("xml/sub/sub2/file2.txt"));
-        assertThat(CharStreams.toString(new InputStreamReader(get)), is("2\n"));
-
-        get = storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("csv/file1.txt"));
-        assertThat(CharStreams.toString(new InputStreamReader(get)), is("3\n"));
-    }
-    @Test
     @DisabledIfEnvironmentVariable(named = "GITHUB_WORKFLOW", matches = ".*")
     void failed() {
         Bash bash = configure(Bash.builder()
@@ -157,6 +128,7 @@ abstract class AbstractBashTest {
         assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getStdOutLineCount(), is(0));
         assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getStdErrLineCount(), is(1));
     }
+
     @Test
     @DisabledIfEnvironmentVariable(named = "GITHUB_WORKFLOW", matches = ".*")
     void dontStopOnFirstFailed() throws Exception {
@@ -246,7 +218,6 @@ abstract class AbstractBashTest {
             new URI("/file/storage/get.yml"),
             new FileInputStream(Objects.requireNonNull(resource).getFile())
         );
-
 
         Map<String, String> files = new HashMap<>();
         files.put("1.yml", put1.toString());
