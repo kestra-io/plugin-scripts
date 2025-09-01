@@ -47,7 +47,7 @@ class CommandsTest {
         URI put = storageInterface.put(
             TenantService.MAIN_TENANT,
             null,
-            new URI("/file/storage/get.yml"),
+            new URI("/file/storage/tests/scripts/ruby/get.yml"),
             IOUtils.toInputStream(
                 "puts \"Hello World!\"\n" +
                     "STDERR.puts \"done\"",

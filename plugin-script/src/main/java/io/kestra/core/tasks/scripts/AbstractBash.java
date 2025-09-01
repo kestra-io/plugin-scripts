@@ -189,7 +189,7 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
         if (!rFiles.isEmpty()) {
             allOutputs.addAll(rFiles);
         }
-        
+
         Map<String, String> outputFilePaths = PluginUtilsService.createOutputFiles(
             workingDirectory,
             allOutputs,

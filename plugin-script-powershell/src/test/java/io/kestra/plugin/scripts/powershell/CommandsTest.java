@@ -50,7 +50,7 @@ class CommandsTest {
         URI put = storageInterface.put(
             TenantService.MAIN_TENANT,
             null,
-            new URI("/file/storage/get.yml"),
+            new URI("/file/storage/tests/scripts/powershell/get.yml"),
             IOUtils.toInputStream(
                 "Get-ChildItem | Format-List",
                 StandardCharsets.UTF_8
