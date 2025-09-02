@@ -3,7 +3,7 @@ plugins {
     id "idea"
     id 'jacoco-report-aggregation'
     id "com.adarshr.test-logger" version "4.0.0" apply(false)
-    id "com.github.johnrengelman.shadow" version "8.1.1" apply(false)
+    id "com.gradleup.shadow" version "9.1.0" apply(false)
     id 'signing'
     id "com.github.ben-manes.versions" version "0.52.0"
     id 'net.researchgate.release' version '3.1.0'
@@ -182,7 +182,7 @@ subprojects { Project subproject ->
     apply plugin: "io.kestra.gradle.inject-bom-versions"
 
     if (subproject.path != ":plugin-script") {
-        apply plugin: "com.github.johnrengelman.shadow"
+        apply plugin: "com.gradleup.shadow"
 
         shadowJar {
             dependsOn(":plugin-script:jar")
