@@ -129,3 +129,14 @@ tasks:
       DISCOUNT_AMOUNT: "{{ inputs.discount_amount }}"
     commands:
       - python main.py
+
+  - id: assert
+    type: io.kestra.plugin.core.execution.Assert
+    conditions:
+    - "{{ outputs.python_script.exitCode == 0 }}"
+    - "{{ outputs.python_script_process.exitCode == 0 }}"
+    - "{{ outputs.python_commands.exitCode == 0 }}"
+    - "{{ outputs.python_script_process.exitCode == 0 }}"
+    - "{{ outputs.python_script_logs.exitCode == 0 }}"
+    - "{{ outputs.python_script_metrics.exitCode == 0 }}"
+    - "{{ outputs.python_commands_etl_outputs.outputFiles != '' }}"
