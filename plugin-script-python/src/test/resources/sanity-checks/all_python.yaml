@@ -139,4 +139,4 @@ tasks:
     - "{{ outputs.python_script_process.exitCode == 0 }}"
     - "{{ outputs.python_script_logs.exitCode == 0 }}"
     - "{{ outputs.python_script_metrics.exitCode == 0 }}"
-    - "{{ outputs.python_commands_etl_outputs.outputFiles != '' }}"
+    - "{{ outputs.python_commands_etl_outputs.outputFiles['processed_orders.csv'] != null }}"
