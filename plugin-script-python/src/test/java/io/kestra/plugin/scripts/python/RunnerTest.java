@@ -15,7 +15,7 @@ class RunnerTest {
     @Test
     @ExecuteFlow("sanity-checks/all_python.yaml")
     void all_python(Execution execution) {
-        assertThat(execution.getTaskRunList(), hasSize(8));
+        assertThat(execution.getTaskRunList(), hasSize(9));
         assertThat(execution.getState().getCurrent(), is(State.Type.SUCCESS));
     }
 }
