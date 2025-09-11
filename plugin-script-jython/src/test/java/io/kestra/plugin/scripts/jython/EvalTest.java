@@ -13,8 +13,8 @@ class EvalTest extends io.kestra.plugin.scripts.jvm.EvalTest {
         return Eval.builder()
             .id("jython-eval-" + UUID.randomUUID())
             .type(Eval.class.getName())
-            .outputs(Property.of(Arrays.asList("out", "map")))
-            .script(Property.of("from io.kestra.core.models.executions.metrics import Counter\n" +
+            .outputs(Property.ofValue(Arrays.asList("out", "map")))
+            .script(Property.ofValue("from io.kestra.core.models.executions.metrics import Counter\n" +
                 "import tempfile\n" +
                 "from java.io import File\n" +
                 "\n" +

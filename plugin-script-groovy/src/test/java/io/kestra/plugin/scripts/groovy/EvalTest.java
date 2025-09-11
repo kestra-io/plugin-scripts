@@ -13,7 +13,7 @@ class EvalTest extends io.kestra.plugin.scripts.jvm.EvalTest {
         return Eval.builder()
             .id("groovy-eval-" + UUID.randomUUID())
             .type(Eval.class.getName())
-            .outputs(Property.of(Arrays.asList("out", "map")))
+            .outputs(Property.ofValue(Arrays.asList("out", "map")))
             .script(new Property<>("import io.kestra.core.models.executions.metrics.Counter\n" +
                 "\n" +
                 "logger.info('executionId: {}', runContext.render('{{ execution.id }}'))\n" +

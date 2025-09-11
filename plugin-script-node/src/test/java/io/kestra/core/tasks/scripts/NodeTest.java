@@ -36,7 +36,7 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
-            .nodePath(Property.of("node"))
+            .nodePath(Property.ofValue("node"))
             .inputFiles(files)
             .build();
 
@@ -57,7 +57,7 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
-            .nodePath(Property.of("node"))
+            .nodePath(Property.ofValue("node"))
             .inputFiles(files)
             .build();
 
@@ -78,8 +78,8 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
-            .nodePath(Property.of("node"))
-            .npmPath(Property.of("npm"))
+            .nodePath(Property.ofValue("node"))
+            .npmPath(Property.ofValue("npm"))
             .inputFiles(files)
             .build();
 
@@ -98,7 +98,7 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
-            .nodePath(Property.of("node"))
+            .nodePath(Property.ofValue("node"))
             .inputFiles(files)
             .build();
 
@@ -118,7 +118,7 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
-            .nodePath(Property.of("node"))
+            .nodePath(Property.ofValue("node"))
             .inputFiles(files)
             .build();
 
@@ -136,9 +136,9 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
-            .nodePath(Property.of("node"))
+            .nodePath(Property.ofValue("node"))
             .inputFiles(files)
-            .args(Property.of(Arrays.asList("test", "param", "value")))
+            .args(Property.ofValue(Arrays.asList("test", "param", "value")))
             .build();
 
         ScriptOutput run = node.run(runContext);
@@ -160,7 +160,7 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
-            .nodePath(Property.of("node"))
+            .nodePath(Property.ofValue("node"))
             .inputFiles(files)
             .build();
 

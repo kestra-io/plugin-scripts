@@ -14,7 +14,7 @@ class EvalTest extends io.kestra.plugin.scripts.jvm.EvalTest {
         return Eval.builder()
             .id("nashorn-eval-" + UUID.randomUUID())
             .type(Eval.class.getName())
-            .outputs(Property.of(Arrays.asList("out", "map")))
+            .outputs(Property.ofValue(Arrays.asList("out", "map")))
             .script(new Property<>("var Counter = Java.type('io.kestra.core.models.executions.metrics.Counter');\n" +
                 "var File = Java.type('java.io.File');\n" +
                 "var FileOutputStream = Java.type('java.io.FileOutputStream');\n" +
