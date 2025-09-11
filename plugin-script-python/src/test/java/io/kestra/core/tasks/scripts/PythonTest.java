@@ -112,7 +112,7 @@ class PythonTest {
             .id("test-python-task")
             .type(Python.class.getName())
             .inputFiles(files)
-            .runner(Property.of(RunnerType.DOCKER))
+            .runner(Property.ofValue(RunnerType.DOCKER))
             .dockerOptions(DockerOptions.builder()
                 .image("python")
                 .build()

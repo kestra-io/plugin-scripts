@@ -346,7 +346,7 @@ public class Script extends AbstractPythonExecScript implements RunnableTask<Scr
             .withInterpreter(this.interpreter)
             .withBeforeCommands(beforeCommands)
             .withBeforeCommandsWithOptions(true)
-            .withCommands(Property.of(List.of(
+            .withCommands(Property.ofValue(List.of(
                 String.join(" ", pythonEnvironment.interpreter(), commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
             )))
             .withTargetOS(os)

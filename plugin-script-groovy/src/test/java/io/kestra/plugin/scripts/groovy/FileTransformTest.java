@@ -15,7 +15,7 @@ class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
             .type(FileTransform.class.getName())
             .from(source)
             .concurrent(10)
-            .script(Property.of("logger.info('row: {}', row)\n" +
+            .script(Property.ofValue("logger.info('row: {}', row)\n" +
                 "sleep(1000)\n" +
                 "if (row.get('name') == 'richard') {\n" +
                 "  row = null\n" +
@@ -33,7 +33,7 @@ class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
             .type(FileTransform.class.getName())
             .from(source)
             .concurrent(10)
-            .script(Property.of("rows = [1, 2, row, [\"action\": \"insert\"]]\n"))
+            .script(Property.ofValue("rows = [1, 2, row, [\"action\": \"insert\"]]\n"))
             .build();
     }
 }

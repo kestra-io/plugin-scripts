@@ -54,7 +54,7 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script(Property.of("print('::{\"outputs\": {\"extract\":\"hello world\"}}::')"))
+            .script(Property.ofValue("print('::{\"outputs\": {\"extract\":\"hello world\"}}::')"))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
@@ -73,7 +73,7 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script(Property.of("import sys; sys.exit(1)"))
+            .script(Property.ofValue("import sys; sys.exit(1)"))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
@@ -93,10 +93,10 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script(Property.of("import requests;" +
+            .script(Property.ofValue("import requests;" +
                 "print('::{\"outputs\": {\"extract\":\"' + str(requests.get('https://google.com').status_code) + '\"}}::')"
             ))
-            .beforeCommands(Property.of(List.of(
+            .beforeCommands(Property.ofValue(List.of(
                 "python3 -m venv venv",
                 ". venv/bin/activate",
                 "pip install requests > /dev/null"
@@ -118,9 +118,9 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .dependencies(Property.of(List.of("kestra", "pandas")))
-            .pythonVersion(Property.of("3"))
-            .script(Property.of("""
+            .dependencies(Property.ofValue(List.of("kestra", "pandas")))
+            .pythonVersion(Property.ofValue("3"))
+            .script(Property.ofValue("""
                   from kestra import Kestra
                   import pandas as pd
                   data = {
@@ -160,7 +160,7 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script(Property.of("import os\n" +
+            .script(Property.ofValue("import os\n" +
                 "\n" +
                 "file_size = os.path.getsize(\"" + put.toString() + "\")\n" +
                 "print('::{\"outputs\": {\"extract\":' + str(file_size) + '}}::')"
@@ -182,11 +182,11 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script(Property.of("from kestra import Kestra\n" +
+            .script(Property.ofValue("from kestra import Kestra\n" +
                 "print(\"1234\\n\\n\")\n" +
                 "Kestra.outputs({'secrets': \"test string\"})"
             ))
-            .beforeCommands(Property.of(List.of(
+            .beforeCommands(Property.ofValue(List.of(
                 "python -m venv venv",
                 ". venv/bin/activate",
                 "pip install kestra > /dev/null"
@@ -208,7 +208,7 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .beforeCommands(Property.of(List.of(
+            .beforeCommands(Property.ofValue(List.of(
                 "python -m venv venv",
                 ". venv/bin/activate",
                 "pip install kestra > /dev/null"
@@ -229,7 +229,7 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script(Property.of("from kestra import Kestra\n" +
+            .script(Property.ofValue("from kestra import Kestra\n" +
                 "import time\n" +
                 "Kestra.outputs({'test': 'value', 'int': 2, 'bool': True, 'float': 3.65})\n" +
                 "Kestra.counter('count', 1, {'tag1': 'i', 'tag2': 'win'})\n" +
@@ -237,7 +237,7 @@ class ScriptTest {
                 "Kestra.timer('timer1', lambda: time.sleep(1), {'tag1': 'i', 'tag2': 'lost'})\n" +
                 "Kestra.timer('timer2', 2.12, {'tag1': 'i', 'tag2': 'destroy'})\n"
             ))
-            .beforeCommands(Property.of(List.of(
+            .beforeCommands(Property.ofValue(List.of(
                 "python -m venv venv",
                 ". venv/bin/activate",
                 "pip install kestra > /dev/null"
