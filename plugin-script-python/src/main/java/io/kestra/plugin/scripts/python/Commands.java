@@ -9,6 +9,7 @@ import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+import io.kestra.plugin.scripts.python.internals.PackageManagerType;
 import io.kestra.plugin.scripts.python.internals.PythonEnvironmentManager;
 import io.kestra.plugin.scripts.python.internals.PythonEnvironmentManager.ResolvedPythonEnvironment;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -69,6 +70,11 @@ import java.util.Map;
                   type: io.kestra.plugin.scripts.python.Commands
                   namespaceFiles:
                     enabled: true
+                    folderPerNamespace: true
+                    namespaces:
+                      - company
+                      - company.team
+                      - company.team.project # Explicitly name all namespaces to include; by default only the flow namespace is loaded.
                     include:
                       - etl_script.py
                   taskRunner:
@@ -253,7 +259,7 @@ import java.util.Map;
                                 }
                             }
                           }
-                """
+              """
     ),
     @Example(
         full = true,
@@ -264,6 +270,7 @@ import java.util.Map;
             tasks:
               - id: python
                 type: io.kestra.plugin.scripts.python.Commands
+                packageManager: UV
                 inputFiles:
                   main.py: |
                     import requests
@@ -303,7 +310,8 @@ public class Commands extends AbstractPythonExecScript implements RunnableTask<S
     public ScriptOutput run(RunContext runContext) throws Exception {
         TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
 
-        PythonEnvironmentManager pythonEnvironmentManager = new PythonEnvironmentManager(runContext, this);
+        PackageManagerType resolvedPackageManager = runContext.render(this.packageManager).as(PackageManagerType.class).orElse(PackageManagerType.PIP);
+        PythonEnvironmentManager pythonEnvironmentManager = new PythonEnvironmentManager(runContext, this, resolvedPackageManager);
         ResolvedPythonEnvironment pythonEnvironment = pythonEnvironmentManager.setup(containerImage, taskRunner, runner);
 
         Map<String, String> env = new HashMap<>();

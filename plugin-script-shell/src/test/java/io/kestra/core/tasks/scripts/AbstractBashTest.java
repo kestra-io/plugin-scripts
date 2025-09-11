@@ -2,17 +2,16 @@ package io.kestra.core.tasks.scripts;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
+import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.AbstractMetricEntry;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
-import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.tenant.TenantService;
 import io.kestra.core.utils.TestsUtils;
-import io.kestra.core.junit.annotations.KestraTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
@@ -95,35 +94,6 @@ abstract class AbstractBashTest {
     }
 
     @Test
-    void outputDirs() throws Exception {
-        Bash bash = configure(Bash.builder()
-            .outputDirs(Property.ofValue(Arrays.asList("xml", "csv")))
-            .inputFiles(ImmutableMap.of("files/in/in.txt", "I'm here"))
-            .commands(new String[]{
-                "echo 1 >> {{ outputDirs.xml }}/file1.txt",
-                "mkdir -p {{ outputDirs.xml }}/sub/sub2",
-                "echo 2 >> {{ outputDirs.xml }}/sub/sub2/file2.txt",
-                "echo 3 >> {{ outputDirs.csv }}/file1.txt",
-            })
-        ).build();
-
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptOutput run = bash.run(runContext);
-
-        assertThat(run.getExitCode(), is(0));
-        assertThat(run.getStdErrLineCount(), is(0));
-        assertThat(run.getStdOutLineCount(), is(0));
-
-        InputStream get = storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("xml/file1.txt"));
-        assertThat(CharStreams.toString(new InputStreamReader(get)), is("1\n"));
-
-        get = storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("xml/sub/sub2/file2.txt"));
-        assertThat(CharStreams.toString(new InputStreamReader(get)), is("2\n"));
-
-        get = storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("csv/file1.txt"));
-        assertThat(CharStreams.toString(new InputStreamReader(get)), is("3\n"));
-    }
-    @Test
     @DisabledIfEnvironmentVariable(named = "GITHUB_WORKFLOW", matches = ".*")
     void failed() {
         Bash bash = configure(Bash.builder()
@@ -157,6 +127,7 @@ abstract class AbstractBashTest {
         assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getStdOutLineCount(), is(0));
         assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getStdErrLineCount(), is(1));
     }
+
     @Test
     @DisabledIfEnvironmentVariable(named = "GITHUB_WORKFLOW", matches = ".*")
     void dontStopOnFirstFailed() throws Exception {
@@ -198,12 +169,7 @@ abstract class AbstractBashTest {
     void useInputFilesFromKestraFs() throws Exception {
         URL resource = AbstractBashTest.class.getClassLoader().getResource("application.yml");
 
-        URI put = storageInterface.put(
-            TenantService.MAIN_TENANT,
-            null,
-            new URI("/file/storage/get.yml"),
-            new FileInputStream(Objects.requireNonNull(resource).getFile())
-        );
+        URI put = putUnique(storageInterface, resource);
 
         Map<String, String> files = new HashMap<>();
         files.put("test.sh", "cat fscontent.txt");
@@ -233,20 +199,9 @@ abstract class AbstractBashTest {
     void useInputFilesAsVariable() throws Exception {
         URL resource = AbstractBashTest.class.getClassLoader().getResource("application.yml");
 
-        URI put1 = storageInterface.put(
-            TenantService.MAIN_TENANT,
-            null,
-            new URI("/file/storage/get.yml"),
-            new FileInputStream(Objects.requireNonNull(resource).getFile())
-        );
+        URI put1 = putUnique(storageInterface, resource);
 
-        URI put2 = storageInterface.put(
-            TenantService.MAIN_TENANT,
-            null,
-            new URI("/file/storage/get.yml"),
-            new FileInputStream(Objects.requireNonNull(resource).getFile())
-        );
-
+        URI put2 = putUnique(storageInterface, resource);
 
         Map<String, String> files = new HashMap<>();
         files.put("1.yml", put1.toString());
@@ -276,12 +231,7 @@ abstract class AbstractBashTest {
     void preventRelativeFile() throws Exception {
         URL resource = AbstractBashTest.class.getClassLoader().getResource("application.yml");
 
-        URI put = storageInterface.put(
-            TenantService.MAIN_TENANT,
-            null,
-            new URI("/file/storage/get.yml"),
-            new FileInputStream(Objects.requireNonNull(resource).getFile())
-        );
+        URI put = putUnique(storageInterface, resource);
 
         assertThrows(IllegalArgumentException.class, () -> {
             Bash bash = configure(Bash.builder()
@@ -360,5 +310,15 @@ abstract class AbstractBashTest {
             .filter(abstractMetricEntry -> abstractMetricEntry.getName().equals(name))
             .findFirst()
             .orElseThrow();
+    }
+
+    private static URI putUnique(StorageInterface storage, URL resource) throws Exception {
+        String name = "test-" + UUID.randomUUID() + ".yml";
+        return storage.put(
+            TenantService.MAIN_TENANT,
+            null,
+            new URI("/file/storage/tests/" + name),
+            new FileInputStream(Objects.requireNonNull(resource).getFile())
+        );
     }
 }

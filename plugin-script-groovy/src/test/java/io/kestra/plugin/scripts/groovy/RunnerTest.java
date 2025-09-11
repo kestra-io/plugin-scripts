@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts.python;
+package io.kestra.plugin.scripts.groovy;
 
 import io.kestra.core.junit.annotations.ExecuteFlow;
 import io.kestra.core.junit.annotations.KestraTest;
@@ -13,9 +13,9 @@ import static org.hamcrest.Matchers.is;
 @KestraTest(startRunner = true)
 class RunnerTest {
     @Test
-    @ExecuteFlow("sanity-checks/all_python.yaml")
-    void all_python(Execution execution) {
-        assertThat(execution.getTaskRunList(), hasSize(9));
+    @ExecuteFlow("sanity-checks/all_groovy.yaml")
+    void all_groovy(Execution execution) {
+        assertThat(execution.getTaskRunList(), hasSize(2));
         assertThat(execution.getState().getCurrent(), is(State.Type.SUCCESS));
     }
 }

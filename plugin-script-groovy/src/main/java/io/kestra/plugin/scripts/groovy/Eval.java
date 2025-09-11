@@ -1,11 +1,14 @@
 package io.kestra.plugin.scripts.groovy;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.runners.RunContext;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
 @ToString
@@ -46,7 +49,7 @@ import io.kestra.core.runners.RunContext;
                       URI uri = new URI(runContext.variables.outputs.download.uri)
                       InputStream istream = runContext.storage().getFile(uri)
                       logger.info('Content: {}', istream.text)
-                  """
+                """
             ),
         @Example(
             code = """

@@ -4,13 +4,14 @@ import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.property.Property;
 
 import java.util.Arrays;
+import java.util.UUID;
 
 @KestraTest
 class EvalTest extends io.kestra.plugin.scripts.jvm.EvalTest {
     @Override
     protected io.kestra.plugin.scripts.jvm.Eval task() {
         return Eval.builder()
-            .id("unit-test")
+            .id("groovy-eval-" + UUID.randomUUID())
             .type(Eval.class.getName())
             .outputs(Property.ofValue(Arrays.asList("out", "map")))
             .script(new Property<>("import io.kestra.core.models.executions.metrics.Counter\n" +

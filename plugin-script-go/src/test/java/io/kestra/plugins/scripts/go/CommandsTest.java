@@ -12,7 +12,6 @@ import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.tenant.TenantService;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.go.Commands;
-import io.kestra.plugin.scripts.go.Script;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.apache.commons.io.IOUtils;
@@ -21,9 +20,10 @@ import org.junit.jupiter.api.Test;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -42,7 +42,7 @@ public class CommandsTest {
 
     @Test
     void should_print_hello_there() throws Exception {
-        List<LogEntry> logs = new ArrayList<>();
+        List<LogEntry> logs = new CopyOnWriteArrayList<>();
         var receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         var goScript = storageInterface.put(
@@ -64,7 +64,7 @@ public class CommandsTest {
         inputFiles.put("go_script.go", goScript.toString());
 
         var commands = Commands.builder()
-            .id("go_commands")
+            .id("go-commands-" + UUID.randomUUID())
             .type(Commands.class.getName())
             .allowWarning(true)
             .inputFiles(inputFiles)
@@ -84,7 +84,7 @@ public class CommandsTest {
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("hello there!"));
         receive.blockLast();
-        assertThat(logs.stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("hello there!")).count(), is(1L));
+        assertThat(List.copyOf(logs).stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("hello there!")).count(), is(1L));
     }
 
     @Test
@@ -93,7 +93,7 @@ public class CommandsTest {
         var goScript = storageInterface.put(
             TenantService.MAIN_TENANT,
             null,
-            new URI("/file/storage/go_script.go"),
+            new URI("/file/storage/csv_output/go_script.go"),
             IOUtils.toInputStream("""
                     package main
                     import (

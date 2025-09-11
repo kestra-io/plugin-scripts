@@ -15,8 +15,9 @@ import jakarta.inject.Named;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -33,11 +34,11 @@ public class ScriptTest {
 
     @Test
     void script() throws Exception {
-        List<LogEntry> logs = new ArrayList<>();
+        List<LogEntry> logs = new CopyOnWriteArrayList<>();
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         Script phpScript = Script.builder()
-            .id("unit-test")
+            .id("php-script-" + UUID.randomUUID())
             .type(Script.class.getName())
             .script(Property.ofValue("""
                 #!/usr/bin/php
@@ -55,6 +56,6 @@ public class ScriptTest {
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("Hello, World!"));
         receive.blockLast();
-        assertThat(logs.stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("Hello, World!")).count(), is(1L));
+        assertThat(List.copyOf(logs).stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("Hello, World!")).count(), is(1L));
     }
 }

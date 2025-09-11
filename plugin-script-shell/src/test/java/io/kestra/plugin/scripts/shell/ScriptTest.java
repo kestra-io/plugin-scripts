@@ -2,6 +2,7 @@ package io.kestra.plugin.scripts.shell;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
+import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.queues.QueueFactoryInterface;
@@ -10,13 +11,11 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.tenant.TenantService;
-import io.kestra.core.utils.IdUtils;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.runner.docker.Credentials;
-import io.kestra.core.junit.annotations.KestraTest;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.junit.jupiter.api.Test;
@@ -31,6 +30,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -59,7 +59,7 @@ class ScriptTest {
     @MethodSource("source")
     void script(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Script bash = Script.builder()
-            .id("unit-test")
+            .id("shell-script-" + UUID.randomUUID())
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
@@ -83,7 +83,7 @@ class ScriptTest {
     @MethodSource("source")
     void massLog(RunnerType runner, DockerOptions dockerOptions) throws Exception {
         Script bash = Script.builder()
-            .id("unit-test")
+            .id("shell-script-log-" + UUID.randomUUID())
             .type(Script.class.getName())
             .docker(dockerOptions)
             .interpreter(Property.ofValue(List.of("/bin/bash", "-c")))
@@ -108,7 +108,7 @@ class ScriptTest {
     @Test
     void overwrite() throws Exception {
         Function<String, Script> function = (String username) -> Script.builder()
-            .id("unit-test")
+            .id("shell-script-overwrite-" + UUID.randomUUID())
             .type(Script.class.getName())
             .docker(DockerOptions.builder()
                 .image("ubuntu")
@@ -144,10 +144,10 @@ class ScriptTest {
     @Test
     void inputOutputFiles() throws Exception {
         Script bash = Script.builder()
-            .id("unit-test")
+            .id("shell-script-files-" + UUID.randomUUID())
             .type(Script.class.getName())
             .inputFiles(Map.of(
-                "test/application.yml", internalFiles("/test/" + IdUtils.create() + ".yml").toString()
+                "test/application.yml", internalFiles("/test/" + UUID.randomUUID() + ".yml").toString()
             ))
             .outputFiles(Property.ofValue(
                 List.of("out/**")))

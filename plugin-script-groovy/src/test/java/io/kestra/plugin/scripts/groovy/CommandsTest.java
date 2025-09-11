@@ -1,4 +1,4 @@
-package io.kestra.plugins.scripts.lua;
+package io.kestra.plugin.scripts.groovy;
 
 import com.google.common.collect.ImmutableMap;
 import io.kestra.core.junit.annotations.KestraTest;
@@ -9,15 +9,12 @@ import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.utils.TestsUtils;
-import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.plugin.scripts.lua.Commands;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -26,6 +23,7 @@ import static org.hamcrest.Matchers.is;
 
 @KestraTest
 public class CommandsTest {
+
     @Inject
     RunContextFactory runContextFactory;
 
@@ -38,23 +36,20 @@ public class CommandsTest {
         List<LogEntry> logs = new CopyOnWriteArrayList<>();
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
-        Commands luaCommands = Commands.builder()
-            .id("lua-commands-" + UUID.randomUUID())
+        var groovyCommands = Commands.builder()
+            .id("groovy-commands-" + UUID.randomUUID())
             .type(Commands.class.getName())
-            .commands(Property.ofValue(List.of("lua main.lua")))
-            .inputFiles(Map.of(
-                "main.lua", "print(\"Hello from kestra!\");"
-            ))
+            .allowWarning(true)
+            .commands(Property.ofValue(List.of("groovy -e \"println 'I love Kestra!'\"")))
             .build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, luaCommands, ImmutableMap.of());
-        ScriptOutput run = luaCommands.run(runContext);
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, groovyCommands, ImmutableMap.of());
+        var run = groovyCommands.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
 
-        String expectedLog = "Hello from kestra!";
-        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains(expectedLog));
+        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("I love Kestra!"));
         receive.blockLast();
-        assertThat(List.copyOf(logs).stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains(expectedLog)), is(true));
+        assertThat(List.copyOf(logs).stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains("I love Kestra!")), is(true));
     }
 }
