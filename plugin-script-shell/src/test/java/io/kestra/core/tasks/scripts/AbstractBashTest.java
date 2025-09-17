@@ -14,7 +14,6 @@ import io.kestra.core.tenant.TenantService;
 import io.kestra.core.utils.TestsUtils;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -98,6 +97,7 @@ abstract class AbstractBashTest {
         Bash bash = configure(Bash.builder()
             .interpreter(Property.ofValue("/bin/bash"))
             .commands(new String[]{"echo 1 1>&2", "exit 66", "echo 2"})
+            .interpreter(Property.ofValue("/bin/bash"))
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -133,6 +133,7 @@ abstract class AbstractBashTest {
         Bash bash = configure(Bash.builder()
             .interpreter(Property.ofValue("/bin/bash"))
             .commands(new String[]{"unknown", "echo 1"})
+            .interpreter(Property.ofValue("/bin/bash"))
             .exitOnFailed(Property.ofValue(false))
         ).build();
 
