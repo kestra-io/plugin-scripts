@@ -39,7 +39,7 @@ public class ScriptTest {
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         Script bunScript = Script.builder()
-            .id("bun-commands-" + UUID.randomUUID())
+            .id("bun-script-" + UUID.randomUUID())
             .type(Script.class.getName())
             .script(Property.ofValue("console.log(\"Kestra is amazing!\");"))
             .build();
