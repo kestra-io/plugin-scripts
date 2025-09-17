@@ -157,6 +157,12 @@ subprojects {
     test {
         finalizedBy jacocoTestReport
     }
+
+    jacocoTestReport {
+        reports {
+            xml.required.set(true)
+        }
+    }
 }
 
 dependencies {
