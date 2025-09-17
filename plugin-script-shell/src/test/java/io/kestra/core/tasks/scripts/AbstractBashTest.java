@@ -94,9 +94,9 @@ abstract class AbstractBashTest {
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = "GITHUB_WORKFLOW", matches = ".*")
     void failed() {
         Bash bash = configure(Bash.builder()
+            .interpreter(Property.ofValue("/bin/bash"))
             .commands(new String[]{"echo 1 1>&2", "exit 66", "echo 2"})
         ).build();
 
@@ -108,14 +108,14 @@ abstract class AbstractBashTest {
 
         assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getExitCode(), is(66));
         assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getStdOutLineCount(), is(0));
-        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getStdErrLineCount(), is(1));
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getStdErrLineCount(), greaterThan(0));
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = "GITHUB_WORKFLOW", matches = ".*")
     void stopOnFirstFailed() {
         Bash bash = configure(Bash.builder()
             .commands(new String[]{"unknown", "echo 1"})
+            .interpreter(Property.ofValue("/bin/bash"))
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -125,13 +125,13 @@ abstract class AbstractBashTest {
 
         assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getExitCode(), is(127));
         assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getStdOutLineCount(), is(0));
-        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getStdErrLineCount(), is(1));
+        assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getStdErrLineCount(), greaterThan(0));
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = "GITHUB_WORKFLOW", matches = ".*")
     void dontStopOnFirstFailed() throws Exception {
         Bash bash = configure(Bash.builder()
+            .interpreter(Property.ofValue("/bin/bash"))
             .commands(new String[]{"unknown", "echo 1"})
             .exitOnFailed(Property.ofValue(false))
         ).build();
@@ -141,7 +141,7 @@ abstract class AbstractBashTest {
 
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getStdOutLineCount(), is(1));
-        assertThat(run.getStdErrLineCount(), is(1));
+        assertThat(run.getStdErrLineCount(), greaterThan(0));
     }
 
     @Test

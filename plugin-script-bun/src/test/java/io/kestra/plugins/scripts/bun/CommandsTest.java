@@ -40,7 +40,7 @@ public class CommandsTest {
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
         var bunCommands = Commands.builder()
-            .id("bun-script-" + UUID.randomUUID())
+            .id("bun-commands-" + UUID.randomUUID())
             .type(Commands.class.getName())
             .beforeCommands(Property.ofValue(List.of("bun add cowsay")))
             .commands(Property.ofValue(List.of("bun run index.ts")))
