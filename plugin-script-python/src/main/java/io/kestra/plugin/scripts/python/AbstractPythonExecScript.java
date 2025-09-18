@@ -27,6 +27,7 @@ public abstract class AbstractPythonExecScript extends AbstractExecScript implem
 
     protected Property<String> pythonVersion;
 
+    @Builder.Default
     protected Property<Boolean> dependencyCacheEnabled = Property.ofValue(true);
 
     @Schema(
