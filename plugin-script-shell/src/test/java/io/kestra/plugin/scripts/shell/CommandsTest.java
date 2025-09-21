@@ -223,7 +223,7 @@ class CommandsTest {
             .id("shell-commands-pull-" + UUID.randomUUID())
             .type(Commands.class.getName())
             .docker(DockerOptions.builder()
-                .pullPolicy(Property.ofValue(PullPolicy.IF_NOT_PRESENT))
+                .pullPolicy(Property.ofValue(PullPolicy.ALWAYS))
                 .image("alpine:3.15.6")
                 .build()
             )
@@ -240,7 +240,7 @@ class CommandsTest {
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("Image pulled"));
         receive.blockLast();
-        assertThat(List.copyOf(logs).stream().filter(m -> m.getMessage().contains("pulled")).count(), is(1L));
+        assertThat(List.copyOf(logs).stream().filter(m -> m.getMessage().contains("pulled")).count(), greaterThan(1L));
     }
 
     @Test
