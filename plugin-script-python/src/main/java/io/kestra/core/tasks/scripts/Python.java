@@ -8,6 +8,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
+import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.plugin.scripts.python.internals.PackageManagerType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
@@ -229,6 +230,11 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
             if (this.commands != null && this.commands.size() == 1 && this.commands.getFirst().equals("./bin/python main.py")) {
                 throw new Exception("Invalid input files structure, expecting inputFiles property to contain at least a main.py key with python code value.");
             }
+        }
+
+        if (this.getOutputsFiles() != null) {
+            var rOutputsFiles = runContext.render(this.getOutputsFiles()).asList(String.class);
+            additionalVars.put("outputFiles", rOutputsFiles);
         }
 
         return run(runContext, throwSupplier(() -> {

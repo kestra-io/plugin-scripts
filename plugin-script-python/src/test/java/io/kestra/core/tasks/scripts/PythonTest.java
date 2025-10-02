@@ -253,6 +253,28 @@ class PythonTest {
         assertThat(PythonTest.<Duration>getMetrics(runContext, "timer2").getTags().get("tag2"), is("destroy"));
     }
 
+    @Test
+    void outputFiles() throws Exception {
+        RunContext runContext = runContextFactory.of(ImmutableMap.of());
+        Map<String, String> files = new HashMap<>();
+        files.put("main.py", """
+            with open("{{ outputFiles.test }}", "w", encoding="utf-8") as f:
+                f.write("test")
+            """
+        );
+
+        Python node = Python.builder()
+            .id("test-output-files")
+            .pythonPath("python3")
+            .outputsFiles(Property.ofValue(List.of("test")))
+            .inputFiles(files)
+            .build();
+
+        ScriptOutput run = node.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+    }
+
     @SuppressWarnings("unchecked")
     static <T> AbstractMetricEntry<T> getMetrics(RunContext runContext, String name) {
         return (AbstractMetricEntry<T>) runContext.metrics()
