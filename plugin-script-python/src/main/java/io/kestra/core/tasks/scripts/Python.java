@@ -212,6 +212,11 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
             }
         }
 
+        if (this.getOutputsFiles() != null) {
+            var rOutputsFiles = runContext.render(this.getOutputsFiles()).asList(String.class);
+            additionalVars.put("outputFiles", rOutputsFiles);
+        }
+
         return run(runContext, throwSupplier(() -> {
             List<String> renderer = new ArrayList<>();
             if (this.virtualEnv) {
