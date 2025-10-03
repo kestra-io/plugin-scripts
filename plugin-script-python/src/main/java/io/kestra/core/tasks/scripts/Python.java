@@ -201,8 +201,6 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
-        Map<String, String> finalInputFiles = this.finalInputFiles(runContext);
-
         if (this.inputFiles == null ||
             (this.inputFiles instanceof Map && !((Map<?, ?>) this.inputFiles).containsKey("main.py")) ||
             (this.inputFiles instanceof String && !this.inputFiles.toString().contains("main.py"))) {
