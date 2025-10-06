@@ -11,3 +11,8 @@ jar {
         )
     }
 }
+
+
+test {
+    failOnNoDiscoveredTests = false
+}
