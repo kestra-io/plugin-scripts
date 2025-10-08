@@ -2,7 +2,9 @@ package io.kestra.plugin.scripts.python;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
+import io.kestra.core.models.annotations.Metric;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.executions.metrics.Counter;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
@@ -295,6 +297,10 @@ import java.util.Map;
                       - "Average Marks: {{ outputs.generate_output.vars.average_marks }}"
                 """
         )
+    },
+    metrics = {
+        @Metric(name = "deps.cache.download.duration", description = "Number of records converted", type = Counter.TYPE),
+        @Metric(name = "deps.cache.upload.duration", description = "Number of records converted", type = Counter.TYPE),
     }
 )
 public class Script extends AbstractPythonExecScript implements RunnableTask<ScriptOutput> {

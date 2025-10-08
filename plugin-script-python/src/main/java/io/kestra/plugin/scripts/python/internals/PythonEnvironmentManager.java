@@ -84,7 +84,7 @@ public class PythonEnvironmentManager {
                 runContext.logger().debug("Restoring python dependencies cache for key: {}", hash);
                 resolvedPythonPackages = resolver.getPythonLibs(targetPythonVersion, hash, cacheFile.get());
                 runContext.logger().debug("Cache restored successfully");
-                runContext.metric(Timer.of("task.pythondeps.cache.download.duration", Duration.ofMillis(System.currentTimeMillis() - metricCacheDownloadStart)));
+                runContext.metric(Timer.of("deps.cache.download.duration", Duration.ofMillis(System.currentTimeMillis() - metricCacheDownloadStart)));
                 cached = true;
             } else {
                 if (isDependencyCacheEnabled) {
@@ -129,7 +129,7 @@ public class PythonEnvironmentManager {
             File cache = resolvedPythonPackages.toZippedArchive(runContext.workingDir());
             runContext.storage().putCacheFile(cache, getCacheKey(), resolvedPythonPackages.hash());
             runContext.logger().debug("Cache uploaded successfully (size: {} bytes)", cache.length());
-            runContext.metric(Timer.of("task.pythondeps.cache.upload.duration", Duration.ofMillis(System.currentTimeMillis() - start)));
+            runContext.metric(Timer.of("deps.cache.upload.duration", Duration.ofMillis(System.currentTimeMillis() - start)));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
