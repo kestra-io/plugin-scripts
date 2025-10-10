@@ -172,7 +172,6 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
                 renderer.add("./.venv/bin/uv pip install " + runContext.render(String.join(" ", requirements), additionalVars) + " > /dev/null");
             }
         } else {
-            renderer.add(this.pythonPath + " -m venv --system-site-packages " + workingDirectory + " > /dev/null");
             if (requirements != null && !requirements.isEmpty()) {
                 renderer.addAll(Arrays.asList(
                     "./bin/pip install pip --upgrade > /dev/null",
