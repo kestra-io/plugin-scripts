@@ -4,6 +4,9 @@ import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.executions.metrics.Counter;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
+import io.kestra.core.models.annotations.Metric;
+import io.kestra.core.models.annotations.Metrics;
+import io.kestra.core.models.executions.metrics.Timer;
 import io.kestra.core.serializers.FileSerde;
 import io.kestra.core.serializers.JacksonMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -41,6 +44,18 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
         "If you set the `row` to `null`, the row will be skipped.\n" +
         "You can create a variable `rows` to return multiple rows for a single `row`.\n"
 )
+@Metrics({
+    @Metric(
+        name = "records",
+        type = Counter.TYPE,
+        description = "The total number of records processed by the file transform script."
+    ),
+    @Metric(
+        name = "script.execution.duration",
+        type = Timer.TYPE,
+        description = "The duration in milliseconds to execute the file transformation script."
+    )
+})    
 @Deprecated
 public abstract class FileTransform extends AbstractJvmScript implements RunnableTask<FileTransform.Output> {
     @NotNull
