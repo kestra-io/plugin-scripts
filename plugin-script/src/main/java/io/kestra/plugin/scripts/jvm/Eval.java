@@ -3,6 +3,9 @@ package io.kestra.plugin.scripts.jvm;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
+import io.kestra.core.models.annotations.Metric;
+import io.kestra.core.models.annotations.Metrics;
+import io.kestra.core.models.executions.metrics.Timer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -30,6 +33,13 @@ import java.util.Map;
         "\n" +
         "The stdOut & stdErr is not captured, so you must use `logger`.\n"
 )
+@Metrics({
+    @Metric(
+        name = "script.execution.duration",
+        type = Timer.TYPE,
+        description = "The duration in milliseconds to execute the script."
+    )
+})
 @Deprecated
 public abstract class Eval extends AbstractJvmScript implements RunnableTask<Eval.Output> {
     @Schema(
