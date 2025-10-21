@@ -1,6 +1,8 @@
 package io.kestra.plugin.scripts.python.internals;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
+import io.kestra.core.models.annotations.Metrics;
+import io.kestra.core.models.annotations.Metric;
 import io.kestra.core.models.executions.metrics.Timer;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.runners.TaskRunner;
@@ -19,8 +21,35 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.SuperBuilder;
+import lombok.ToString;
+
 import static io.kestra.plugin.scripts.python.internals.PythonBasedPlugin.DEFAULT_IMAGE;
 import static io.kestra.plugin.scripts.python.internals.PythonBasedPlugin.DEFAULT_PYTHON_VERSION;
+
+// @NoArgsConstructor
+// @SuperBuilder
+@ToString
+@EqualsAndHashCode
+@Getter
+@Schema(title = "Manages Python environment setup for a plugin.")
+@Metrics({
+    @Metric(
+        name = "deps.cache.download.duration",
+        type = Timer.TYPE,
+        description = "The duration in milliseconds to download Python dependencies from cache."
+    ),
+    @Metric(
+        name = "deps.cache.upload.duration",
+        type = Timer.TYPE,
+        description = "The duration in milliseconds to upload Python dependencies to cache."
+    )
+})
 
 public class PythonEnvironmentManager {
 
