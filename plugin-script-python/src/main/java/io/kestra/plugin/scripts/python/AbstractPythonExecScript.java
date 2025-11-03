@@ -30,14 +30,6 @@ public abstract class AbstractPythonExecScript extends AbstractExecScript implem
     @Builder.Default
     protected Property<Boolean> dependencyCacheEnabled = Property.ofValue(true);
 
-    @Schema(
-        title = "Package manager for Python dependencies",
-        description = "Package manager to use for installing Python dependencies. " +
-            "Options: 'uv' (default), 'pip'. " +
-            "UV automatically falls back to PIP if not available.",
-        allowableValues = {"PIP", "UV"}
-    )
-    @PluginProperty
     @Builder.Default
     protected Property<PackageManagerType> packageManager = Property.ofValue(PackageManagerType.UV);
 }
