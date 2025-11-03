@@ -119,7 +119,7 @@ class ScriptTest {
             .docker(dockerOptions)
             .runner(runner)
             .dependencies(Property.ofValue(List.of("kestra", "pandas")))
-            .pythonVersion(Property.ofValue("3"))
+            .dependencyCacheEnabled(Property.ofValue(false))
             .script(Property.ofValue("""
                   from kestra import Kestra
                   import pandas as pd
