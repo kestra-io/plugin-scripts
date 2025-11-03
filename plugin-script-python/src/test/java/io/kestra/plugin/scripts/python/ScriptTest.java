@@ -41,7 +41,7 @@ class ScriptTest {
 
     static Stream<Arguments> source() {
         return Stream.of(
-            Arguments.of(RunnerType.DOCKER, DockerOptions.builder().image("python").build()),
+            Arguments.of(RunnerType.DOCKER, DockerOptions.builder().image("python:3.13").build()),
             Arguments.of(RunnerType.PROCESS, DockerOptions.builder().build())
         );
     }
