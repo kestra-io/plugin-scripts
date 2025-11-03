@@ -37,7 +37,7 @@ public class PythonEnvironmentManager {
 
     public PythonEnvironmentManager(final RunContext runContext,
                                 final PythonBasedPlugin plugin) throws IllegalVariableEvaluationException {
-        this(runContext, plugin, PackageManagerType.UV);
+        this(runContext, plugin, runContext.render(plugin.getPackageManager()).as(PackageManagerType.class).orElse(PackageManagerType.UV));
     }
 
 

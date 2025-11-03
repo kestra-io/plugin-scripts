@@ -34,4 +34,14 @@ public interface PythonBasedPlugin extends Plugin {
     )
     @PluginProperty
     Property<Boolean> getDependencyCacheEnabled();
+
+    @Schema(
+        title = "Package manager for Python dependencies",
+        description = "Package manager to use for installing Python dependencies. " +
+            "Options: 'UV' (default), 'PIP'. " +
+            "UV automatically falls back to PIP if not available.",
+        allowableValues = {"PIP", "UV"}
+    )
+    @PluginProperty
+    Property<PackageManagerType> getPackageManager();
 }

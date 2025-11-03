@@ -41,7 +41,7 @@ class ScriptTest {
 
     static Stream<Arguments> source() {
         return Stream.of(
-            Arguments.of(RunnerType.DOCKER, DockerOptions.builder().image("python").build()),
+            Arguments.of(RunnerType.DOCKER, DockerOptions.builder().image("python:3.13").build()),
             Arguments.of(RunnerType.PROCESS, DockerOptions.builder().build())
         );
     }
@@ -119,7 +119,8 @@ class ScriptTest {
             .docker(dockerOptions)
             .runner(runner)
             .dependencies(Property.ofValue(List.of("kestra", "pandas")))
-            .pythonVersion(Property.ofValue("3"))
+            .dependencyCacheEnabled(Property.ofValue(false))
+            .pythonVersion(Property.ofValue("3.13"))
             .script(Property.ofValue("""
                   from kestra import Kestra
                   import pandas as pd

@@ -92,9 +92,17 @@ public enum PackageManagerType {
     PIP("pip") {
         @Override
         public String getPythonPath(PythonDependenciesResolver resolver, String version) {
-            String[] candidates = version == null
+            String normalized = null, major = null;
+            if (version != null && !version.isBlank()) {
+                String[] parts = version.split("\\.");
+                major = parts[0];
+                normalized = parts.length >= 2 ? parts[0] + "." + parts[1] : parts[0];
+            }
+
+            String[] candidates = normalized == null
                 ? new String[]{"python3", "python"}
-                : new String[]{"python" + version, "python" + version.charAt(0) + "." + version.charAt(2), "python3", "python"};
+                : new String[]{"python" + normalized, "python" + major, "python3", "python"};
+
             for (String candidate : candidates) {
                 try {
                     Process process = new ProcessBuilder(candidate, "--version").start();
