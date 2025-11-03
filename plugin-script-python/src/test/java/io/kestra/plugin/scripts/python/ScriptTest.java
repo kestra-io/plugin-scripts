@@ -120,6 +120,7 @@ class ScriptTest {
             .runner(runner)
             .dependencies(Property.ofValue(List.of("kestra", "pandas")))
             .dependencyCacheEnabled(Property.ofValue(false))
+            .pythonVersion(Property.ofValue("3.13"))
             .script(Property.ofValue("""
                   from kestra import Kestra
                   import pandas as pd
