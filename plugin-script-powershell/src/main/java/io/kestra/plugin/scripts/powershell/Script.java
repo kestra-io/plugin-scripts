@@ -115,7 +115,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     }
 
     @Override
-    protected List<String> getExitOnErrorCommands(RunContext runContext) throws IllegalVariableEvaluationException {
-        return List.of("$ErrorActionPreference = \"Stop\"");
+    protected List<String> getExitOnErrorCommands(RunContext runContext) {
+        return List.of("$ErrorActionPreference = 'Stop'");
     }
 }
