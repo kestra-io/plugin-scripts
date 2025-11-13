@@ -8,14 +8,12 @@ import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
-import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.plugin.scripts.python.internals.PackageManagerType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -102,7 +100,6 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
         )
     }
 )
-@Slf4j
 @Deprecated
 public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
     @Builder.Default
