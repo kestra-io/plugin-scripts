@@ -2,7 +2,6 @@ package io.kestra.plugin.scripts.python.internals;
 
 import io.kestra.core.exceptions.KestraRuntimeException;
 import io.kestra.core.runners.WorkingDir;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
@@ -23,7 +22,6 @@ import java.util.function.Function;
 /**
  * Service for resolving python and installing packages.
  */
-@Slf4j
 public class PythonDependenciesResolver {
 
     private static final String HOME_ENV = System.getenv("HOME");
