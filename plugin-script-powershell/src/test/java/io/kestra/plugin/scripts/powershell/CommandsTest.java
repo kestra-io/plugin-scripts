@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -70,9 +71,11 @@ class CommandsTest {
         assertThat(run.getStdErrLineCount(), is(0));
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains(put.getPath()));
-        receive.blockLast();
-        assertThat(logs, hasItem(hasProperty("message", containsString("FileVersion:"))));
 
+        assertThat(logs.stream()
+            .map(LogEntry::getMessage)
+            .filter(m -> m != null)
+            .collect(Collectors.joining("\n")), containsString("FileVersion:"));
     }
 
     @Test
