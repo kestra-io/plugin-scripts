@@ -1,4 +1,4 @@
-group: io.kestra.plugin.scripts
+group: io.kestra.plugin.scripts.python
 name: "plugin-python"
 title: "Python"
 description: "Tasks that run Python code with dependencies."

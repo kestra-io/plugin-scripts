@@ -1,4 +1,4 @@
-group: io.kestra.plugin.scripts
+group: io.kestra.plugin.scripts.shell
 name: "plugin-shell"
 title: "Shell"
 description: "Tasks that run Shell code."

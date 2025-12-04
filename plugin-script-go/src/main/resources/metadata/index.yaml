@@ -1,4 +1,4 @@
-group: io.kestra.plugin.scripts
+group: io.kestra.plugin.scripts.go
 name: "plugin-go"
 title: "Go"
 description: "Tasks that run Go-based code."

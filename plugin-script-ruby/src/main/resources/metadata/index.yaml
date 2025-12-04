@@ -1,4 +1,4 @@
-group: io.kestra.plugin.scripts
+group: io.kestra.plugin.scripts.ruby
 name: "plugin-ruby"
 title: "Ruby"
 description: "Tasks that run Ruby code."

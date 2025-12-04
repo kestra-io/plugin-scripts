@@ -1,4 +1,4 @@
-group: io.kestra.plugin.scripts
+group: io.kestra.plugin.scripts.jbang
 name: "plugin-jbang"
 title: "JBang"
 description: "Tasks that run JBang-based code."

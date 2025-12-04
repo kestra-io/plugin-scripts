@@ -1,4 +1,4 @@
-group: io.kestra.plugin.scripts
+group: io.kestra.plugin.scripts.r
 name: "plugin-r"
 title: "R"
 description: "Tasks that run R code."

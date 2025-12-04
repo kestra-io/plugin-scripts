@@ -1,4 +1,4 @@
-group: io.kestra.plugin.scripts
+group: io.kestra.plugin.scripts.nashorn
 name: "plugin-nashorn"
 title: "Nashorn"
 description: "Tasks that run Nashorn-based code."

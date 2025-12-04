@@ -1,4 +1,4 @@
-group: io.kestra.plugin.scripts
+group: io.kestra.plugin.scripts.bun
 name: "plugin-bun"
 title: "Bun"
 description: "Tasks that run Bun-based code."

@@ -1,4 +1,4 @@
-group: io.kestra.plugin.scripts
+group: io.kestra.plugin.scripts.node
 name: "plugin-node"
 title: "Node"
 description: "Tasks that run Node-based code."

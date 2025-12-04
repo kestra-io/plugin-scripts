@@ -1,4 +1,4 @@
-group: io.kestra.plugin.scripts
+group: io.kestra.plugin.scripts.groovy
 name: "plugin-groovy"
 title: "Groovy"
 description: "Tasks that run Groovy-based code."
