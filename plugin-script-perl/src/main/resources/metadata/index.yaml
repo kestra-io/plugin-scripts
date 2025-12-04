@@ -1,8 +1,8 @@
 group: io.kestra.plugin.scripts.perl
 name: "plugin-perl"
 title: "Perl"
-description: "This sub-group of plugins contains tasks for running Perl script."
-body: ""
+description: "Tasks that run Perl scripts."
+body: "Provide Perl code or script files with arguments to execute via Perl in Kestra, capturing stdout/stderr and output files."
 videos: []
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"
