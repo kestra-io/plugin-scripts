@@ -1,8 +1,8 @@
 group: io.kestra.plugin.scripts.bun
 name: "plugin-bun"
 title: "Bun"
-description: "Tasks that run Bun-based code."
-body: ""
+description: "Tasks that run Bun scripts."
+body: "Provide inline Bun/JavaScript code or script files with optional packages and arguments to execute via Bun, capturing stdout/stderr and output files for downstream steps."
 videos: []
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"

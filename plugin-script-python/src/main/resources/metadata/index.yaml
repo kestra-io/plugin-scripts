@@ -1,8 +1,8 @@
 group: io.kestra.plugin.scripts.python
 name: "plugin-python"
 title: "Python"
-description: "Tasks that run Python code with dependencies."
-body: ""
+description: "Tasks that run Python scripts with optional dependencies."
+body: "Provide Python code or files, pip requirements, interpreter options, and arguments to execute via Python in Kestra, capturing stdout/stderr and output files for downstream tasks."
 videos: []
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"

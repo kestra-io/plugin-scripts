@@ -1,8 +1,8 @@
 group: io.kestra.plugin.scripts.deno
 name: "plugin-deno"
 title: "Deno"
-description: "Tasks that run Deno-based code."
-body: ""
+description: "Tasks that run Deno scripts."
+body: "Provide TypeScript/JavaScript code or files with permissions, imports, and arguments to execute via Deno, capturing stdout/stderr and output files from workflows."
 videos: []
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"

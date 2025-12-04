@@ -1,8 +1,8 @@
 group: io.kestra.plugin.scripts.lua
 name: "plugin-lua"
 title: "Lua"
-description: "Tasks that run Lua-based code."
-body: ""
+description: "Tasks that run Lua scripts."
+body: "Provide Lua code or script files and arguments to execute via the Lua runtime in Kestra, capturing stdout/stderr and outputs."
 videos: []
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"
