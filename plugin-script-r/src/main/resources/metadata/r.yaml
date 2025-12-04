@@ -1,8 +1,0 @@
-group: io.kestra.plugin.scripts.r
-name: "r"
-title: "R"
-description: "This subgroup of plugins contains tasks for running R scripts."
-body: ""
-videos: []
-createdBy: "Kestra Core Team"
-managedBy: "Kestra Core Team"

@@ -1,8 +1,0 @@
-group: io.kestra.plugin.scripts.ruby
-name: "ruby"
-title: "Ruby"
-description: "This subgroup of plugins contains tasks for running Ruby scripts."
-body: ""
-videos: []
-createdBy: "Kestra Core Team"
-managedBy: "Kestra Core Team"

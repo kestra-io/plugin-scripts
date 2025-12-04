@@ -1,8 +1,0 @@
-group: io.kestra.plugin.scripts.nashorn
-name: "nashorn"
-title: "Nashorn"
-description: "This sub-group of plugins contains tasks for making scripts and file transformations using JavaScript (with the Nashorn engine)."
-body: ""
-videos: []
-createdBy: "Kestra Core Team"
-managedBy: "Kestra Core Team"

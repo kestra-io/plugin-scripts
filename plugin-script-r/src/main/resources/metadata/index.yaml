@@ -1,7 +1,7 @@
 group: io.kestra.plugin.scripts
-name: "scripts"
-title: "RScript"
-description: ""
+name: "plugin-r"
+title: "R"
+description: "Tasks that run R code."
 body: ""
 videos: []
 createdBy: "Kestra Core Team"

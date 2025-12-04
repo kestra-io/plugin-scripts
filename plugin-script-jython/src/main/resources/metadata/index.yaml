@@ -1,7 +1,7 @@
 group: io.kestra.plugin.scripts
-name: "scripts"
+name: "plugin-jython"
 title: "Jython"
-description: ""
+description: "Tasks that run Jython-based code."
 body: ""
 videos: []
 createdBy: "Kestra Core Team"

@@ -1,7 +1,7 @@
 group: io.kestra.plugin.scripts
-name: "scripts"
+name: "plugin-python"
 title: "Python"
-description: ""
+description: "Tasks that run Python code with dependencies."
 body: ""
 videos: []
 createdBy: "Kestra Core Team"

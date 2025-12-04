@@ -1,7 +1,7 @@
 group: io.kestra.plugin.scripts
-name: "scripts"
+name: "plugin-groovy"
 title: "Groovy"
-description: ""
+description: "Tasks that run Groovy-based code."
 body: ""
 videos: []
 createdBy: "Kestra Core Team"

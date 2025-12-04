@@ -1,8 +1,0 @@
-group: io.kestra.plugin.scripts.php
-name: "php"
-title: "Php"
-description: "This sub-group of plugins contains tasks for running PHP script."
-body: ""
-videos: []
-createdBy: "Kestra Core Team"
-managedBy: "Kestra Core Team"

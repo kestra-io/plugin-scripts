@@ -1,8 +1,0 @@
-group: io.kestra.plugin.scripts.powershell
-name: "powershell"
-title: "Powershell"
-description: "This subgroup of plugins contains tasks for running PowerShell scripts."
-body: ""
-videos: []
-createdBy: "Kestra Core Team"
-managedBy: "Kestra Core Team"

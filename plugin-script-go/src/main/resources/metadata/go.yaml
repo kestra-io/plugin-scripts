@@ -1,8 +1,0 @@
-group: io.kestra.plugin.scripts.go
-name: "go"
-title: "Go"
-description: "This sub-group of plugins contains tasks for running Go script."
-body: ""
-videos: []
-createdBy: "Kestra Core Team"
-managedBy: "Kestra Core Team"
