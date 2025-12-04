@@ -1,0 +1,8 @@
+group: io.kestra.plugin.scripts.groovy
+name: "groovy"
+title: "Groovy"
+description: "This sub-group of plugins contains tasks for making scripts and file transformations using Groovy."
+body: ""
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"

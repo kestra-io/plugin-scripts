@@ -1,0 +1,8 @@
+group: io.kestra.plugin.scripts.perl
+name: "perl"
+title: "Perl"
+description: "This sub-group of plugins contains tasks for running Perl script."
+body: ""
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"

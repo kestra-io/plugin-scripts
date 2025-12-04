@@ -1,0 +1,8 @@
+group: io.kestra.plugin.scripts.python
+name: "python"
+title: "Python"
+description: "This subgroup of plugins contains Python tasks."
+body: ""
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"

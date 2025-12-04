@@ -1,0 +1,8 @@
+group: io.kestra.plugin.scripts.shell
+name: "shell"
+title: "Shell"
+description: "This subgroup of plugins contains tasks for running shell scripts."
+body: ""
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"

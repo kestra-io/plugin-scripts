@@ -1,0 +1,8 @@
+group: io.kestra.plugin.scripts.jython
+name: "jython"
+title: "Jython"
+description: "This sub-group of plugins contains tasks for making scripts and file transformations using Java Python (Jython)."
+body: ""
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"
