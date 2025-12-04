@@ -1,0 +1,8 @@
+group: io.kestra.plugin.scripts.php
+name: "plugin-php"
+title: "PHP"
+description: "Tasks that run PHP-based code."
+body: ""
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"

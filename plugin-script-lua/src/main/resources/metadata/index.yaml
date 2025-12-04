@@ -1,0 +1,8 @@
+group: io.kestra.plugin.scripts.lua
+name: "plugin-lua"
+title: "Lua"
+description: "Tasks that run Lua-based code."
+body: ""
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"

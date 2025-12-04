@@ -1,0 +1,8 @@
+group: io.kestra.plugin.scripts.deno
+name: "plugin-deno"
+title: "Deno"
+description: "Tasks that run Deno-based code."
+body: ""
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"

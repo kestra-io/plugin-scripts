@@ -1,0 +1,8 @@
+group: io.kestra.plugin.scripts.jbang
+name: "plugin-jbang"
+title: "JBang"
+description: "Tasks that run JBang-based code."
+body: ""
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"

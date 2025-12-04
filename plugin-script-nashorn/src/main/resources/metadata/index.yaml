@@ -1,0 +1,8 @@
+group: io.kestra.plugin.scripts.nashorn
+name: "plugin-nashorn"
+title: "Nashorn"
+description: "Tasks that run Nashorn-based code."
+body: ""
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"
