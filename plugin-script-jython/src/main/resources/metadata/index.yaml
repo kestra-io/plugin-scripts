@@ -1,0 +1,8 @@
+group: io.kestra.plugin.scripts.jython
+name: "plugin-jython"
+title: "Jython"
+description: "Tasks that run Jython-based code."
+body: ""
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"

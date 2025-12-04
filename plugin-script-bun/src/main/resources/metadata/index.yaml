@@ -1,0 +1,8 @@
+group: io.kestra.plugin.scripts.bun
+name: "plugin-bun"
+title: "Bun"
+description: "Tasks that run Bun-based code."
+body: ""
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"
