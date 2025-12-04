@@ -1,8 +1,8 @@
 group: io.kestra.plugin.scripts.powershell
 name: "plugin-powershell"
 title: "PowerShell"
-description: "Tasks that run Powershell code."
-body: ""
+description: "Tasks that run PowerShell scripts."
+body: "Provide PowerShell code or ps1 files with arguments to execute via PowerShell, capturing stdout/stderr and any output files for subsequent steps."
 videos: []
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"
