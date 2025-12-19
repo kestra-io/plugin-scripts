@@ -15,7 +15,7 @@ jar {
 dependencies {
     implementation project(':plugin-script')
 
-    api group: 'org.apache.groovy', name: 'groovy-jsr223', version: '5.0.2'
+    api group: 'org.apache.groovy', name: 'groovy-jsr223', version: '5.0.3'
 
     testImplementation project(':plugin-script').sourceSets.test.output
 }
