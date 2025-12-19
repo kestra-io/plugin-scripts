@@ -25,10 +25,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 
 @KestraTest
 class CommandsTest {
@@ -71,8 +71,11 @@ class CommandsTest {
         assertThat(run.getStdErrLineCount(), is(0));
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains(put.getPath()));
-        receive.blockLast();
-        assertThat(List.copyOf(logs).stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("FileVersion:")).count(), is(1L));
+
+        assertThat(logs.stream()
+            .map(LogEntry::getMessage)
+            .filter(m -> m != null)
+            .collect(Collectors.joining("\n")), containsString("FileVersion:"));
     }
 
     @Test

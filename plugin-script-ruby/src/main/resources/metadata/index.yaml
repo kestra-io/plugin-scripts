@@ -1,0 +1,8 @@
+group: io.kestra.plugin.scripts.ruby
+name: "plugin-ruby"
+title: "Ruby"
+description: "Tasks that run Ruby scripts."
+body: "Provide Ruby code or files with gem dependencies and arguments to execute via Ruby, capturing stdout/stderr and any generated files for later steps."
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"

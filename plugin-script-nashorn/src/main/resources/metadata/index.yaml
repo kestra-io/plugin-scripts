@@ -1,0 +1,8 @@
+group: io.kestra.plugin.scripts.nashorn
+name: "plugin-nashorn"
+title: "Nashorn"
+description: "Tasks that run JavaScript with the Nashorn engine."
+body: "Provide JavaScript code or script files to execute via Nashorn on the JVM, with optional bindings and arguments, capturing outputs for workflows."
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"
