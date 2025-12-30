@@ -1,6 +1,6 @@
 @PluginSubGroup(
     description = "This sub-group of plugins contains tasks for running Deno script.",
-    categories = { PluginSubGroup.PluginCategory.SCRIPT }
+        categories = { PluginSubGroup.PluginCategory.DATA, PluginSubGroup.PluginCategory.CORE }
 )
 package io.kestra.plugin.scripts.deno;
 

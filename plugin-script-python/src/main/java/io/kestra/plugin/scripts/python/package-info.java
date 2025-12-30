@@ -1,6 +1,6 @@
 @PluginSubGroup(
     description = "This subgroup of plugins contains Python tasks.",
-    categories = { PluginSubGroup.PluginCategory.SCRIPT }
+        categories = { PluginSubGroup.PluginCategory.DATA, PluginSubGroup.PluginCategory.CORE }
 )
 package io.kestra.plugin.scripts.python;
 
