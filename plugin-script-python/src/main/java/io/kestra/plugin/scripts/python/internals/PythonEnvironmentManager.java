@@ -108,7 +108,7 @@ public class PythonEnvironmentManager {
     }
 
     private String logAndGetPythonDefaultVersion() {
-        runContext.logger().warn("No Python Version found. Using default: '{}'", DEFAULT_IMAGE);
+        runContext.logger().warn("No Python Version found. Using default version: '{}'", DEFAULT_PYTHON_VERSION);
         return DEFAULT_PYTHON_VERSION;
     }
 
