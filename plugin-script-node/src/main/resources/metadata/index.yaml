@@ -2,7 +2,7 @@ group: io.kestra.plugin.scripts.node
 name: "plugin-node"
 title: "Node"
 description: "Tasks that run Node.js scripts."
-body: "Provide JavaScript/TypeScript code or files with npm packages and arguments to run via Node.js, capturing stdout/stderr and output files for downstream steps."
+body: "Provide JavaScript/TypeScript code inline or files with npm packages and arguments to run via Node.js, capturing stdout/stderr and output files for downstream steps."
 videos:
   - "https://www.youtube.com/watch?v=oZYtLimdKBo"
 createdBy: "Kestra Core Team"

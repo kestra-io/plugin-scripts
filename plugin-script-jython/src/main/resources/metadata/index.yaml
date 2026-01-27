@@ -2,7 +2,7 @@ group: io.kestra.plugin.scripts.jython
 name: "plugin-jython"
 title: "Jython"
 description: "Tasks that run Python scripts with the Jython interpreter."
-body: "Provide Python code or files to execute on the JVM via Jython with optional dependencies and arguments, capturing outputs for downstream processing."
+body: "Provide Python code inline or files to execute on the JVM via Jython with optional dependencies and arguments, capturing outputs for downstream processing."
 videos:
   - "https://www.youtube.com/watch?v=oZYtLimdKBo"
 createdBy: "Kestra Core Team"
