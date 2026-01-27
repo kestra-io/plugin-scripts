@@ -20,7 +20,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Deno commands from the CLI."
+    title = "Execute Deno files and commands."
 )
 @Plugin(examples = {
     @Example(

@@ -27,7 +27,7 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute an R script."
+    title = "Execute an R script inline with your Flow Code."
 )
 @Plugin(
     examples = {

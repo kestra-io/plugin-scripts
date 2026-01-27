@@ -23,7 +23,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Ruby commands from the CLI."
+    title = "Execute Ruby files and commands."
 )
 @Plugin(examples = {
     @Example(

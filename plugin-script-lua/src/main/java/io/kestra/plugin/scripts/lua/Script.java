@@ -26,7 +26,7 @@ import java.util.Map;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@Schema(title = "Execute a Lua script.")
+@Schema(title = "Execute a Lua script inline with your Flow Code.")
 @Plugin(examples = {
     @Example(
         title = "Run a simple inline Lua script.",

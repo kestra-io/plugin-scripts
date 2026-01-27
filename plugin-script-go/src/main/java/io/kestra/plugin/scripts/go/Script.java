@@ -24,7 +24,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Go script."
+    title = "Execute a Go script inline with your Flow Code."
 )
 @Plugin(examples = {
     @Example(

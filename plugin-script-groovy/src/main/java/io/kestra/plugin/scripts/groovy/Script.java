@@ -28,7 +28,7 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Groovy script."
+    title = "Execute a Groovy script inline with your Flow Code."
 )
 @Plugin(examples = {
     @Example(
