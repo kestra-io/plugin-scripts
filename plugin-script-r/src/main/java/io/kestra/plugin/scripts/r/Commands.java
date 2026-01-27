@@ -23,7 +23,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute R scripts from the CLI."
+    title = "Execute R files and commands."
 )
 @Plugin(examples = {
     @Example(

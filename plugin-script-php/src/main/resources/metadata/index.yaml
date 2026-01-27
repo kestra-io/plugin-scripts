@@ -2,7 +2,8 @@ group: io.kestra.plugin.scripts.php
 name: "plugin-php"
 title: "PHP"
 description: "Tasks that run PHP scripts."
-body: "Provide PHP code or files with dependencies and arguments to execute via PHP in Kestra, capturing stdout/stderr and any generated files."
-videos: []
+body: "Provide PHP code inline or files with dependencies and arguments to execute via PHP in Kestra, capturing stdout/stderr and any generated files."
+videos:
+  - "https://www.youtube.com/watch?v=oZYtLimdKBo"
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"

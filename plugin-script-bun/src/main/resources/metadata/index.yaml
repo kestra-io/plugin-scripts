@@ -3,6 +3,7 @@ name: "plugin-bun"
 title: "Bun"
 description: "Tasks that run Bun scripts."
 body: "Provide inline Bun/JavaScript code or script files with optional packages and arguments to execute via Bun, capturing stdout/stderr and output files for downstream steps."
-videos: []
+videos:
+  - "https://www.youtube.com/watch?v=oZYtLimdKBo"
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"

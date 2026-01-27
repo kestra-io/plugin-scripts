@@ -2,7 +2,8 @@ group: io.kestra.plugin.scripts.r
 name: "plugin-r"
 title: "R"
 description: "Tasks that run R scripts."
-body: "Provide R code or script files with package installs and arguments to execute via R, capturing stdout/stderr and outputs (including plots/files) for workflows."
-videos: []
+body: "Provide R code inline or script files with package installs and arguments to execute via R, capturing stdout/stderr and outputs (including plots/files) for workflows."
+videos:
+  - "https://www.youtube.com/watch?v=oZYtLimdKBo"
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"

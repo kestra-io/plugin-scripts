@@ -3,6 +3,7 @@ name: "plugin-shell"
 title: "Shell"
 description: "Tasks that run shell commands or scripts."
 body: "Provide shell commands or script files with interpreter options and environment settings to execute on the worker, capturing stdout/stderr and output files for downstream tasks."
-videos: []
+videos: 
+  - "https://www.youtube.com/watch?v=oZYtLimdKBo"
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"

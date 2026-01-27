@@ -19,7 +19,7 @@ import java.util.List;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@Schema(title = "Execute Perl commands from the CLI.")
+@Schema(title = "Execute Perl files and commands.")
 @Plugin(examples = {
     @Example(
         full = true,

@@ -23,7 +23,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Go scripts from the CLI."
+    title = "Execute Go files and commands."
 )
 @Plugin(examples = {
     @Example(

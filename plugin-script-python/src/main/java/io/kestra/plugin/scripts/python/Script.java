@@ -34,7 +34,7 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Python script."
+    title = "Execute a Python script inline with your Flow Code."
 )
 @Plugin(
     examples = {

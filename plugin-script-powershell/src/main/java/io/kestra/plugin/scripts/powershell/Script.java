@@ -27,7 +27,7 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a PowerShell script."
+    title = "Execute a PowerShell script inline with your Flow Code."
 )
 @Plugin(
     examples = {

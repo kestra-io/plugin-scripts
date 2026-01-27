@@ -23,7 +23,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Bun commands from the CLI."
+    title = "Execute Bun files and commands."
 )
 @Plugin(examples = {
     @Example(

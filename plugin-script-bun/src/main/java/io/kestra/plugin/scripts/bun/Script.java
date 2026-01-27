@@ -27,7 +27,7 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Bun script."
+    title = "Execute a Bun script inline with your Flow Code."
 )
 @Plugin(examples = {
     @Example(

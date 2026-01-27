@@ -23,7 +23,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute one or more JBang commands."
+    title = "Execute JBang files or commands."
 )
 @Plugin(
     examples = {

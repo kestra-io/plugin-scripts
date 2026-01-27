@@ -2,7 +2,8 @@ group: io.kestra.plugin.scripts.jbang
 name: "plugin-jbang"
 title: "JBang"
 description: "Tasks that run Java code with JBang."
-body: "Provide Java source scripts, dependencies, and JBang options to compile and run via JBang from Kestra, capturing outputs for downstream steps."
-videos: []
+body: "Provide Java code inline or source files with dependencies and JBang options to compile and run via JBang from Kestra, capturing outputs for downstream steps."
+videos:
+  - "https://www.youtube.com/watch?v=oZYtLimdKBo"
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"
