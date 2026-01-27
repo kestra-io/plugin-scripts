@@ -3,6 +3,7 @@ name: "plugin-deno"
 title: "Deno"
 description: "Tasks that run Deno scripts."
 body: "Provide TypeScript/JavaScript code or files with permissions, imports, and arguments to execute via Deno, capturing stdout/stderr and output files from workflows."
-videos: []
+videos:
+  - "https://www.youtube.com/watch?v=oZYtLimdKBo"
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"

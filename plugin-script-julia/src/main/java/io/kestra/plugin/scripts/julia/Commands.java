@@ -23,7 +23,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Julia scripts from the CLI."
+    title = "Execute Julia files and commands."
 )
 @Plugin(examples = {
     @Example(

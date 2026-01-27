@@ -24,7 +24,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute PowerShell commands.",
+    title = "Execute PowerShell commands and files.",
     description = "Note that instead of adding the script using the inputFiles property, you can also add the script from the embedded VS Code editor and point to its location by path. If you do so, make sure to enable namespace files by setting the enabled flag of the namespaceFiles property to true."
 )
 @Plugin(examples = {

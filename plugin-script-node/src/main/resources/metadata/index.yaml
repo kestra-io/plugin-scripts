@@ -3,6 +3,7 @@ name: "plugin-node"
 title: "Node"
 description: "Tasks that run Node.js scripts."
 body: "Provide JavaScript/TypeScript code or files with npm packages and arguments to run via Node.js, capturing stdout/stderr and output files for downstream steps."
-videos: []
+videos:
+  - "https://www.youtube.com/watch?v=oZYtLimdKBo"
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"

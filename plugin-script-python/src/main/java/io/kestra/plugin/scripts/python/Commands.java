@@ -32,7 +32,7 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Python commands from the CLI."
+    title = "Execute Python files and commands."
 )
 @Plugin(
     examples = {

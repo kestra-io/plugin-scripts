@@ -3,6 +3,7 @@ name: "plugin-go"
 title: "Go"
 description: "Tasks that run Go code."
 body: "Provide Go source, modules, and build/run arguments to compile or execute Go programs within Kestra, capturing logs and outputs."
-videos: []
+videos:
+  - "https://www.youtube.com/watch?v=oZYtLimdKBo"
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"

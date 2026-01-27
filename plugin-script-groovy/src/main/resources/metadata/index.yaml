@@ -3,6 +3,7 @@ name: "plugin-groovy"
 title: "Groovy"
 description: "Tasks that run Groovy scripts."
 body: "Provide Groovy code or script files with optional dependencies and JVM options to execute via Groovy, capturing stdout/stderr and generated files."
-videos: []
+videos:
+  - "https://www.youtube.com/watch?v=oZYtLimdKBo"
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"

@@ -3,6 +3,7 @@ name: "plugin-julia"
 title: "Julia"
 description: "Tasks that run Julia scripts."
 body: "Provide Julia code or files with package requirements and arguments to execute via Julia, capturing stdout/stderr and any generated artifacts from workflows."
-videos: []
+videos:
+  - "https://www.youtube.com/watch?v=oZYtLimdKBo"
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"
