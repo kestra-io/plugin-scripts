@@ -26,7 +26,10 @@ import java.util.Map;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@Schema(title = "Execute a Deno script inline with your Flow Code.")
+@Schema(
+    title = "Run inline Deno script",
+    description = "Executes a multi-line Deno script inside the default 'denoland/deno' image unless overridden. Script is written to a temp .ts file and run with 'deno run'; add required --allow-* flags in beforeCommands or interpreter options."
+)
 @Plugin(examples = {
     @Example(
         title = "Run a simple inline Deno script.",
@@ -45,10 +48,17 @@ import java.util.Map;
 public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "denoland/deno";
 
+    @Schema(
+        title = "Container image for Deno runtime",
+        description = "Docker image used to run the script; defaults to 'denoland/deno'. Include dependencies or install them in beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
-    @Schema(title = "The inline script content.")
+    @Schema(
+        title = "Inline Deno script",
+        description = "Script content written inline; saved as a temporary .ts file and executed with 'deno run'."
+    )
     @NotNull
     protected Property<String> script;
 

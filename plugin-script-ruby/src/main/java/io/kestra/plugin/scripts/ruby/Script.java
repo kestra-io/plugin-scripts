@@ -27,7 +27,8 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Ruby script inline with your Flow Code."
+    title = "Run inline Ruby script",
+    description = "Executes a multi-line Ruby script inside the default 'ruby' image unless overridden. Script is written to a temp .rb file and run with `ruby`; install gems via beforeCommands. Use the Commands task to run existing files."
 )
 @Plugin(
     examples = {
@@ -90,11 +91,16 @@ import java.util.Map;
 public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "ruby";
 
+    @Schema(
+        title = "Container image for Ruby runtime",
+        description = "Docker image used to run the script; defaults to 'ruby'. Include required gems or install them in beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
+        title = "Inline Ruby script",
+        description = "Ruby source as a multi-line string; saved to a temporary .rb file and executed with `ruby`. For existing files, use the Commands task."
     )
     @NotNull
     protected Property<String> script;

@@ -34,27 +34,23 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Transform an ION file from Kestra with a Groovy script.",
-    description = "This allows you to transform the data, previously loaded by Kestra, as you need.\n\n" +
-        "Take a ion format file from Kestra and iterate row per row.\n" +
-        "Each row will populate a `row` global variable. You need to alter this variable that will be saved on output file.\n" +
-        "If you set the `row` to `null`, the row will be skipped.\n" +
-        "You can create a variable `rows` to return multiple rows for a single `row`.\n"
+    title = "Transform rows with JVM script",
+    description = "Deprecated; use the GraalVM FileTransform variants (`io.kestra.plugin.graalvm.js|python|ruby.FileTransform`). Streams an ION file or rendered JSON list/map through the script: each row is bound to `row`, set `row` to null to skip or populate `rows` to emit multiple rows. Optional parallelism speeds up transforms but reorders output."
 )
 @Deprecated
 public abstract class FileTransform extends AbstractJvmScript implements RunnableTask<FileTransform.Output> {
     @NotNull
     @Schema(
-        title = "Source file containing rows to transform.",
-        description = "Can be Kestra's internal storage URI, a map or a list."
+        title = "Source rows",
+        description = "Kestra internal storage URI (kestra://...) or rendered JSON map/list to stream into the script."
     )
     @PluginProperty(dynamic = true)
     private String from;
 
     @Min(2)
     @Schema(
-        title = "Number of concurrent parallel transformations to execute.",
-        description = "Take care that the order is **not respected** if you use parallelism."
+        title = "Concurrent transforms",
+        description = "Number of parallel workers; ordering is not preserved when greater than 1."
     )
     @PluginProperty
     private Integer concurrent;
@@ -165,8 +161,8 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @Schema(
-            title = "URI of a temporary result file.",
-            description = "The file will be serialized as ion file."
+            title = "Result file URI",
+            description = "Temporary ION file stored in Kestra internal storage."
         )
         private final URI uri;
     }
