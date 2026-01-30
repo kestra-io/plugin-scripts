@@ -32,7 +32,7 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Run Python commands",
+    title = "Execute Python files and commands.",
     description = "Executes Python commands using the default 'python:3.13-slim' image unless overridden, with dependencies installed via UV (default) or pip and optional caching. Supports inputFiles/namespaceFiles to stage code and beforeCommands for setup; suitable for running existing scripts."
 )
 @Plugin(

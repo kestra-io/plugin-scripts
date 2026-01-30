@@ -23,7 +23,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Run Go commands",
+    title = "Execute Go files and commands.",
     description = "Executes provided Go commands in order using the default 'golang' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install modules; useful for running existing files with 'go run'."
 )
 @Plugin(examples = {

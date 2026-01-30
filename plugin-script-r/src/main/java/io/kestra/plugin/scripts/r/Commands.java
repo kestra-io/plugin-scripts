@@ -23,7 +23,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Run R commands",
+    title = "Execute R files and commands.",
     description = "Executes provided R commands in order using the default 'r-base' image unless overridden. Supports inputFiles and beforeCommands to stage scripts and install packages; enable namespaceFiles if pointing to stored files."
 )
 @Plugin(examples = {

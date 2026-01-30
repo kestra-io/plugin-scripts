@@ -23,7 +23,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Run Node.js commands",
+    title = "Execute Node.js files and commands.",
     description = "Executes provided Node.js commands in order using the default 'node' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install npm packages; enable namespaceFiles if referencing files stored in the Namespace."
 )
 @Plugin(examples = {

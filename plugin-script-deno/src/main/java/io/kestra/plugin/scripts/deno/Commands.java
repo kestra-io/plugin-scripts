@@ -20,7 +20,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Run Deno commands",
+    title = "Execute Deno files and commands.",
     description = "Executes provided Deno commands in order using the default 'denoland/deno' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install deps; remember to include required --allow-* flags."
 )
 @Plugin(examples = {

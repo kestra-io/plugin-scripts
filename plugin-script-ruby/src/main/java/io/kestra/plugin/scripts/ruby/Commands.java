@@ -23,7 +23,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Run Ruby commands",
+    title = "Execute Ruby files and commands.",
     description = "Executes provided Ruby commands in order using the default 'ruby' image unless overridden. Supports inputFiles and beforeCommands to stage scripts and install gems; enable namespaceFiles if pulling scripts from the Namespace."
 )
 @Plugin(examples = {

@@ -20,7 +20,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Run Lua commands",
+    title = "Execute Lua files and commands.",
     description = "Executes provided Lua commands in order using the default 'nickblah/lua' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install modules."
 )
 @Plugin(examples = {

@@ -23,7 +23,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Run Julia commands",
+    title = "Execute Julia files and commands.",
     description = "Executes provided Julia commands in order using the default 'julia' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install packages; ideal for running existing .jl files."
 )
 @Plugin(examples = {

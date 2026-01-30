@@ -23,7 +23,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Run JBang commands",
+    title = "Execute JBang files and commands.",
     description = "Executes provided JBang commands (e.g., scripts, JARs) in order using the default 'jbangdev/jbang-action' image unless overridden. Supports beforeCommands for setup and uses inputFiles for staging sources."
 )
 @Plugin(

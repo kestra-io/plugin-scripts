@@ -24,7 +24,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Run PowerShell commands",
+    title = "Execute PowerShell files and commands.",
     description = "Executes provided PowerShell commands in order using the default 'ghcr.io/kestra-io/powershell:latest' image unless overridden. Supports inputFiles and beforeCommands to stage scripts/modules; enable namespaceFiles if referencing files stored in the Namespace."
 )
 @Plugin(examples = {
