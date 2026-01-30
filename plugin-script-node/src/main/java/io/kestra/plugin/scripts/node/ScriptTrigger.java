@@ -9,14 +9,12 @@ import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
-import io.kestra.plugin.core.runner.Process;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+import io.kestra.plugin.scripts.runner.docker.Docker;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import io.kestra.plugin.scripts.runner.docker.Docker;
-import io.kestra.core.models.triggers.TriggerService;
 
 
 import java.time.Duration;
@@ -36,7 +34,7 @@ import java.util.regex.Pattern;
 @Plugin(
     examples = {
         @Example(
-            title = "Trigger when the script fails with an implicit error (exit 1).",
+            title = "Trigger when the script fails with exit code 1.",
             full = true,
             code = """
                 id: node_script_trigger
@@ -54,7 +52,7 @@ import java.util.regex.Pattern;
                 tasks:
                   - id: log
                     type: io.kestra.plugin.core.log.Log
-                    message: "Triggered with exitCode={{ trigger.exitCode }} (condition={{ trigger.condition }})"
+                    message: "Triggered with exitCode={{ trigger.exitCode }}"
                 """
         )
     }
@@ -64,71 +62,34 @@ public class ScriptTrigger extends AbstractTrigger
 
     private static final String DEFAULT_IMAGE = "node";
 
-    @Schema(
-        title = "Docker image used to execute the script.",
-        description = """
-            Container image used by the underlying Script task to run the inline Node.js script.
-            Defaults to 'node'.
-            """
-    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
-    @Schema(
-        title = "Inline Node.js script to execute.",
-        description = """
-            Inline script content (multi-line string). This is the same 'script' concept as the Node Script task.
-            The script is executed on each poll.
-            """
-    )
     @NotNull
     protected Property<String> script;
 
-    @Schema(
-        title = "Condition to match.",
-        description = """
-            Condition evaluated after each script execution. The trigger emits an event only when this condition matches.
-
-            Supported forms:
-            - 'exit N' (example: 'exit 1'): matches when the script exit code equals N.
-            - Any other string: treated as a regex (or substring if regex is invalid) matched against:
-              - the task 'vars' (when the script emits ::{"outputs":...}::),
-              - and error logs when the task fails (TaskException).
-            """
-    )
     @NotNull
     protected Property<String> exitCondition;
 
-    @Schema(
-        title = "Check interval",
-        description = "Interval between polling evaluations."
-    )
     @Builder.Default
     private final Duration interval = Duration.ofSeconds(60);
 
-    @Schema(
-        title = "Edge trigger mode.",
-        description = """
-            If true, the trigger emits only on a transition from 'not matching' to 'matching' (anti-spam).
-            If false, the trigger emits on every poll where the condition matches.
-            """
-    )
     @Builder.Default
     protected Property<Boolean> edge = Property.ofValue(true);
 
-    @Builder.Default
     @Getter(AccessLevel.NONE)
+    @Builder.Default
     private final AtomicBoolean lastMatched = new AtomicBoolean(false);
 
     @Override
     public Optional<Execution> evaluate(ConditionContext conditionContext, TriggerContext context) throws Exception {
         RunContext runContext = conditionContext.getRunContext();
-        boolean rEdge = runContext.render(this.edge).as(Boolean.class).orElse(true);
+        boolean edgeEnabled = runContext.render(this.edge).as(Boolean.class).orElse(true);
 
-        Output out = runOnce(runContext);
-        boolean matched = matchesCondition(out);
+        Output output = runOnce(runContext);
+        boolean matched = matchesCondition(output);
 
-        boolean emit = rEdge
+        boolean emit = edgeEnabled
             ? (!lastMatched.getAndSet(matched) && matched)
             : matched;
 
@@ -136,13 +97,14 @@ public class ScriptTrigger extends AbstractTrigger
             return Optional.empty();
         }
 
-        return Optional.of(TriggerService.generateExecution(this, conditionContext, context, out));
+        return Optional.of(
+            TriggerService.generateExecution(this, conditionContext, context, output)
+        );
     }
 
- private Output runOnce(RunContext runContext) throws Exception {
+   private Output runOnce(RunContext runContext) throws Exception {
     Script task = Script.builder()
-        .id("node-script-trigger")
-        .taskRunner(Docker.builder().build())
+        .taskRunner(Docker.instance())
         .containerImage(this.containerImage)
         .script(this.script)
         .build();
@@ -152,7 +114,7 @@ public class ScriptTrigger extends AbstractTrigger
         .orElse("");
 
     try {
-        ScriptOutput taskOutput = TriggerService.runTask(runContext, task);
+        ScriptOutput taskOutput = task.run(runContext);
 
         return new Output(
             Instant.now(),
@@ -174,11 +136,13 @@ public class ScriptTrigger extends AbstractTrigger
 }
 
 
-
     private boolean matchesCondition(Output out) {
         String cond = out.getCondition() == null ? "" : out.getCondition().trim();
 
-        Matcher exitMatcher = Pattern.compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE).matcher(cond);
+        Matcher exitMatcher = Pattern
+            .compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE)
+            .matcher(cond);
+
         if (exitMatcher.matches()) {
             int expected = Integer.parseInt(exitMatcher.group(1));
             return out.getExitCode() != null && out.getExitCode() == expected;
@@ -191,7 +155,7 @@ public class ScriptTrigger extends AbstractTrigger
 
         try {
             return Pattern.compile(cond).matcher(haystack).find();
-        } catch (Exception invalidRegex) {
+        } catch (Exception e) {
             return haystack.contains(cond);
         }
     }
@@ -209,17 +173,17 @@ public class ScriptTrigger extends AbstractTrigger
         return sb.toString();
     }
 
-    private Integer safeExitCode(ScriptOutput taskOutput) {
+    private Integer safeExitCode(ScriptOutput output) {
         try {
-            return taskOutput.getExitCode();
+            return output.getExitCode();
         } catch (Exception ignored) {
             return null;
         }
     }
 
-    private Map<String, Object> safeVars(ScriptOutput taskOutput) {
+    private Map<String, Object> safeVars(ScriptOutput output) {
         try {
-            return taskOutput.getVars();
+            return output.getVars();
         } catch (Exception ignored) {
             return null;
         }
@@ -236,7 +200,9 @@ public class ScriptTrigger extends AbstractTrigger
             if (cur instanceof TaskException te) {
                 exitCode = te.getExitCode();
                 try {
-                    logs = te.getLogConsumer() != null ? te.getLogConsumer().toString() : null;
+                    logs = te.getLogConsumer() != null
+                        ? te.getLogConsumer().toString()
+                        : null;
                 } catch (Exception ignored) {}
                 break;
             }
