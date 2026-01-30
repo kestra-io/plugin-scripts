@@ -20,7 +20,8 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Deno files and commands."
+    title = "Run Deno commands",
+    description = "Executes provided Deno commands in order using the default 'denoland/deno' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install deps; remember to include required --allow-* flags."
 )
 @Plugin(examples = {
     @Example(
@@ -46,11 +47,16 @@ import java.util.List;
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "denoland/deno";
 
+    @Schema(
+        title = "Container image for Deno runtime",
+        description = "Docker image used to run the commands; defaults to 'denoland/deno'. Include needed dependencies or install them in beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The commands to run."
+        title = "Commands to execute",
+        description = "List of Deno commands executed in order inside the container; use beforeCommands to install deps and inputFiles to stage sources. Add --allow-* flags as required by your script."
     )
     protected Property<List<String>> commands;
 

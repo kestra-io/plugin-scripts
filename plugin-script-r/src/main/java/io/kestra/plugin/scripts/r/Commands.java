@@ -23,7 +23,8 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute R files and commands."
+    title = "Run R commands",
+    description = "Executes provided R commands in order using the default 'r-base' image unless overridden. Supports inputFiles and beforeCommands to stage scripts and install packages; enable namespaceFiles if pointing to stored files."
 )
 @Plugin(examples = {
     @Example(
@@ -52,11 +53,16 @@ import java.util.List;
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "r-base";
 
+    @Schema(
+        title = "Container image for R runtime",
+        description = "Docker image used to run the commands; defaults to 'r-base'. Include required packages or install them in beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The commands to run"
+        title = "Commands to execute",
+        description = "List of R commands executed in order inside the container; combine with beforeCommands for package installs and inputFiles/namespaceFiles to stage scripts."
     )
     @NotNull
     protected Property<List<String>> commands;

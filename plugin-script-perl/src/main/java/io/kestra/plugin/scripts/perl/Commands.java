@@ -19,7 +19,10 @@ import java.util.List;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@Schema(title = "Execute Perl files and commands.")
+@Schema(
+    title = "Run Perl commands",
+    description = "Executes provided Perl commands in order using the default 'perl' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install modules."
+)
 @Plugin(examples = {
     @Example(
         full = true,
@@ -38,10 +41,17 @@ import java.util.List;
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "perl";
 
+    @Schema(
+        title = "Container image for Perl runtime",
+        description = "Docker image used to run the commands; defaults to 'perl'. Include needed modules or install them in beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
-    @Schema(title = "The commands to run.")
+    @Schema(
+        title = "Commands to execute",
+        description = "List of Perl commands executed in order inside the container; combine with beforeCommands for CPAN installs and inputFiles to stage scripts."
+    )
     protected Property<List<String>> commands;
 
     @Override

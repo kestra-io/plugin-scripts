@@ -23,7 +23,8 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Julia files and commands."
+    title = "Run Julia commands",
+    description = "Executes provided Julia commands in order using the default 'julia' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install packages; ideal for running existing .jl files."
 )
 @Plugin(examples = {
     @Example(
@@ -53,11 +54,16 @@ import java.util.List;
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "julia";
 
+    @Schema(
+        title = "Container image for Julia runtime",
+        description = "Docker image used to run the commands; defaults to 'julia'. Include dependencies or install them in beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The commands to run."
+        title = "Commands to execute",
+        description = "List of Julia commands executed in order inside the container; combine with beforeCommands to add packages and inputFiles to stage sources."
     )
     @NotNull
     protected Property<List<String>> commands;

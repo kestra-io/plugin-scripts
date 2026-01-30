@@ -27,7 +27,8 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Julia script inline with your Flow Code."
+    title = "Run inline Julia script",
+    description = "Executes a multi-line Julia script inside the default 'julia' image unless overridden. Script is written to a temp .jl file and run with 'julia'; install required packages via beforeCommands. Use the Commands task to run existing files."
 )
 @Plugin(examples = {
     @Example(
@@ -54,11 +55,16 @@ import java.util.Map;
 public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "julia";
 
+    @Schema(
+        title = "Container image for Julia runtime",
+        description = "Docker image used to run the script; defaults to 'julia'. Include dependencies or install them in beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command such as `julia myscript.jl`, use the `Commands` task instead."
+        title = "Inline Julia script",
+        description = "Julia source as a multi-line string; saved to a temporary .jl file and executed with 'julia'. For existing files, use the Commands task."
     )
     @NotNull
     protected Property<String> script;

@@ -23,7 +23,8 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Go files and commands."
+    title = "Run Go commands",
+    description = "Executes provided Go commands in order using the default 'golang' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install modules; useful for running existing files with 'go run'."
 )
 @Plugin(examples = {
     @Example(
@@ -67,11 +68,16 @@ import java.util.List;
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "golang";
 
+    @Schema(
+        title = "Container image for Go runtime",
+        description = "Docker image used to run the commands; defaults to 'golang'. Ensure the image includes needed toolchain or install via beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The commands to run."
+        title = "Commands to execute",
+        description = "List of Go commands executed in order inside the container; combine with beforeCommands for module init/get and inputFiles to stage sources."
     )
     @NotNull
     protected Property<List<String>> commands;

@@ -18,8 +18,8 @@ import java.util.Collection;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Transform an ION file from Kestra's internal storage with a Jython script.",
-    description = "This task is deprecated, please use `io.kestra.plugin.graalvm.python.FileTransform` instead."
+    title = "Transform rows with Jython script",
+    description = "Deprecated; use `io.kestra.plugin.graalvm.python.FileTransform` instead. Streams ION/internal storage or rendered JSON rows through the script: each row is bound to `row`, set to None to skip, or populate `rows` to emit multiple rows."
 )
 @Plugin(
     examples = {

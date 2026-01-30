@@ -23,7 +23,8 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Ruby files and commands."
+    title = "Run Ruby commands",
+    description = "Executes provided Ruby commands in order using the default 'ruby' image unless overridden. Supports inputFiles and beforeCommands to stage scripts and install gems; enable namespaceFiles if pulling scripts from the Namespace."
 )
 @Plugin(examples = {
     @Example(
@@ -89,11 +90,16 @@ import java.util.List;
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "ruby";
 
+    @Schema(
+        title = "Container image for Ruby runtime",
+        description = "Docker image used to run the commands; defaults to 'ruby'. Include required gems or install them in beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The commands to run"
+        title = "Commands to execute",
+        description = "List of Ruby commands executed in order inside the container; combine with beforeCommands for gem installs and inputFiles/namespaceFiles to stage scripts."
     )
     @NotNull
     protected Property<List<String>> commands;
