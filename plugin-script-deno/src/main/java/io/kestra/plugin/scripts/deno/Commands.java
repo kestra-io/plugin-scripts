@@ -21,7 +21,7 @@ import java.util.List;
 @NoArgsConstructor
 @Schema(
     title = "Execute Deno files and commands.",
-    description = "Executes provided Deno commands in order using the default 'denoland/deno' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install deps; remember to include required --allow-* flags."
+    description = "Executes provided Deno commands in order using the default 'denoland/deno' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install deps; remember to include required --allow-* flags and prefer this task for existing .ts/.js files instead of inline scripts."
 )
 @Plugin(examples = {
     @Example(

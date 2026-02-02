@@ -24,7 +24,7 @@ import java.util.List;
 @NoArgsConstructor
 @Schema(
     title = "Execute Node.js files and commands.",
-    description = "Executes provided Node.js commands in order using the default 'node' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install npm packages; enable namespaceFiles if referencing files stored in the Namespace."
+    description = "Executes provided Node.js commands in order using the default 'node' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install npm packages; enable namespaceFiles if referencing files stored in the Namespace — useful for running existing scripts rather than inline code."
 )
 @Plugin(examples = {
     @Example(

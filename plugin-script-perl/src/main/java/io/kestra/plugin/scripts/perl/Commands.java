@@ -21,7 +21,7 @@ import java.util.List;
 @NoArgsConstructor
 @Schema(
     title = "Execute Perl files and commands.",
-    description = "Executes provided Perl commands in order using the default 'perl' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install modules."
+    description = "Executes provided Perl commands in order using the default 'perl' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install modules; use this task to run existing Perl files instead of inline scripts."
 )
 @Plugin(examples = {
     @Example(

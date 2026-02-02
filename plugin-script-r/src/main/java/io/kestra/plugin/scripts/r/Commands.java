@@ -24,7 +24,7 @@ import java.util.List;
 @NoArgsConstructor
 @Schema(
     title = "Execute R files and commands.",
-    description = "Executes provided R commands in order using the default 'r-base' image unless overridden. Supports inputFiles and beforeCommands to stage scripts and install packages; enable namespaceFiles if pointing to stored files."
+    description = "Executes provided R commands in order using the default 'r-base' image unless overridden. Supports inputFiles and beforeCommands to stage scripts and install packages; enable namespaceFiles if pointing to stored files — use this task for existing R scripts instead of inline code."
 )
 @Plugin(examples = {
     @Example(

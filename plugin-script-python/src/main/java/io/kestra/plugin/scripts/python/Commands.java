@@ -33,7 +33,7 @@ import java.util.Map;
 @NoArgsConstructor
 @Schema(
     title = "Execute Python files and commands.",
-    description = "Executes Python commands using the default 'python:3.13-slim' image unless overridden, with dependencies installed via UV (default) or pip and optional caching. Supports inputFiles/namespaceFiles to stage code and beforeCommands for setup; suitable for running existing scripts."
+    description = "Executes Python commands using the default 'python:3.13-slim' image unless overridden, with dependencies installed via UV (default) or pip and optional caching. Supports inputFiles/namespaceFiles to stage code and beforeCommands for setup; choose this task to run existing scripts instead of inline code."
 )
 @Plugin(
     examples = {
