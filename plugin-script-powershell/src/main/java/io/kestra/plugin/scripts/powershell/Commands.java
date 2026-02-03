@@ -24,8 +24,8 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute PowerShell commands and files.",
-    description = "Note that instead of adding the script using the inputFiles property, you can also add the script from the embedded VS Code editor and point to its location by path. If you do so, make sure to enable namespace files by setting the enabled flag of the namespaceFiles property to true."
+    title = "Execute PowerShell files and commands.",
+    description = "Executes provided PowerShell commands in order using the default 'ghcr.io/kestra-io/powershell:latest' image unless overridden. Supports inputFiles and beforeCommands to stage scripts/modules; enable namespaceFiles if referencing files stored in the Namespace — best for running existing .ps1 files instead of inline scripts."
 )
 @Plugin(examples = {
     @Example(
@@ -49,11 +49,16 @@ import java.util.List;
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/powershell:latest";
 
+    @Schema(
+        title = "Container image for PowerShell runtime",
+        description = "Docker image used to run the commands; defaults to 'ghcr.io/kestra-io/powershell:latest'. Include required modules or install them in beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The commands to run."
+        title = "Commands to execute",
+        description = "List of PowerShell commands executed in order; combine with beforeCommands for setup and inputFiles/namespaceFiles to stage scripts."
     )
     @NotNull
     protected Property<List<String>> commands;

@@ -26,7 +26,10 @@ import java.util.Map;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@Schema(title = "Execute a Perl script inline with your Flow Code.")
+@Schema(
+    title = "Run inline Perl script",
+    description = "Executes a multi-line Perl script inside the default 'perl' image unless overridden. Script is written to a temp .pl file and run with `perl`; install CPAN modules via beforeCommands. Use the Commands task to run existing files."
+)
 @Plugin(examples = {
     @Example(
         title = "Run a simple inline Perl script.",
@@ -46,10 +49,17 @@ import java.util.Map;
 public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "perl";
 
+    @Schema(
+        title = "Container image for Perl runtime",
+        description = "Docker image used to run the script; defaults to 'perl'. Include required modules or install them in beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
-    @Schema(title = "The inline script content.")
+    @Schema(
+        title = "Inline Perl script",
+        description = "Perl source as a multi-line string; saved to a temporary .pl file and executed with `perl`. For existing files, use the Commands task."
+    )
     @NotNull
     protected Property<String> script;
 

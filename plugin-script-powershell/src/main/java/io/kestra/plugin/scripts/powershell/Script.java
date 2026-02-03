@@ -27,7 +27,8 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a PowerShell script inline with your Flow Code."
+    title = "Run inline PowerShell script",
+    description = "Executes a multi-line PowerShell script in the default 'ghcr.io/kestra-io/powershell:latest' image unless overridden. Script is saved to a temp .ps1 and run with pwsh -NoProfile -NonInteractive; outputDir/outputFiles work as usual."
 )
 @Plugin(
     examples = {
@@ -66,11 +67,16 @@ import java.util.Map;
 public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/powershell:latest";
 
+    @Schema(
+        title = "Container image for PowerShell runtime",
+        description = "Docker image used to run the script; defaults to 'ghcr.io/kestra-io/powershell:latest'. Include required modules or install them in beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
+        title = "Inline PowerShell script",
+        description = "PowerShell script body as a multi-line string; written to a temporary .ps1 file and executed with pwsh. For existing files, use the Commands task."
     )
     @NotNull
     protected Property<String> script;
