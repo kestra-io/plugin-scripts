@@ -28,8 +28,8 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a script written in Java, JShell, Kotlin, Groovy or render Markdown with JBang inline with your Flow Code.",
-    description = "Besides scripting languages, with JBang, it is possible to [write scripts using Markdown](https://www.jbang.dev/documentation/guide/latest/usage.html#running-markdowns-md-experimental). JBang will extract code found in java, jsh, or jshelllanguage code blocks."
+    title = "Run inline JBang script",
+    description = "Executes Java/JShell/Kotlin/Groovy or Markdown (code blocks) via JBang inside the default 'jbangdev/jbang-action' image. Saves the rendered script to a temp file with the chosen extension and runs `jbang` (quiet by default). Add //DEPS lines for dependencies."
 )
 @Plugin(
     examples = {
@@ -104,26 +104,31 @@ import java.util.Map;
 public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "jbangdev/jbang-action";
 
+    @Schema(
+        title = "Container image for JBang runtime",
+        description = "Docker image used to run the script; defaults to 'jbangdev/jbang-action'. Provide an image that includes JBang if overriding."
+    )
     @Builder.Default
     private Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `jbang hello.java` or an executable JAR, use the `Commands` task instead."
+        title = "Inline JBang script",
+        description = "Script body as a multi-line string; written to a temp file and executed with `jbang`. For existing files or JARs, use the Commands task."
     )
     @NotNull
     private Property<String> script;
 
     @Schema(
-        title = "The JBang script extension.",
-        description = "JBang support more than Java scripts, you can use it with JShell (.jsh), Kotlin (.kt), Groovy (.groovy) or even Markdowns (.md)."
+        title = "Script extension",
+        description = "File extension to write (e.g., .java, .jsh, .kt, .groovy, .md); defaults to .java."
     )
     @Builder.Default
     @NotNull
     private Property<String> extension = Property.ofValue(".java");
 
     @Schema(
-        title = "Whether JBang should be quit.",
-        description = "By default, JBang logs in stderr so quiet is configured to true by default so no JBang logs are shown except errors."
+        title = "Quiet mode",
+        description = "When true (default), runs JBang with --quiet to suppress non-error logs."
     )
     @NotNull
     @Builder.Default

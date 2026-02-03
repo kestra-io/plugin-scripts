@@ -29,7 +29,10 @@ import java.util.regex.Pattern;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@Schema(title = "Trigger a flow when a Shell script matches a condition.")
+@Schema(
+    title = "Trigger on shell script condition",
+    description = "Polls by running an inline shell script in a container (default image ubuntu) and emits when exitCondition matches. Supports edge mode to emit only on transitions and polls every 60s by default. Accepts 'exit N' or a regex (fallback substring) matched against emitted vars and failure logs; run untrusted scripts only in trusted images."
+)
 @Plugin(
     examples = {
         @Example(
@@ -64,35 +67,29 @@ public class ScriptTrigger extends AbstractTrigger
     private static final String DEFAULT_IMAGE = "ubuntu";
 
     @Schema(
-        title = "Docker image used to execute the script.",
+        title = "Container image for script execution",
         description = """
-            Container image used by the underlying Script task to run the inline shell script.
-            Defaults to 'ubuntu'.
+            Image used by the Script task to run the inline shell script; defaults to 'ubuntu'.
+            Provide an image that includes the needed shell and tooling.
             """
     )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "Inline shell script to execute.",
+        title = "Inline shell script",
         description = """
-            Inline script content (multi-line string). This is the same 'script' concept as the Shell Script task.
-            The script is executed on each poll.
+            Multi-line script executed on each poll, with the same semantics as the Shell Script task.
             """
     )
     @NotNull
     protected Property<String> script;
 
     @Schema(
-        title = "Condition to match.",
+        title = "Condition to match",
         description = """
-            Condition evaluated after each script execution. The trigger emits an event only when this condition matches.
-
-            Supported forms:
-            - 'exit N' (example: 'exit 1'): matches when the script exit code equals N.
-            - Any other string: treated as a regex (or substring if regex is invalid) matched against:
-              - the task 'vars' (when the script emits ::{"outputs":...}::),
-              - and error logs when the task fails (TaskException).
+            Rendered condition evaluated after each execution; the trigger emits only when it matches.
+            'exit N' compares the exit code, otherwise the string is used as a regex (or substring fallback) against emitted vars (from ::{"outputs":...}::) and failure logs.
             """
     )
     @NotNull
@@ -101,17 +98,16 @@ public class ScriptTrigger extends AbstractTrigger
     @Schema(
         title = "Check interval",
         description = """
-            Interval between polling evaluations. The scheduler uses this interval to compute the next evaluation date.
+            Interval between polls; default PT60S. The scheduler uses this to schedule the next evaluation.
             """
     )
     @Builder.Default
     private final Duration interval = Duration.ofSeconds(60);
 
     @Schema(
-        title = "Edge trigger mode.",
+        title = "Edge trigger mode",
         description = """
-            If true, the trigger emits only on a transition from 'not matching' to 'matching' (anti-spam).
-            If false, the trigger emits on every poll where the condition matches.
+            When true (default), emit only on a transition from not matching to matching. When false, emit on every poll that matches.
             """
     )
     @Builder.Default

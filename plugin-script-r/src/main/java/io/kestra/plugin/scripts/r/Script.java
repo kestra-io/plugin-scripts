@@ -27,7 +27,8 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute an R script inline with your Flow Code."
+    title = "Run inline R script",
+    description = "Executes a multi-line R script inside the default 'r-base' image unless overridden. Script is written to a temp .R file and run with `Rscript`; install packages via beforeCommands. Use the Commands task to run existing files."
 )
 @Plugin(
     examples = {
@@ -145,11 +146,16 @@ import java.util.Map;
 public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "r-base";
 
+    @Schema(
+        title = "Container image for R runtime",
+        description = "Docker image used to run the script; defaults to 'r-base'. Include required packages or install them in beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `Rscript main.R` or `python main.py`, use the corresponding `Commands` task for a given language instead."
+        title = "Inline R script",
+        description = "R source as a multi-line string; saved to a temporary .R file and executed with `Rscript`. For existing files, use the Commands task."
     )
     @NotNull
     protected Property<String> script;

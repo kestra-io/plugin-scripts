@@ -23,7 +23,8 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Bun files and commands."
+    title = "Execute Bun files and commands.",
+    description = "Executes provided Bun commands in order using the default 'oven/bun' image unless overridden. Supports inputFiles and beforeCommands for staging sources and installing dependencies; use this task when running existing Bun files instead of inline scripts."
 )
 @Plugin(examples = {
     @Example(

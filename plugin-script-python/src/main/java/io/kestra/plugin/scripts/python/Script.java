@@ -34,7 +34,8 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Python script inline with your Flow Code."
+    title = "Run inline Python script",
+    description = "Executes a multi-line Python script inside the default 'python:3.13-slim' image unless overridden. Handles dependency install via UV (default) or pip with optional cache; script is saved to a temp .py file and run with the resolved interpreter. Use Commands task to run existing files."
 )
 @Plugin(
     examples = {
@@ -306,7 +307,8 @@ import java.util.Map;
 public class Script extends AbstractPythonExecScript implements RunnableTask<ScriptOutput> {
 
     @Schema(
-        title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
+        title = "Inline Python script",
+        description = "Python source as a multi-line string; written to a temporary .py file and executed with the resolved interpreter. For existing files, use the Commands task."
     )
     @NotNull
     protected Property<String> script;

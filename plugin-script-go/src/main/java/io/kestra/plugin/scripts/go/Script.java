@@ -24,7 +24,8 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Go script inline with your Flow Code."
+    title = "Run inline Go script",
+    description = "Executes a multi-line Go program inside the default 'golang' image unless overridden. Script is saved to a temp .go file and run with 'go run'; install modules via beforeCommands. Use Commands task if you prefer to point at existing files."
 )
 @Plugin(examples = {
     @Example(
@@ -65,11 +66,16 @@ import java.util.List;
 public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "golang";
 
+    @Schema(
+        title = "Container image for Go runtime",
+        description = "Docker image used to run the script; defaults to 'golang'. Include required toolchain or install in beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command such as `go run go_script.go`, use the `Commands` task instead."
+        title = "Inline Go script",
+        description = "Go source code as a multi-line string; written to a temporary .go file and executed with 'go run'. For existing files, use the Commands task."
     )
     @NotNull
     protected Property<String> script;

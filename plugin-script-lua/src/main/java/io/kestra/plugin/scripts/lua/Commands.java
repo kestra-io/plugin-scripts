@@ -19,7 +19,10 @@ import java.util.List;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@Schema(title = "Execute Lua files and commands.")
+@Schema(
+    title = "Execute Lua files and commands.",
+    description = "Executes provided Lua commands in order using the default 'nickblah/lua' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install modules; choose this task when running existing Lua files instead of inline scripts."
+)
 @Plugin(examples = {
     @Example(
         full = true,
@@ -38,10 +41,17 @@ import java.util.List;
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "nickblah/lua";
 
+    @Schema(
+        title = "Container image for Lua runtime",
+        description = "Docker image used to run the commands; defaults to 'nickblah/lua'. Include needed modules or install them in beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
-    @Schema(title = "The commands to run.")
+    @Schema(
+        title = "Commands to execute",
+        description = "List of Lua commands executed in order inside the container; combine with beforeCommands for setup and inputFiles to stage sources."
+    )
     protected Property<List<String>> commands;
 
     @Override

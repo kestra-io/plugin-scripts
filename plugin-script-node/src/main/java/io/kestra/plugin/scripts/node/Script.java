@@ -27,7 +27,8 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Node.js script inline with your Flow Code."
+    title = "Run inline Node.js script",
+    description = "Executes a multi-line Node.js script inside the default 'node' image unless overridden. Script is written to a temp .js file and run with `node`; install npm packages in beforeCommands. Use the Commands task to run existing files."
 )
 @Plugin(examples = {
     @Example(
@@ -166,11 +167,16 @@ import java.util.Map;
 public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "node";
 
+    @Schema(
+        title = "Container image for Node.js runtime",
+        description = "Docker image used to run the script; defaults to 'node'. Include required tooling or install via beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
+        title = "Inline Node.js script",
+        description = "JavaScript source as a multi-line string; saved to a temporary .js file and executed with `node`. For existing files, use the Commands task."
     )
     @NotNull
     protected Property<String> script;
