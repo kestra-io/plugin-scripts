@@ -27,7 +27,8 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a PHP script inline with your Flow Code."
+    title = "Run inline PHP script",
+    description = "Executes a multi-line PHP script inside the default 'php' image unless overridden. Script is written to a temp file and run with `php`; install extensions/deps via beforeCommands. Use the Commands task to run existing files."
 )
 @Plugin(examples = {
     @Example(
@@ -51,11 +52,16 @@ import java.util.Map;
 public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "php";
 
+    @Schema(
+        title = "Container image for PHP runtime",
+        description = "Docker image used to run the script; defaults to 'php'. Include required extensions or install them in beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file. To run a command from a file such as `bash myscript.sh` or `python myscript.py`, use the `Commands` task instead."
+        title = "Inline PHP script",
+        description = "PHP source as a multi-line string; saved to a temporary file and executed with `php`. For existing files, use the Commands task."
     )
     @NotNull
     protected Property<String> script;

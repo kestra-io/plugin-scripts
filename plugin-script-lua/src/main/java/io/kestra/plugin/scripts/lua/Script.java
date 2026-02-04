@@ -26,7 +26,10 @@ import java.util.Map;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@Schema(title = "Execute a Lua script inline with your Flow Code.")
+@Schema(
+    title = "Run inline Lua script",
+    description = "Executes a multi-line Lua script inside the default 'nickblah/lua' image unless overridden. Script is written to a temp .lua file and run with `lua`; install required modules via beforeCommands."
+)
 @Plugin(examples = {
     @Example(
         title = "Run a simple inline Lua script.",
@@ -46,10 +49,17 @@ import java.util.Map;
 public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "nickblah/lua";
 
+    @Schema(
+        title = "Container image for Lua runtime",
+        description = "Docker image used to run the script; defaults to 'nickblah/lua'. Include needed Lua modules or install them in beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
-    @Schema(title = "The inline script content.")
+    @Schema(
+        title = "Inline Lua script",
+        description = "Lua source as a multi-line string; saved to a temporary .lua file and executed with `lua`."
+    )
     @NotNull
     protected Property<String> script;
 

@@ -32,7 +32,8 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Python files and commands."
+    title = "Execute Python files and commands.",
+    description = "Executes Python commands using the default 'python:3.13-slim' image unless overridden, with dependencies installed via UV (default) or pip and optional caching. Supports inputFiles/namespaceFiles to stage code and beforeCommands for setup; choose this task to run existing scripts instead of inline code."
 )
 @Plugin(
     examples = {
@@ -299,7 +300,8 @@ import java.util.Map;
 public class Commands extends AbstractPythonExecScript implements RunnableTask<ScriptOutput> {
 
     @Schema(
-        title = "The commands to run."
+        title = "Commands to execute",
+        description = "List of Python commands run in order inside the container; combine with beforeCommands for env setup and inputFiles/namespaceFiles to stage scripts."
     )
     @NotNull
     protected Property<List<String>> commands;

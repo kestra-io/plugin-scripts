@@ -23,7 +23,8 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute JBang files or commands."
+    title = "Execute JBang files and commands.",
+    description = "Executes provided JBang commands (e.g., scripts, JARs) in order using the default 'jbangdev/jbang-action' image unless overridden. Supports beforeCommands for setup and uses inputFiles for staging sources; choose this task to run existing JBang files instead of inline scripts."
 )
 @Plugin(
     examples = {
@@ -46,11 +47,16 @@ import java.util.List;
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "jbangdev/jbang-action";
 
+    @Schema(
+        title = "Container image for JBang runtime",
+        description = "Docker image used to run the commands; defaults to 'jbangdev/jbang-action'. Override only with an image that includes JBang."
+    )
     @Builder.Default
     private Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "JBangs commands to run."
+        title = "Commands to execute",
+        description = "List of JBang commands executed in order inside the container."
     )
     @NotNull
     private Property<List<String>> commands;

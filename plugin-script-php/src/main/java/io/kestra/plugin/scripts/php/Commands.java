@@ -24,7 +24,7 @@ import java.util.List;
 @NoArgsConstructor
 @Schema(
     title = "Execute PHP files and commands.",
-    description = "Note that instead of adding the script using the inputFiles property, you can also add the script from the embedded VS Code editor and point to its location by path. If you do so, make sure to enable Namespace Files by setting the enabled flag of the namespaceFiles property to true."
+    description = "Executes provided PHP commands in order using the default 'php' image unless overridden. Supports inputFiles and beforeCommands to stage scripts and install extensions; enable namespaceFiles if referring to files stored in the Namespace — use this task when running existing PHP files instead of inline scripts."
 )
 @Plugin(examples = {
     @Example(
@@ -51,11 +51,16 @@ import java.util.List;
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "php";
 
+    @Schema(
+        title = "Container image for PHP runtime",
+        description = "Docker image used to run the commands; defaults to 'php'. Include required extensions or install them in beforeCommands."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The commands to run."
+        title = "Commands to execute",
+        description = "List of PHP commands executed in order inside the container; combine with beforeCommands for dependency setup and inputFiles/namespaceFiles to stage code."
     )
     @NotNull
     protected Property<List<String>> commands;
