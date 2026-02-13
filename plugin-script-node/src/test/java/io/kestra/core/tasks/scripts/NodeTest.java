@@ -124,6 +124,7 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
+            .type(Node.class.getName())
             .nodePath(Property.ofValue("node"))
             .inputFiles(files)
             .build();
