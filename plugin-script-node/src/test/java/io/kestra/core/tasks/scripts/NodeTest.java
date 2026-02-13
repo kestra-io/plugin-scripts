@@ -36,6 +36,7 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
+            .type(Node.class.getName())
             .nodePath(Property.ofValue("node"))
             .inputFiles(files)
             .build();
@@ -58,6 +59,7 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
+            .type(Node.class.getName())
             .nodePath(Property.ofValue("node"))
             .inputFiles(files)
             .build();
@@ -80,6 +82,7 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
+            .type(Node.class.getName())
             .nodePath(Property.ofValue("node"))
             .npmPath(Property.ofValue("npm"))
             .inputFiles(files)
@@ -100,6 +103,7 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
+            .type(Node.class.getName())
             .nodePath(Property.ofValue("node"))
             .inputFiles(files)
             .build();
@@ -138,6 +142,7 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
+            .type(Node.class.getName())
             .nodePath(Property.ofValue("node"))
             .inputFiles(files)
             .args(Property.ofValue(Arrays.asList("test", "param", "value")))
@@ -162,6 +167,7 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
+            .type(Node.class.getName())
             .nodePath(Property.ofValue("node"))
             .inputFiles(files)
             .build();
