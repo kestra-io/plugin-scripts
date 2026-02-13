@@ -1,6 +1,6 @@
 @PluginSubGroup(
     description = "This subgroup of plugins contains tasks for running Ruby scripts.",
-    categories = { PluginSubGroup.PluginCategory.SCRIPT }
+        categories = { PluginSubGroup.PluginCategory.CORE }
 )
 package io.kestra.plugin.scripts.ruby;
 
