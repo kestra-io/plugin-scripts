@@ -28,16 +28,17 @@ class PythonTest {
 
     @Test
     void run() throws Exception {
-        RunContext runContext = runContextFactory.of();
         Map<String, String> files = new HashMap<>();
         files.put("main.py", "print('::{\"outputs\": {\"extract\":\"hello world\"}}::')");
 
         Python python = Python.builder()
             .id("test-python-task")
+            .type(Python.class.getName())
             .pythonPath("python3")
             .inputFiles(files)
             .build();
 
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, Map.of());
         ScriptOutput run = python.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
@@ -47,16 +48,17 @@ class PythonTest {
 
     @Test
     void failed() {
-        RunContext runContext = runContextFactory.of();
         Map<String, String> files = new HashMap<>();
         files.put("main.py", "import sys; sys.exit(1)");
 
         Python python = Python.builder()
             .id("test-python-task")
+            .type(Python.class.getName())
             .pythonPath("python3")
             .inputFiles(files)
             .build();
 
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, Map.of());
         RunnableTaskException pythonException = assertThrows(RunnableTaskException.class, () -> {
             python.run(runContext);
         });
@@ -67,17 +69,18 @@ class PythonTest {
 
     @Test
     void requirements() throws Exception {
-        RunContext runContext = runContextFactory.of();
         Map<String, String> files = new HashMap<>();
         files.put("main.py", "import requests; print('::{\"outputs\": {\"extract\":\"' + str(requests.get('http://google.com').status_code) + '\"}}::')");
 
         Python python = Python.builder()
             .id("test-python-task")
+            .type(Python.class.getName())
             .pythonPath("python3")
             .inputFiles(files)
             .requirements(Collections.singletonList("requests"))
             .build();
 
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, Map.of());
         ScriptOutput run = python.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
@@ -86,9 +89,9 @@ class PythonTest {
 
     @Test
     void noVirtualEnv() throws Exception {
-        RunContext runContext = runContextFactory.of();
         Python python = Python.builder()
             .id("test-python-task")
+            .type(Python.class.getName())
             .inputFiles(Map.of(
                 "main.py", "from kestra import Kestra\n" +
                     "Kestra.outputs({'ok': True})\n"
@@ -97,6 +100,7 @@ class PythonTest {
             .virtualEnv(false)
             .build();
 
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, Map.of());
         ScriptOutput run = python.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
@@ -130,17 +134,18 @@ class PythonTest {
 
     @Test
     void manyFiles() throws Exception {
-        RunContext runContext = runContextFactory.of();
         Map<String, String> files = new HashMap<>();
         files.put("main.py", "import otherfile; otherfile.test()");
         files.put("otherfile.py", "def test(): print('::{\"outputs\": {\"extract\":\"success\"}}::')");
 
         Python python = Python.builder()
             .id("test-python-task")
+            .type(Python.class.getName())
             .pythonPath("python3")
             .inputFiles(files)
             .build();
 
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, Map.of());
         ScriptOutput run = python.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
@@ -149,17 +154,18 @@ class PythonTest {
 
     @Test
     void pipConf() throws Exception {
-        RunContext runContext = runContextFactory.of();
         Map<String, String> files = new HashMap<>();
         files.put("main.py", "print('::{\"outputs\": {\"extract\":\"' + str('#it worked !' in open('pip.conf').read()) + '\"}}::')");
         files.put("pip.conf", "[global]\nno-cache-dir = false\n#it worked !");
 
         Python python = Python.builder()
             .id("test-python-task")
+            .type(Python.class.getName())
             .pythonPath("python3")
             .inputFiles(files)
             .build();
 
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, Map.of());
         ScriptOutput run = python.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
@@ -168,7 +174,6 @@ class PythonTest {
 
     @Test
     void fileInSubFolders() throws Exception {
-        RunContext runContext = runContextFactory.of();
         Map<String, String> files = new HashMap<>();
         files.put("main.py", "print('::{\"outputs\": {\"extract\":\"' + open('sub/folder/file/test.txt').read() + '\"}}::')");
         files.put("sub/folder/file/test.txt", "OK");
@@ -176,10 +181,12 @@ class PythonTest {
 
         Python python = Python.builder()
             .id("test-python-task")
+            .type(Python.class.getName())
             .pythonPath("python3")
             .inputFiles(files)
             .build();
 
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, Map.of());
         ScriptOutput run = python.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
@@ -188,17 +195,18 @@ class PythonTest {
 
     @Test
     void args() throws Exception {
-        RunContext runContext = runContextFactory.of(ImmutableMap.of("test", "value"));
         Map<String, String> files = new HashMap<>();
         files.put("main.py", "import sys; print('::{\"outputs\": {\"extract\":\"' + ' '.join(sys.argv) + '\"}}::')");
 
         Python python = Python.builder()
             .id("test-python-task")
+            .type(Python.class.getName())
             .pythonPath("python3")
             .inputFiles(files)
-            .args(Arrays.asList("test", "param", "{{test}}"))
+            .args(Arrays.asList("test", "param", "value"))
             .build();
 
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of("test", "value"));
         ScriptOutput run = python.run(runContext);
 
         assertThat(run.getVars().get("extract"), is("main.py test param value"));
@@ -206,7 +214,6 @@ class PythonTest {
 
     @Test
     void outputs() throws Exception {
-        RunContext runContext = runContextFactory.of(ImmutableMap.of("test", "value"));
         Map<String, String> files = new HashMap<>();
         files.put("main.py", "from kestra import Kestra\n" +
             "import time\n" +
@@ -219,10 +226,12 @@ class PythonTest {
 
         Python node = Python.builder()
             .id("test-node-task")
+            .type(Python.class.getName())
             .pythonPath("python3")
             .inputFiles(files)
             .build();
 
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, node, ImmutableMap.of("test", "value"));
         ScriptOutput run = node.run(runContext);
 
         assertThat(run.getVars().get("test"), is("value"));
@@ -255,7 +264,6 @@ class PythonTest {
 
     @Test
     void outputFiles() throws Exception {
-        RunContext runContext = runContextFactory.of(ImmutableMap.of());
         Map<String, String> files = new HashMap<>();
         files.put("main.py", """
             with open("{{ outputFiles.test }}", "w", encoding="utf-8") as f:
@@ -265,11 +273,13 @@ class PythonTest {
 
         Python node = Python.builder()
             .id("test-output-files")
+            .type(Python.class.getName())
             .pythonPath("python3")
             .outputsFiles(Property.ofValue(List.of("test")))
             .inputFiles(files)
             .build();
 
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, node, Map.of());
         ScriptOutput run = node.run(runContext);
 
         assertThat(run.getExitCode(), is(0));

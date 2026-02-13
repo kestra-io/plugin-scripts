@@ -8,6 +8,7 @@ import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
+import io.kestra.core.utils.TestsUtils;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
@@ -30,15 +31,17 @@ class NodeTest {
 
     @Test
     void run() throws Exception {
-        RunContext runContext = runContextFactory.of();
         Map<String, String> files = new HashMap<>();
         files.put("main.js", "console.log('::{\"outputs\": {\"extract\":\"hello world\"}}::')");
 
         Node node = Node.builder()
             .id("test-node-task")
+            .type(Node.class.getName())
             .nodePath(Property.ofValue("node"))
             .inputFiles(files)
             .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, node, ImmutableMap.of());
 
         ScriptOutput run = node.run(runContext);
 
@@ -51,15 +54,17 @@ class NodeTest {
     @Test
     void
     failed() throws Exception {
-        RunContext runContext = runContextFactory.of();
         Map<String, String> files = new HashMap<>();
         files.put("main.js", "process.exit(1)");
 
         Node node = Node.builder()
             .id("test-node-task")
+            .type(Node.class.getName())
             .nodePath(Property.ofValue("node"))
             .inputFiles(files)
             .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, node, ImmutableMap.of());
 
         RunnableTaskException nodeException = assertThrows(RunnableTaskException.class, () -> {
             node.run(runContext);
@@ -71,18 +76,19 @@ class NodeTest {
 
     @Test
     void requirements() throws Exception {
-        RunContext runContext = runContextFactory.of();
         Map<String, String> files = new HashMap<>();
         files.put("main.js", "require('axios').get('http://google.com').then(r => { console.log('::{\"outputs\": {\"extract\":\"' + r.status + '\"}}::') })");
         files.put("package.json", "{\"dependencies\":{\"axios\":\"^0.20.0\"}}");
 
         Node node = Node.builder()
             .id("test-node-task")
+            .type(Node.class.getName())
             .nodePath(Property.ofValue("node"))
             .npmPath(Property.ofValue("npm"))
             .inputFiles(files)
             .build();
 
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, node, ImmutableMap.of());
         ScriptOutput run = node.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
@@ -91,17 +97,18 @@ class NodeTest {
 
     @Test
     void manyFiles() throws Exception {
-        RunContext runContext = runContextFactory.of();
         Map<String, String> files = new HashMap<>();
         files.put("main.js", "console.log('::{\"outputs\": {\"extract\":\"' + (require('./otherfile').value) + '\"}}::')");
         files.put("otherfile.js", "module.exports.value = 'success'");
 
         Node node = Node.builder()
             .id("test-node-task")
+            .type(Node.class.getName())
             .nodePath(Property.ofValue("node"))
             .inputFiles(files)
             .build();
 
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, node, ImmutableMap.of());
         ScriptOutput run = node.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
@@ -110,7 +117,6 @@ class NodeTest {
 
     @Test
     void fileInSubFolders() throws Exception {
-        RunContext runContext = runContextFactory.of();
         Map<String, String> files = new HashMap<>();
         files.put("main.js", "console.log('::{\"outputs\": {\"extract\":\"' + (require('fs').readFileSync('./sub/folder/file/test.txt', 'utf-8')) + '\"}}::')");
         files.put("sub/folder/file/test.txt", "OK");
@@ -118,10 +124,12 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
+            .type(Node.class.getName())
             .nodePath(Property.ofValue("node"))
             .inputFiles(files)
             .build();
 
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, node, ImmutableMap.of());
         ScriptOutput run = node.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
@@ -130,17 +138,18 @@ class NodeTest {
 
     @Test
     void args() throws Exception {
-        RunContext runContext = runContextFactory.of();
         Map<String, String> files = new HashMap<>();
         files.put("main.js", "console.log('::{\"outputs\": {\"extract\":\"' + (process.argv.slice(2).join(' ')) + '\"}}::')");
 
         Node node = Node.builder()
             .id("test-node-task")
+            .type(Node.class.getName())
             .nodePath(Property.ofValue("node"))
             .inputFiles(files)
             .args(Property.ofValue(Arrays.asList("test", "param", "value")))
             .build();
 
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, node, ImmutableMap.of());
         ScriptOutput run = node.run(runContext);
 
         assertThat(run.getVars().get("extract"), is("test param value"));
@@ -148,7 +157,6 @@ class NodeTest {
 
     @Test
     void outputs() throws Exception {
-        RunContext runContext = runContextFactory.of(ImmutableMap.of("test", "value"));
         Map<String, String> files = new HashMap<>();
         files.put("main.js", "const Kestra = require(\"./kestra\");" +
             "Kestra.outputs({test: 'value', int: 2, bool: true, float: 3.65});" +
@@ -160,10 +168,12 @@ class NodeTest {
 
         Node node = Node.builder()
             .id("test-node-task")
+            .type(Node.class.getName())
             .nodePath(Property.ofValue("node"))
             .inputFiles(files)
             .build();
 
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, node, ImmutableMap.of("test", "value"));
         ScriptOutput run = node.run(runContext);
 
         assertThat(run.getVars().get("test"), is("value"));

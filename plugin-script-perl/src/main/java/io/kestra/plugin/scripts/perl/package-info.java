@@ -1,6 +1,6 @@
 @PluginSubGroup(
     description = "This sub-group of plugins contains tasks for running Perl script.",
-    categories = { PluginSubGroup.PluginCategory.SCRIPT }
+        categories = { PluginSubGroup.PluginCategory.CORE }
 )
 package io.kestra.plugin.scripts.perl;
 
