@@ -203,7 +203,7 @@ class PythonTest {
             .type(Python.class.getName())
             .pythonPath("python3")
             .inputFiles(files)
-            .args(Arrays.asList("test", "param", "{{test}}"))
+            .args(Arrays.asList("test", "param", "value"))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of("test", "value"));
