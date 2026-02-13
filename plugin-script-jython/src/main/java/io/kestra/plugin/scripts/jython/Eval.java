@@ -16,8 +16,8 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Jython script.",
-    description = "This task is deprecated, please use `io.kestra.plugin.graalvm.js.Eval` instead."
+    title = "Execute Jython script",
+    description = "Deprecated; use `io.kestra.plugin.graalvm.js.Eval` or other GraalVM Eval tasks. Runs a rendered Jython script with bindings from the JVM Eval base; stdout/stderr not captured—log via `logger`."
 )
 @Plugin(
     examples = {

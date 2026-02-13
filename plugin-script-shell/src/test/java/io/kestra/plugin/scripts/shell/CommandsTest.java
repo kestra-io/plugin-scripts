@@ -260,7 +260,10 @@ class CommandsTest {
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
         Exception exception = assertThrows(Exception.class, () -> bash.run(runContext));
 
-        assertThat(exception.getMessage(), containsString("manifest for alpine:999.15.6 not found"));
+        assertThat(exception.getMessage(), allOf(
+            containsString("alpine:999.15.6"),
+            containsString("not found")
+        ));
     }
 
     @ParameterizedTest

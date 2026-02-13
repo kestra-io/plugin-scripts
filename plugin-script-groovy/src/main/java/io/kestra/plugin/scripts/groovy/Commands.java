@@ -23,7 +23,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Groovy commands from the CLI."
+    title = "Execute Groovy files and commands."
 )
 @Plugin(examples = {
     @Example(

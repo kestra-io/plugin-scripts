@@ -16,8 +16,8 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Nashorn (JavaScript) script.",
-    description = "This task is deprecated, please use `io.kestra.plugin.graalvm.js.Eval` instead."
+    title = "Execute Nashorn (JavaScript) script",
+    description = "Deprecated; use `io.kestra.plugin.graalvm.js.Eval` instead. Runs a rendered Nashorn script via the JVM Eval base; stdout/stderr not captured—log via `logger`."
 )
 @Plugin(
     examples = {

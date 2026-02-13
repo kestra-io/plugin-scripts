@@ -19,21 +19,14 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    description = "You can use a full script. \n" +
-        "The script contains some predefined variables:\n" +
-        "- All the variables you have in expression vars like `execution.id`. For example:\n" +
-        "- `logger`: use as the standard Java logger (`logger.info('my message')`)\n" +
-        "- `runContext` that allows you to:\n" +
-        "  - `runContext.metric(Counter.of(\"file.size\", response.contentLength()))`: send metrics\n" +
-        "  - `runContext.storage().getFile(URI uri)`: get a file from Kestra's internal storage\n" +
-        "  - `runContext.storage().putFile(File file)`: store a file in Kestra's internal storage\n" +
-        "\n" +
-        "The stdOut & stdErr is not captured, so you must use `logger`.\n"
+    title = "Execute JVM script",
+    description = "Deprecated; use GraalVM Eval tasks instead (`io.kestra.plugin.graalvm.js|python|ruby.Eval`). Runs a rendered script with bindings for flow variables, logger, and runContext; stdout/stderr are not captured—log via `logger`. Optional outputs list persists selected binding values."
 )
 @Deprecated
 public abstract class Eval extends AbstractJvmScript implements RunnableTask<Eval.Output> {
     @Schema(
-        title = "A list of output variables that will be usable in outputs."
+        title = "Binding names to return",
+        description = "List of binding keys to copy into task outputs after execution."
     )
     protected Property<List<String>> outputs;
 
@@ -74,13 +67,14 @@ public abstract class Eval extends AbstractJvmScript implements RunnableTask<Eva
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @Schema(
-            title = "The resulting object.",
-            description = "Mostly the last return of eval (if the language allows it)."
+            title = "Evaluated result",
+            description = "Last expression returned by the script, if the engine provides one."
         )
         private final Object result;
 
         @Schema(
-            title = "The captured outputs as declared on task property."
+            title = "Captured bindings",
+            description = "Map of binding values whose keys were listed in outputs."
         )
         private final Map<String, Object> outputs;
     }

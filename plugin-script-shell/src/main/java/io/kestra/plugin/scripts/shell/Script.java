@@ -24,7 +24,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Shell script."
+    title = "Execute a Shell script inline with your Flow Code."
 )
 @Plugin(
     examples = {
