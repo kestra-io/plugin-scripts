@@ -21,6 +21,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import io.kestra.core.models.enums.MonacoLanguages;
+import io.kestra.core.models.annotations.PluginProperty;
+
 @SuperBuilder
 @ToString
 @EqualsAndHashCode
@@ -60,6 +63,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Script content written inline; saved as a temporary .ts file and executed with 'deno run'."
     )
     @NotNull
+    @PluginProperty(language = MonacoLanguages.TYPESCRIPT)
     protected Property<String> script;
 
     @Override

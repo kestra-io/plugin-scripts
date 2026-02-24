@@ -18,6 +18,9 @@ import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
+import io.kestra.core.models.enums.MonacoLanguages;
+import io.kestra.core.models.annotations.PluginProperty;
+
 @SuperBuilder
 @ToString
 @EqualsAndHashCode
@@ -78,6 +81,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Go source code as a multi-line string; written to a temporary .go file and executed with 'go run'. For existing files, use the Commands task."
     )
     @NotNull
+    @PluginProperty(language = MonacoLanguages.GO)
     protected Property<String> script;
 
     @Override
