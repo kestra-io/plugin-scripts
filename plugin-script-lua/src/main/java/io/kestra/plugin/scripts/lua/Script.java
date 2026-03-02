@@ -21,6 +21,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import io.kestra.core.models.enums.MonacoLanguages;
+import io.kestra.core.models.annotations.PluginProperty;
+
 @SuperBuilder
 @ToString
 @EqualsAndHashCode
@@ -61,6 +64,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Lua source as a multi-line string; saved to a temporary .lua file and executed with `lua`."
     )
     @NotNull
+    @PluginProperty(language = MonacoLanguages.LUA)
     protected Property<String> script;
 
     @Override
