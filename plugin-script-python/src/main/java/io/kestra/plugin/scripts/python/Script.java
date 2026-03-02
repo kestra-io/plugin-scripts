@@ -28,6 +28,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.kestra.core.models.enums.MonacoLanguages;
+import io.kestra.core.models.annotations.PluginProperty;
+
 @SuperBuilder
 @ToString
 @EqualsAndHashCode
@@ -311,6 +314,7 @@ public class Script extends AbstractPythonExecScript implements RunnableTask<Scr
         description = "Python source as a multi-line string; written to a temporary .py file and executed with the resolved interpreter. For existing files, use the Commands task."
     )
     @NotNull
+    @PluginProperty(language = MonacoLanguages.PYTHON)
     protected Property<String> script;
 
     @Override

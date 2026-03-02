@@ -21,6 +21,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import io.kestra.core.models.enums.MonacoLanguages;
+import io.kestra.core.models.annotations.PluginProperty;
+
 @SuperBuilder
 @ToString
 @EqualsAndHashCode
@@ -79,6 +82,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "PowerShell script body as a multi-line string; written to a temporary .ps1 file and executed with pwsh. For existing files, use the Commands task."
     )
     @NotNull
+    @PluginProperty(language = MonacoLanguages.POWERSHELL)
     protected Property<String> script;
 
     @Builder.Default

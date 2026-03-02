@@ -21,6 +21,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import io.kestra.core.models.enums.MonacoLanguages;
+import io.kestra.core.models.annotations.PluginProperty;
+
 @SuperBuilder
 @ToString
 @EqualsAndHashCode
@@ -67,6 +70,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Julia source as a multi-line string; saved to a temporary .jl file and executed with 'julia'. For existing files, use the Commands task."
     )
     @NotNull
+    @PluginProperty(language = MonacoLanguages.JULIA)
     protected Property<String> script;
 
     @Override

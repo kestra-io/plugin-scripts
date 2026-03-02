@@ -18,8 +18,12 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import io.kestra.core.models.enums.MonacoLanguages;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -179,6 +183,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "JavaScript source as a multi-line string; saved to a temporary .js file and executed with `node`. For existing files, use the Commands task."
     )
     @NotNull
+    @PluginProperty(language = MonacoLanguages.JAVASCRIPT)
     protected Property<String> script;
 
     @Override

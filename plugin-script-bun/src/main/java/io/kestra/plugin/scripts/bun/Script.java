@@ -21,6 +21,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import io.kestra.core.models.enums.MonacoLanguages;
+import io.kestra.core.models.annotations.PluginProperty;
+
 @SuperBuilder
 @ToString
 @EqualsAndHashCode
@@ -78,6 +81,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file."
     )
     @NotNull
+    @PluginProperty(language = MonacoLanguages.JAVASCRIPT)
     protected Property<String> script;
 
     @Override
