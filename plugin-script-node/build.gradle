@@ -16,4 +16,7 @@ dependencies {
     implementation project(':plugin-script')
 
     testImplementation project(':plugin-script').sourceSets.test.output
+
+    testImplementation group: "io.kestra", name: "scheduler", version: kestraVersion
+    testImplementation group: "io.kestra", name: "worker", version: kestraVersion
 }
