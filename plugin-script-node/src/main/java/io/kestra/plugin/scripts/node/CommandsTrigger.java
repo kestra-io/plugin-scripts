@@ -59,6 +59,18 @@ import java.util.regex.Pattern;
 public class CommandsTrigger extends AbstractTrigger
     implements PollingTriggerInterface, TriggerOutput<CommandsTrigger.Output> {
 
+    private static final String DEFAULT_IMAGE = "node";
+
+    @Schema(
+        title = "Docker image used to execute the commands.",
+        description = """
+            Container image used by the underlying Commands task to run Node.js commands.
+            Defaults to 'node'.
+            """
+    )
+    @Builder.Default
+    protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
+
     @Schema(
         title = "Node commands to execute.",
         description = "Commands executed on each poll."
@@ -112,7 +124,8 @@ public class CommandsTrigger extends AbstractTrigger
 
     private Output runOnce(RunContext runContext) throws Exception {
         Commands task = Commands.builder()
-            .taskRunner(Process.instance()) 
+            .taskRunner(Process.instance())
+            .containerImage(this.containerImage)
             .commands(this.commands)
             .build();
 
