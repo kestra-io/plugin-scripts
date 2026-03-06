@@ -16,7 +16,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -129,15 +128,12 @@ public class ScriptTrigger extends AbstractTrigger
         );
     }
 
-   private Output runOnce(RunContext runContext) throws Exception {
-
+    private Output runOnce(RunContext runContext) throws Exception {
         Script task = Script.builder()
-                    .taskRunner(Process.instance())
-                    .containerImage(this.containerImage)
-                    .script(this.script)
-                    .build();
-
-
+            .taskRunner(Process.instance())
+            .containerImage(this.containerImage)
+            .script(this.script)
+            .build();
 
         String renderedCondition = runContext.render(this.exitCondition)
             .as(String.class)
@@ -161,11 +157,9 @@ public class ScriptTrigger extends AbstractTrigger
                 failure.exitCode,
                 null,
                 failure.logs
-                );
-            }
+            );
+        }
     }
-
-
 
     private boolean matchesCondition(Output out) {
         String cond = out.getCondition() == null ? "" : out.getCondition().trim();
