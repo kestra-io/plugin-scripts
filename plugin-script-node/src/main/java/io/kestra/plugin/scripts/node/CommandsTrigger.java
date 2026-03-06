@@ -139,8 +139,8 @@ public class CommandsTrigger extends AbstractTrigger
             return new Output(
                 Instant.now(),
                 renderedCondition,
-                taskOutput.getExitCode(),
-                taskOutput.getVars(),
+                safeExitCode(taskOutput),
+                safeVars(taskOutput),
                 null
             );
         } catch (RunnableTaskException e) {
@@ -189,6 +189,22 @@ public class CommandsTrigger extends AbstractTrigger
         }
 
         return sb.toString();
+    }
+
+    private Integer safeExitCode(ScriptOutput taskOutput) {
+        try {
+            return taskOutput.getExitCode();
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private Map<String, Object> safeVars(ScriptOutput taskOutput) {
+        try {
+            return taskOutput.getVars();
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     private record ExtractedFailure(Integer exitCode, String logs) {}
