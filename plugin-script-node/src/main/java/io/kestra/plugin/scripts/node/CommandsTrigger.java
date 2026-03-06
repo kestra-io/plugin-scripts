@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
             full = true,
             code = """
                 id: node_commands_trigger
-                namespace: io.kestra.dev
+                namespace: company.team
 
                 triggers:
                   - id: on_fail
