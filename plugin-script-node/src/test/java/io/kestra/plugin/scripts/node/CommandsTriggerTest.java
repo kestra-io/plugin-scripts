@@ -27,25 +27,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 @KestraTest
 class CommandsTriggerTest {
     @Inject
-    ApplicationContext applicationContext;
+    protected ApplicationContext applicationContext;
 
     @Inject
-    FlowListeners flowListenersService;
+    protected FlowListeners flowListenersService;
 
     @Inject
     @Named(QueueFactoryInterface.EXECUTION_NAMED)
-    QueueInterface<Execution> executionQueue;
+    protected QueueInterface<Execution> executionQueue;
 
     @Test
     void commandsTrigger_shouldTriggerOnImplicitFailureExit1() throws Exception {
+        FlowListeners flowListenersServiceSpy = spy(this.flowListenersService);
+
         CommandsTrigger trigger = CommandsTrigger.builder()
             .id("commands-trigger")
             .type(CommandsTrigger.class.getName())
@@ -57,28 +62,71 @@ class CommandsTriggerTest {
             )))
             .build();
 
-        Flow flow = Flow.builder()
+        Flow testFlow = Flow.builder()
             .id("commands-trigger-flow")
             .namespace("io.kestra.tests")
             .revision(1)
-            .triggers(List.of(trigger))
-            .tasks(List.of(Return.builder()
+            .triggers(Collections.singletonList(trigger))
+            .tasks(Collections.singletonList(Return.builder()
                 .id("log")
                 .type(Return.class.getName())
                 .format(Property.ofValue("exit={{ trigger.exitCode }}"))
                 .build()))
             .build();
 
-        Execution execution = run(flow);
-        Map<String, Object> vars = execution.getTrigger().getVariables();
+        FlowWithSource flow = FlowWithSource.of(testFlow, null);
+        doReturn(List.of(flow)).when(flowListenersServiceSpy).flows();
 
-        assertThat(vars.get("condition"), is("exit 1"));
-        assertThat(vars.get("exitCode"), is(1));
-        assertThat(vars.get("timestamp"), notNullValue());
+        CountDownLatch queueCount = new CountDownLatch(1);
+        AtomicReference<Execution> lastExecution = new AtomicReference<>();
+
+        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution -> {
+            if (execution.getLeft().getFlowId().equals("commands-trigger-flow")) {
+                lastExecution.set(execution.getLeft());
+                queueCount.countDown();
+            }
+        });
+
+        DefaultWorker worker = applicationContext.createBean(DefaultWorker.class, IdUtils.create(), 8, null);
+        AbstractScheduler scheduler = new JdbcScheduler(applicationContext, flowListenersServiceSpy);
+
+        try {
+            worker.run();
+            scheduler.run();
+
+            Thread.sleep(Duration.ofSeconds(2).toMillis());
+
+            boolean await = queueCount.await(20, TimeUnit.SECONDS);
+            assertThat("CommandsTrigger should execute", await, is(true));
+
+            try {
+                Await.until(
+                    () -> lastExecution.get() != null,
+                    Duration.ofMillis(100),
+                    Duration.ofSeconds(2)
+                );
+            } catch (TimeoutException e) {
+                throw new AssertionError("Execution was not captured within 2 seconds", e);
+            }
+
+            Execution execution = lastExecution.get();
+            assertThat(execution, notNullValue());
+
+            Map<String, Object> triggerVars = execution.getTrigger().getVariables();
+            assertThat("condition should be present", triggerVars.get("condition"), is("exit 1"));
+            assertThat("exitCode should be 1", triggerVars.get("exitCode"), is(1));
+            assertThat("timestamp should be present", triggerVars.get("timestamp"), notNullValue());
+        } finally {
+            try { worker.shutdown(); } catch (Exception ignored) {}
+            try { scheduler.close(); } catch (Exception ignored) {}
+            try { receive.blockLast(); } catch (Exception ignored) {}
+        }
     }
 
     @Test
     void commandsTrigger_shouldTriggerOnStdoutMatchUsingStructuredOutputs() throws Exception {
+        FlowListeners flowListenersServiceSpy = spy(this.flowListenersService);
+
         CommandsTrigger trigger = CommandsTrigger.builder()
             .id("commands-stdout-trigger")
             .type(CommandsTrigger.class.getName())
@@ -90,53 +138,65 @@ class CommandsTriggerTest {
             )))
             .build();
 
-        Flow flow = Flow.builder()
+        Flow testFlow = Flow.builder()
             .id("commands-stdout-flow")
             .namespace("io.kestra.tests")
             .revision(1)
-            .triggers(List.of(trigger))
-            .tasks(List.of(Return.builder()
+            .triggers(Collections.singletonList(trigger))
+            .tasks(Collections.singletonList(Return.builder()
                 .id("log")
                 .type(Return.class.getName())
                 .format(Property.ofValue("ok"))
                 .build()))
             .build();
 
-        Execution execution = run(flow);
-        Map<String, Object> vars = execution.getTrigger().getVariables();
+        FlowWithSource flow = FlowWithSource.of(testFlow, null);
+        doReturn(List.of(flow)).when(flowListenersServiceSpy).flows();
 
-        assertThat(vars.get("condition"), is("toto"));
-        assertThat(vars.get("exitCode"), is(0));
-        assertThat(vars.get("vars"), notNullValue());
-    }
+        CountDownLatch queueCount = new CountDownLatch(1);
+        AtomicReference<Execution> lastExecution = new AtomicReference<>();
 
-    private Execution run(Flow flow) throws Exception {
-        FlowListeners spy = org.mockito.Mockito.spy(flowListenersService);
-        org.mockito.Mockito.doReturn(List.of(FlowWithSource.of(flow, null))).when(spy).flows();
-
-        CountDownLatch latch = new CountDownLatch(1);
-        AtomicReference<Execution> result = new AtomicReference<>();
-
-        Flux<Execution> receive = TestsUtils.receive(executionQueue, e -> {
-            if (e.getLeft().getFlowId().equals(flow.getId())) {
-                result.set(e.getLeft());
-                latch.countDown();
+        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution -> {
+            if (execution.getLeft().getFlowId().equals("commands-stdout-flow")) {
+                lastExecution.set(execution.getLeft());
+                queueCount.countDown();
             }
         });
 
         DefaultWorker worker = applicationContext.createBean(DefaultWorker.class, IdUtils.create(), 8, null);
-        AbstractScheduler scheduler = new JdbcScheduler(applicationContext, spy);
+        AbstractScheduler scheduler = new JdbcScheduler(applicationContext, flowListenersServiceSpy);
 
-        worker.run();
-        scheduler.run();
+        try {
+            worker.run();
+            scheduler.run();
 
-        latch.await(10, TimeUnit.SECONDS);
-        Await.until(() -> result.get() != null, Duration.ofMillis(100), Duration.ofSeconds(2));
+            Thread.sleep(Duration.ofSeconds(2).toMillis());
 
-        worker.shutdown();
-        scheduler.close();
-        receive.blockLast();
+            boolean await = queueCount.await(20, TimeUnit.SECONDS);
+            assertThat("CommandsTrigger should execute", await, is(true));
 
-        return result.get();
+            try {
+                Await.until(
+                    () -> lastExecution.get() != null,
+                    Duration.ofMillis(100),
+                    Duration.ofSeconds(2)
+                );
+            } catch (TimeoutException e) {
+                throw new AssertionError("Execution was not captured within 2 seconds", e);
+            }
+
+            Execution execution = lastExecution.get();
+            assertThat(execution, notNullValue());
+
+            Map<String, Object> triggerVars = execution.getTrigger().getVariables();
+            assertThat("condition should be present", triggerVars.get("condition"), is("toto"));
+            assertThat("exitCode should be 0", triggerVars.get("exitCode"), is(0));
+            assertThat("timestamp should be present", triggerVars.get("timestamp"), notNullValue());
+            assertThat("vars should be present", triggerVars.get("vars"), notNullValue());
+        } finally {
+            try { worker.shutdown(); } catch (Exception ignored) {}
+            try { scheduler.close(); } catch (Exception ignored) {}
+            try { receive.blockLast(); } catch (Exception ignored) {}
+        }
     }
 }
