@@ -62,18 +62,45 @@ public class ScriptTrigger extends AbstractTrigger
 
     private static final String DEFAULT_IMAGE = "node";
 
+    @Schema(
+        title = "Container image for script execution.",
+        description = "Image used by the Script task to run the inline Node.js script; defaults to 'node'."
+    )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
+    @Schema(
+        title = "Inline Node.js script.",
+        description = "Multi-line script executed on each poll."
+    )
     @NotNull
     protected Property<String> script;
 
+    @Schema(
+        title = "Condition to match.",
+        description = """
+            Condition evaluated after each execution. The trigger emits only when it matches.
+            'exit N' compares the exit code, otherwise the string is used as a regex
+            (or substring fallback) against emitted vars and failure logs.
+            """
+    )
     @NotNull
     protected Property<String> exitCondition;
 
+    @Schema(
+        title = "Check interval.",
+        description = "Interval between polling evaluations."
+    )
     @Builder.Default
     private final Duration interval = Duration.ofSeconds(60);
 
+    @Schema(
+        title = "Edge trigger mode.",
+        description = """
+            If true, the trigger emits only on a transition from 'not matching' to 'matching' (anti-spam).
+            If false, the trigger emits on every poll where the condition matches.
+            """
+    )
     @Builder.Default
     protected Property<Boolean> edge = Property.ofValue(true);
 

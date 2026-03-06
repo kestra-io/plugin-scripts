@@ -91,9 +91,20 @@ public class CommandsTrigger extends AbstractTrigger
     @NotNull
     protected Property<String> exitCondition;
 
+    @Schema(
+        title = "Check interval.",
+        description = "Interval between polling evaluations."
+    )
     @Builder.Default
     private final Duration interval = Duration.ofSeconds(60);
 
+    @Schema(
+        title = "Edge trigger mode.",
+        description = """
+            If true, the trigger emits only on a transition from 'not matching' to 'matching' (anti-spam).
+            If false, the trigger emits on every poll where the condition matches.
+            """
+    )
     @Builder.Default
     protected Property<Boolean> edge = Property.ofValue(true);
 
