@@ -104,11 +104,15 @@ class ScriptTriggerTest {
             boolean await = queueCount.await(20, TimeUnit.SECONDS);
             assertThat("ScriptTrigger should execute", await, is(true));
 
-            Await.until(
-                () -> lastExecution.get() != null,
-                Duration.ofMillis(100),
-                Duration.ofSeconds(2)
-            );
+            try {
+                Await.until(
+                    () -> lastExecution.get() != null,
+                    Duration.ofMillis(100),
+                    Duration.ofSeconds(2)
+                );
+            } catch (TimeoutException e) {
+                throw new AssertionError("Execution was not captured within 2 seconds", e);
+            }
 
             Execution execution = lastExecution.get();
             assertThat(execution, notNullValue());
@@ -120,9 +124,9 @@ class ScriptTriggerTest {
             assertThat(triggerVars.get("exitCode"), is(1));
             assertThat(triggerVars.get("timestamp"), notNullValue());
         } finally {
-            worker.shutdown();
-            scheduler.close();
-            receive.blockLast();
+            try { worker.shutdown(); } catch (Exception ignored) {}
+            try { scheduler.close(); } catch (Exception ignored) {}
+            try { receive.blockLast(); } catch (Exception ignored) {}
         }
     }
 
@@ -182,11 +186,15 @@ class ScriptTriggerTest {
             boolean await = queueCount.await(20, TimeUnit.SECONDS);
             assertThat("ScriptTrigger should execute", await, is(true));
 
-            Await.until(
-                () -> lastExecution.get() != null,
-                Duration.ofMillis(100),
-                Duration.ofSeconds(2)
-            );
+            try {
+                Await.until(
+                    () -> lastExecution.get() != null,
+                    Duration.ofMillis(100),
+                    Duration.ofSeconds(2)
+                );
+            } catch (TimeoutException e) {
+                throw new AssertionError("Execution was not captured within 2 seconds", e);
+            }
 
             Execution execution = lastExecution.get();
             assertThat(execution, notNullValue());
@@ -199,9 +207,9 @@ class ScriptTriggerTest {
             assertThat(triggerVars.get("timestamp"), notNullValue());
             assertThat(triggerVars.get("vars"), notNullValue());
         } finally {
-            worker.shutdown();
-            scheduler.close();
-            receive.blockLast();
+            try { worker.shutdown(); } catch (Exception ignored) {}
+            try { scheduler.close(); } catch (Exception ignored) {}
+            try { receive.blockLast(); } catch (Exception ignored) {}
         }
     }
 }
