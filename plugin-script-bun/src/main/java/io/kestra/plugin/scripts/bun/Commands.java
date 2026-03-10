@@ -1,5 +1,7 @@
 package io.kestra.plugin.scripts.bun;
 
+import java.util.List;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
@@ -10,12 +12,11 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.util.List;
 
 @SuperBuilder
 @ToString
@@ -26,43 +27,45 @@ import java.util.List;
     title = "Execute Bun files and commands.",
     description = "Executes provided Bun commands in order using the default 'oven/bun' image unless overridden. Supports inputFiles and beforeCommands for staging sources and installing dependencies; use this task when running existing Bun files instead of inline scripts."
 )
-@Plugin(examples = {
-    @Example(
-        full = true,
-        title = "Execute a Bun command.",
-        code = """
-            id: bun_commands
-            namespace: company.team
+@Plugin(
+    examples = {
+        @Example(
+            full = true,
+            title = "Execute a Bun command.",
+            code = """
+                id: bun_commands
+                namespace: company.team
 
-            tasks:
-              - id: commands
-                type: io.kestra.plugin.scripts.bun.Commands
-                commands:
-                  - bun --version
-            """
-    ),
-    @Example(
-        full = true,
-        title = "Run a TypeScript file with dependencies.",
-        code = """
-            id: bun_commands_with_dependencies
-            namespace: company.team
+                tasks:
+                  - id: commands
+                    type: io.kestra.plugin.scripts.bun.Commands
+                    commands:
+                      - bun --version
+                """
+        ),
+        @Example(
+            full = true,
+            title = "Run a TypeScript file with dependencies.",
+            code = """
+                id: bun_commands_with_dependencies
+                namespace: company.team
 
-            tasks:
-              - id: bun_commands
-                type: io.kestra.plugin.scripts.bun.Commands
-                inputFiles:
-                  index.ts: |
-                    import { say } from "cowsay";
+                tasks:
+                  - id: bun_commands
+                    type: io.kestra.plugin.scripts.bun.Commands
+                    inputFiles:
+                      index.ts: |
+                        import { say } from "cowsay";
 
-                    console.log(say({ text: "I love Kestra!" }));
-                beforeCommands:
-                  - bun add cowsay
-                commands:
-                  - bun run index.ts
-            """
-    )
-})
+                        console.log(say({ text: "I love Kestra!" }));
+                    beforeCommands:
+                      - bun add cowsay
+                    commands:
+                      - bun run index.ts
+                """
+        )
+    }
+)
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "oven/bun";
 

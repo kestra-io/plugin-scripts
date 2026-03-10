@@ -1,6 +1,13 @@
 package io.kestra.plugin.scripts.ruby;
 
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import org.junit.jupiter.api.Test;
+
 import com.google.common.collect.ImmutableMap;
+
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
@@ -10,14 +17,10 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -40,15 +43,22 @@ class ScriptTest {
         Script rubyScript = Script.builder()
             .id("ruby-script-" + UUID.randomUUID())
             .type(Script.class.getName())
-            .beforeCommands(Property.ofValue(List.of(
-                "gem install date"
-            )))
-            .script(Property.ofValue("""
-                require 'date'
-                puts Date.new(2012,12,25).strftime('%F')
-                STDERR.puts Date.jd(2451944).strftime('%F')
-                """
-            ))
+            .beforeCommands(
+                Property.ofValue(
+                    List.of(
+                        "gem install date"
+                    )
+                )
+            )
+            .script(
+                Property.ofValue(
+                    """
+                        require 'date'
+                        puts Date.new(2012,12,25).strftime('%F')
+                        STDERR.puts Date.jd(2451944).strftime('%F')
+                        """
+                )
+            )
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, rubyScript, ImmutableMap.of());

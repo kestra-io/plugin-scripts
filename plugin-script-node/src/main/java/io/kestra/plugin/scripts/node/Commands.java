@@ -1,5 +1,7 @@
 package io.kestra.plugin.scripts.node;
 
+import java.util.List;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
@@ -10,12 +12,11 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.util.List;
 
 @SuperBuilder
 @ToString
@@ -26,28 +27,30 @@ import java.util.List;
     title = "Execute Node.js files and commands.",
     description = "Executes provided Node.js commands in order using the default 'node' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install npm packages; enable namespaceFiles if referencing files stored in the Namespace — useful for running existing scripts rather than inline code."
 )
-@Plugin(examples = {
-    @Example(
-        full = true,
-        title = "Install required npm packages, create a Node.js script and execute it.",
-        code = """
-            id: nodejs_commands
-            namespace: company.team
+@Plugin(
+    examples = {
+        @Example(
+            full = true,
+            title = "Install required npm packages, create a Node.js script and execute it.",
+            code = """
+                id: nodejs_commands
+                namespace: company.team
 
-            tasks:
-              - id: commands
-                type: io.kestra.plugin.scripts.node.Commands
-                inputFiles:
-                  main.js: |
-                    const colors = require("colors");
-                    console.log(colors.red("Hello"));
-                beforeCommands:
-                  - npm install colors
-                commands:
-                  - node main.js
-            """
-    )
-})
+                tasks:
+                  - id: commands
+                    type: io.kestra.plugin.scripts.node.Commands
+                    inputFiles:
+                      main.js: |
+                        const colors = require("colors");
+                        console.log(colors.red("Hello"));
+                    beforeCommands:
+                      - npm install colors
+                    commands:
+                      - node main.js
+                """
+        )
+    }
+)
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "node";
 

@@ -1,6 +1,14 @@
 package io.kestra.core.tasks.scripts;
 
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.jupiter.api.Test;
+
 import com.google.common.collect.ImmutableMap;
+
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.AbstractMetricEntry;
 import io.kestra.core.models.property.Property;
@@ -9,13 +17,8 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.utils.TestsUtils;
-import jakarta.inject.Inject;
-import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import jakarta.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -52,8 +55,7 @@ class NodeTest {
     }
 
     @Test
-    void
-    failed() throws Exception {
+    void failed() throws Exception {
         Map<String, String> files = new HashMap<>();
         files.put("main.js", "process.exit(1)");
 
@@ -66,7 +68,8 @@ class NodeTest {
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, node, ImmutableMap.of());
 
-        RunnableTaskException nodeException = assertThrows(RunnableTaskException.class, () -> {
+        RunnableTaskException nodeException = assertThrows(RunnableTaskException.class, () ->
+        {
             node.run(runContext);
         });
 
@@ -158,12 +161,13 @@ class NodeTest {
     @Test
     void outputs() throws Exception {
         Map<String, String> files = new HashMap<>();
-        files.put("main.js", "const Kestra = require(\"./kestra\");" +
-            "Kestra.outputs({test: 'value', int: 2, bool: true, float: 3.65});" +
-            "Kestra.counter('count', 1, {tag1: 'i', tag2: 'win'});" +
-            "Kestra.counter('count2', 2);" +
-            "Kestra.timer('timer1', (callback) => { setTimeout(callback, 1000) }, {tag1: 'i', tag2: 'lost'});" +
-            "Kestra.timer('timer2', 2.12, {tag1: 'i', tag2: 'destroy'});"
+        files.put(
+            "main.js", "const Kestra = require(\"./kestra\");" +
+                "Kestra.outputs({test: 'value', int: 2, bool: true, float: 3.65});" +
+                "Kestra.counter('count', 1, {tag1: 'i', tag2: 'win'});" +
+                "Kestra.counter('count2', 2);" +
+                "Kestra.timer('timer1', (callback) => { setTimeout(callback, 1000) }, {tag1: 'i', tag2: 'lost'});" +
+                "Kestra.timer('timer2', 2.12, {tag1: 'i', tag2: 'destroy'});"
         );
 
         Node node = Node.builder()
@@ -193,15 +197,15 @@ class NodeTest {
         assertThat(NodeTest.getMetrics(runContext, "count").getTags().get("tag1"), is("i"));
         assertThat(NodeTest.getMetrics(runContext, "count").getTags().get("tag2"), is("win"));
 
-        assertThat(NodeTest.<Duration>getMetrics(runContext, "timer1").getValue().getNano(), greaterThan(0));
-        assertThat(NodeTest.<Duration>getMetrics(runContext, "timer1").getTags().size(), is(2));
-        assertThat(NodeTest.<Duration>getMetrics(runContext, "timer1").getTags().get("tag1"), is("i"));
-        assertThat(NodeTest.<Duration>getMetrics(runContext, "timer1").getTags().get("tag2"), is("lost"));
+        assertThat(NodeTest.<Duration> getMetrics(runContext, "timer1").getValue().getNano(), greaterThan(0));
+        assertThat(NodeTest.<Duration> getMetrics(runContext, "timer1").getTags().size(), is(2));
+        assertThat(NodeTest.<Duration> getMetrics(runContext, "timer1").getTags().get("tag1"), is("i"));
+        assertThat(NodeTest.<Duration> getMetrics(runContext, "timer1").getTags().get("tag2"), is("lost"));
 
-        assertThat(NodeTest.<Duration>getMetrics(runContext, "timer2").getValue().getNano(), greaterThan(100000000));
-        assertThat(NodeTest.<Duration>getMetrics(runContext, "timer2").getTags().size(), is(2));
-        assertThat(NodeTest.<Duration>getMetrics(runContext, "timer2").getTags().get("tag1"), is("i"));
-        assertThat(NodeTest.<Duration>getMetrics(runContext, "timer2").getTags().get("tag2"), is("destroy"));
+        assertThat(NodeTest.<Duration> getMetrics(runContext, "timer2").getValue().getNano(), greaterThan(100000000));
+        assertThat(NodeTest.<Duration> getMetrics(runContext, "timer2").getTags().size(), is(2));
+        assertThat(NodeTest.<Duration> getMetrics(runContext, "timer2").getTags().get("tag1"), is("i"));
+        assertThat(NodeTest.<Duration> getMetrics(runContext, "timer2").getTags().get("tag2"), is("destroy"));
     }
 
     @SuppressWarnings("unchecked")

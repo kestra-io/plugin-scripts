@@ -1,5 +1,9 @@
 package io.kestra.plugin.scripts.groovy;
 
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
@@ -13,14 +17,11 @@ import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.kestra.plugin.scripts.runner.docker.Docker;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
 
 @SuperBuilder
 @ToString
@@ -30,44 +31,46 @@ import java.util.Map;
 @Schema(
     title = "Execute a Groovy script inline with your Flow Code."
 )
-@Plugin(examples = {
-    @Example(
-        title = "Create a Groovy script and execute it.",
-        full = true,
-        code = """
-            id: groovy_script
-            namespace: company.team
+@Plugin(
+    examples = {
+        @Example(
+            title = "Create a Groovy script and execute it.",
+            full = true,
+            code = """
+                id: groovy_script
+                namespace: company.team
 
-            tasks:
-              - id: script
-                type: io.kestra.plugin.scripts.groovy.Script
-                script: |
-                  println "Hello, World!"
-            """
-    ),
-    @Example(
-        title = "Fetch data from an API and save it to a file.",
-        full = true,
-        code = """
-            id: groovy_api_fetch
-            namespace: company.team
+                tasks:
+                  - id: script
+                    type: io.kestra.plugin.scripts.groovy.Script
+                    script: |
+                      println "Hello, World!"
+                """
+        ),
+        @Example(
+            title = "Fetch data from an API and save it to a file.",
+            full = true,
+            code = """
+                id: groovy_api_fetch
+                namespace: company.team
 
-            tasks:
-              - id: groovy_script
-                type: io.kestra.plugin.scripts.groovy.Script
-                outputFiles:
-                  - users.json
-                script: |
-                  import groovy.json.JsonOutput
+                tasks:
+                  - id: groovy_script
+                    type: io.kestra.plugin.scripts.groovy.Script
+                    outputFiles:
+                      - users.json
+                    script: |
+                      import groovy.json.JsonOutput
 
-                  def url = "https://jsonplaceholder.typicode.com/users"
-                  def users = new URL(url).text
+                      def url = "https://jsonplaceholder.typicode.com/users"
+                      def users = new URL(url).text
 
-                  new File("users.json").write(JsonOutput.prettyPrint(users))
-                  println "Successfully fetched users and created users.json"
-            """
-    ),
-})
+                      new File("users.json").write(JsonOutput.prettyPrint(users))
+                      println "Successfully fetched users and created users.json"
+                """
+        ),
+    }
+)
 public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "groovy";
 
@@ -112,10 +115,15 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
                 // because of, we are mounting a volume and the uid running Docker is not 1000, so it should run as user root (-u root).
                 Docker.builder()
                     .user("root")
-                    .build())
-            .withCommands(Property.ofValue(List.of(
-                String.join(" ", "groovy", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
-            )))
+                    .build()
+            )
+            .withCommands(
+                Property.ofValue(
+                    List.of(
+                        String.join(" ", "groovy", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
+                    )
+                )
+            )
             .withTargetOS(os)
             .run();
     }
