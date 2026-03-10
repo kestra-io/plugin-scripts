@@ -1,5 +1,7 @@
 package io.kestra.plugin.scripts.deno;
 
+import java.util.List;
+
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.property.Property;
@@ -8,11 +10,10 @@ import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.util.List;
 
 @SuperBuilder
 @ToString
@@ -23,27 +24,29 @@ import java.util.List;
     title = "Execute Deno files and commands.",
     description = "Executes provided Deno commands in order using the default 'denoland/deno' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install deps; remember to include required --allow-* flags and prefer this task for existing .ts/.js files instead of inline scripts."
 )
-@Plugin(examples = {
-    @Example(
-        full = true,
-        title = "Run a Deno script with network permissions.",
-        code = """
-            id: deno_permissions
-            namespace: company.team
+@Plugin(
+    examples = {
+        @Example(
+            full = true,
+            title = "Run a Deno script with network permissions.",
+            code = """
+                id: deno_permissions
+                namespace: company.team
 
-            tasks:
-              - id: deno_commands
-                type: io.kestra.plugin.scripts.deno.Commands
-                inputFiles:
-                  main.ts: |
-                    const response = await fetch("https://httpbin.org/status/200");
-                    const data = await response.json();
-                    console.log(data);
-                commands:
-                  - deno run --allow-net main.ts
-            """
-    )
-})
+                tasks:
+                  - id: deno_commands
+                    type: io.kestra.plugin.scripts.deno.Commands
+                    inputFiles:
+                      main.ts: |
+                        const response = await fetch("https://httpbin.org/status/200");
+                        const data = await response.json();
+                        console.log(data);
+                    commands:
+                      - deno run --allow-net main.ts
+                """
+        )
+    }
+)
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "denoland/deno";
 

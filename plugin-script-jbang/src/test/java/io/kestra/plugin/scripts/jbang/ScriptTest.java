@@ -1,6 +1,13 @@
 package io.kestra.plugin.scripts.jbang;
 
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import org.junit.jupiter.api.Test;
+
 import com.google.common.collect.ImmutableMap;
+
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
@@ -10,14 +17,10 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -39,17 +42,20 @@ class ScriptTest {
         Script jbangScript = Script.builder()
             .id("jbang-script-" + UUID.randomUUID())
             .type(Script.class.getName())
-            .script(Property.ofValue("""
-                class helloworld {
-                    public static void main(String[] args) {
-                        if(args.length==0) {
-                            System.out.println("Hello World!");
-                        } else {
-                            System.out.println("Hello " + args[0]);
-                        }
-                    }
-                }"""
-            ))
+            .script(
+                Property.ofValue(
+                    """
+                        class helloworld {
+                            public static void main(String[] args) {
+                                if(args.length==0) {
+                                    System.out.println("Hello World!");
+                                } else {
+                                    System.out.println("Hello " + args[0]);
+                                }
+                            }
+                        }"""
+                )
+            )
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, jbangScript, ImmutableMap.of());

@@ -1,6 +1,19 @@
 package io.kestra.plugin.scripts.python;
 
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Stream;
+
+import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
 import com.google.common.collect.ImmutableMap;
+
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.AbstractMetricEntry;
 import io.kestra.core.models.property.Property;
@@ -13,19 +26,9 @@ import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+
 import jakarta.inject.Inject;
 import jakarta.validation.ConstraintViolationException;
-import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -77,7 +80,8 @@ class ScriptTest {
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
-        RunnableTaskException pythonException = assertThrows(RunnableTaskException.class, () -> {
+        RunnableTaskException pythonException = assertThrows(RunnableTaskException.class, () ->
+        {
             python.run(runContext);
         });
 
@@ -93,14 +97,21 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script(Property.ofValue("import requests;" +
-                "print('::{\"outputs\": {\"extract\":\"' + str(requests.get('https://google.com').status_code) + '\"}}::')"
-            ))
-            .beforeCommands(Property.ofValue(List.of(
-                "python3 -m venv venv",
-                ". venv/bin/activate",
-                "pip install requests > /dev/null"
-            )))
+            .script(
+                Property.ofValue(
+                    "import requests;" +
+                        "print('::{\"outputs\": {\"extract\":\"' + str(requests.get('https://google.com').status_code) + '\"}}::')"
+                )
+            )
+            .beforeCommands(
+                Property.ofValue(
+                    List.of(
+                        "python3 -m venv venv",
+                        ". venv/bin/activate",
+                        "pip install requests > /dev/null"
+                    )
+                )
+            )
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
@@ -121,19 +132,22 @@ class ScriptTest {
             .dependencies(Property.ofValue(List.of("kestra", "pandas")))
             .dependencyCacheEnabled(Property.ofValue(false))
             .pythonVersion(Property.ofValue("3.13"))
-            .script(Property.ofValue("""
-                  from kestra import Kestra
-                  import pandas as pd
-                  data = {
-                      'Name': ['Alice', 'Bob', 'Charlie'],
-                      'Age': [25, 30, 35]
-                  }
-                  df = pd.DataFrame(data)
-                  print(df)
-                  print("Average age:", df['Age'].mean())
-                  Kestra.outputs({"average_age": df['Age'].mean()})
-                  """
-            ))
+            .script(
+                Property.ofValue(
+                    """
+                        from kestra import Kestra
+                        import pandas as pd
+                        data = {
+                            'Name': ['Alice', 'Bob', 'Charlie'],
+                            'Age': [25, 30, 35]
+                        }
+                        df = pd.DataFrame(data)
+                        print(df)
+                        print("Average age:", df['Age'].mean())
+                        Kestra.outputs({"average_age": df['Age'].mean()})
+                        """
+                )
+            )
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
@@ -161,11 +175,14 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script(Property.ofValue("import os\n" +
-                "\n" +
-                "file_size = os.path.getsize(\"" + put.toString() + "\")\n" +
-                "print('::{\"outputs\": {\"extract\":' + str(file_size) + '}}::')"
-            ))
+            .script(
+                Property.ofValue(
+                    "import os\n" +
+                        "\n" +
+                        "file_size = os.path.getsize(\"" + put.toString() + "\")\n" +
+                        "print('::{\"outputs\": {\"extract\":' + str(file_size) + '}}::')"
+                )
+            )
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
@@ -183,15 +200,22 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script(Property.ofValue("from kestra import Kestra\n" +
-                "print(\"1234\\n\\n\")\n" +
-                "Kestra.outputs({'secrets': \"test string\"})"
-            ))
-            .beforeCommands(Property.ofValue(List.of(
-                "python -m venv venv",
-                ". venv/bin/activate",
-                "pip install kestra > /dev/null"
-            )))
+            .script(
+                Property.ofValue(
+                    "from kestra import Kestra\n" +
+                        "print(\"1234\\n\\n\")\n" +
+                        "Kestra.outputs({'secrets': \"test string\"})"
+                )
+            )
+            .beforeCommands(
+                Property.ofValue(
+                    List.of(
+                        "python -m venv venv",
+                        ". venv/bin/activate",
+                        "pip install kestra > /dev/null"
+                    )
+                )
+            )
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
@@ -209,11 +233,15 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .beforeCommands(Property.ofValue(List.of(
-                "python -m venv venv",
-                ". venv/bin/activate",
-                "pip install kestra > /dev/null"
-            )))
+            .beforeCommands(
+                Property.ofValue(
+                    List.of(
+                        "python -m venv venv",
+                        ". venv/bin/activate",
+                        "pip install kestra > /dev/null"
+                    )
+                )
+            )
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of("script", "efzfe"));
@@ -230,19 +258,26 @@ class ScriptTest {
             .type(Script.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .script(Property.ofValue("from kestra import Kestra\n" +
-                "import time\n" +
-                "Kestra.outputs({'test': 'value', 'int': 2, 'bool': True, 'float': 3.65})\n" +
-                "Kestra.counter('count', 1, {'tag1': 'i', 'tag2': 'win'})\n" +
-                "Kestra.counter('count2', 2)\n" +
-                "Kestra.timer('timer1', lambda: time.sleep(1), {'tag1': 'i', 'tag2': 'lost'})\n" +
-                "Kestra.timer('timer2', 2.12, {'tag1': 'i', 'tag2': 'destroy'})\n"
-            ))
-            .beforeCommands(Property.ofValue(List.of(
-                "python -m venv venv",
-                ". venv/bin/activate",
-                "pip install kestra > /dev/null"
-            )))
+            .script(
+                Property.ofValue(
+                    "from kestra import Kestra\n" +
+                        "import time\n" +
+                        "Kestra.outputs({'test': 'value', 'int': 2, 'bool': True, 'float': 3.65})\n" +
+                        "Kestra.counter('count', 1, {'tag1': 'i', 'tag2': 'win'})\n" +
+                        "Kestra.counter('count2', 2)\n" +
+                        "Kestra.timer('timer1', lambda: time.sleep(1), {'tag1': 'i', 'tag2': 'lost'})\n" +
+                        "Kestra.timer('timer2', 2.12, {'tag1': 'i', 'tag2': 'destroy'})\n"
+                )
+            )
+            .beforeCommands(
+                Property.ofValue(
+                    List.of(
+                        "python -m venv venv",
+                        ". venv/bin/activate",
+                        "pip install kestra > /dev/null"
+                    )
+                )
+            )
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
@@ -262,15 +297,15 @@ class ScriptTest {
         assertThat(getMetrics(runContext, "count").getTags().get("tag1"), is("i"));
         assertThat(getMetrics(runContext, "count").getTags().get("tag2"), is("win"));
 
-        assertThat(ScriptTest.<Duration>getMetrics(runContext, "timer1").getValue().getNano(), greaterThan(0));
-        assertThat(ScriptTest.<Duration>getMetrics(runContext, "timer1").getTags().size(), is(2));
-        assertThat(ScriptTest.<Duration>getMetrics(runContext, "timer1").getTags().get("tag1"), is("i"));
-        assertThat(ScriptTest.<Duration>getMetrics(runContext, "timer1").getTags().get("tag2"), is("lost"));
+        assertThat(ScriptTest.<Duration> getMetrics(runContext, "timer1").getValue().getNano(), greaterThan(0));
+        assertThat(ScriptTest.<Duration> getMetrics(runContext, "timer1").getTags().size(), is(2));
+        assertThat(ScriptTest.<Duration> getMetrics(runContext, "timer1").getTags().get("tag1"), is("i"));
+        assertThat(ScriptTest.<Duration> getMetrics(runContext, "timer1").getTags().get("tag2"), is("lost"));
 
-        assertThat(ScriptTest.<Duration>getMetrics(runContext, "timer2").getValue().getNano(), greaterThan(100000000));
-        assertThat(ScriptTest.<Duration>getMetrics(runContext, "timer2").getTags().size(), is(2));
-        assertThat(ScriptTest.<Duration>getMetrics(runContext, "timer2").getTags().get("tag1"), is("i"));
-        assertThat(ScriptTest.<Duration>getMetrics(runContext, "timer2").getTags().get("tag2"), is("destroy"));
+        assertThat(ScriptTest.<Duration> getMetrics(runContext, "timer2").getValue().getNano(), greaterThan(100000000));
+        assertThat(ScriptTest.<Duration> getMetrics(runContext, "timer2").getTags().size(), is(2));
+        assertThat(ScriptTest.<Duration> getMetrics(runContext, "timer2").getTags().get("tag1"), is("i"));
+        assertThat(ScriptTest.<Duration> getMetrics(runContext, "timer2").getTags().get("tag2"), is("destroy"));
     }
 
     @SuppressWarnings("unchecked")

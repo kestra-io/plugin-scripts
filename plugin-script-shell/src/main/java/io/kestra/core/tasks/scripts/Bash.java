@@ -1,10 +1,14 @@
 package io.kestra.core.tasks.scripts;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -13,9 +17,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static io.kestra.core.utils.Rethrow.throwSupplier;
 
@@ -35,15 +36,15 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
             title = "Single bash command.",
             full = true,
             code = """
-                   id: bash_single_command
-                   namespace: company.team
+                id: bash_single_command
+                namespace: company.team
 
-                   tasks:
-                     - id: bash
-                       type: io.kestra.core.tasks.scripts.Bash
-                       commands:
-                         - 'echo "The current execution is : {{ execution.id }}"'
-                   """
+                tasks:
+                  - id: bash
+                    type: io.kestra.core.tasks.scripts.Bash
+                    commands:
+                      - 'echo "The current execution is : {{ execution.id }}"'
+                """
         ),
         @Example(
             title = "Bash command that generate file in storage accessible through outputs.",
@@ -172,10 +173,10 @@ public class Bash extends AbstractBash implements RunnableTask<io.kestra.core.ta
     @NotEmpty
     protected String[] commands;
 
-
     @Override
     public io.kestra.core.tasks.scripts.ScriptOutput run(RunContext runContext) throws Exception {
-        return run(runContext, throwSupplier(() -> {
+        return run(runContext, throwSupplier(() ->
+        {
             // final command
             List<String> renderer = new ArrayList<>();
 

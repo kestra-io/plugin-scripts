@@ -1,5 +1,7 @@
 package io.kestra.plugin.scripts.groovy;
 
+import java.util.List;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
@@ -10,12 +12,11 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.util.List;
 
 @SuperBuilder
 @ToString
@@ -25,50 +26,52 @@ import java.util.List;
 @Schema(
     title = "Execute Groovy files and commands."
 )
-@Plugin(examples = {
-    @Example(
-        full = true,
-        title = "Execute a Groovy command.",
-        code = """
-            id: groovy_commands
-            namespace: company.team
+@Plugin(
+    examples = {
+        @Example(
+            full = true,
+            title = "Execute a Groovy command.",
+            code = """
+                id: groovy_commands
+                namespace: company.team
 
-            tasks:
-              - id: commands
-                type: io.kestra.plugin.scripts.groovy.Commands
-                commands:
-                  - groovy --version
-            """
-    ),
-    @Example(
-        full = true,
-        title = "Run a Groovy script with dependencies managed by Grape.",
-        code = """
-            id: groovy_commands_with_dependencies
-            namespace: company.team
+                tasks:
+                  - id: commands
+                    type: io.kestra.plugin.scripts.groovy.Commands
+                    commands:
+                      - groovy --version
+                """
+        ),
+        @Example(
+            full = true,
+            title = "Run a Groovy script with dependencies managed by Grape.",
+            code = """
+                id: groovy_commands_with_dependencies
+                namespace: company.team
 
-            tasks:
-              - id: groovy_commands
-                type: io.kestra.plugin.scripts.groovy.Commands
-                commands:
-                  - |
-                    groovy -e '
-                      @Grab("info.picocli:picocli:4.7.5")
-                      import picocli.CommandLine
-                      @CommandLine.Command(name = "hello")
-                      class HelloWorld implements Runnable {
-                        @CommandLine.Parameters(paramLabel = "NAME", defaultValue = "Kestra")
-                        String name
-                        void run() {
-                           println "Hello, $name!"
-                        }
-                      }
+                tasks:
+                  - id: groovy_commands
+                    type: io.kestra.plugin.scripts.groovy.Commands
+                    commands:
+                      - |
+                        groovy -e '
+                          @Grab("info.picocli:picocli:4.7.5")
+                          import picocli.CommandLine
+                          @CommandLine.Command(name = "hello")
+                          class HelloWorld implements Runnable {
+                            @CommandLine.Parameters(paramLabel = "NAME", defaultValue = "Kestra")
+                            String name
+                            void run() {
+                               println "Hello, $name!"
+                            }
+                          }
 
-                      new CommandLine(new HelloWorld()).execute("Kestra")
-                    '
-            """
-    )
-})
+                          new CommandLine(new HelloWorld()).execute("Kestra")
+                        '
+                """
+        )
+    }
+)
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "groovy";
 

@@ -1,17 +1,20 @@
 package io.kestra.core.tasks.scripts;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
+import org.junitpioneer.jupiter.RetryingTest;
+
 import com.google.common.collect.ImmutableMap;
+
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
-import io.micronaut.context.annotation.Property;
-import org.junitpioneer.jupiter.RetryingTest;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
+import io.micronaut.context.annotation.Property;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -25,9 +28,10 @@ class DockerBashTest extends AbstractBashTest {
             .id(this.getClass().getSimpleName())
             .type(Bash.class.getName())
             .runner(io.kestra.core.models.property.Property.ofValue(RunnerType.DOCKER))
-            .dockerOptions(DockerOptions.builder()
-                .image("ubuntu")
-                .build()
+            .dockerOptions(
+                DockerOptions.builder()
+                    .image("ubuntu")
+                    .build()
             );
     }
 
@@ -37,16 +41,19 @@ class DockerBashTest extends AbstractBashTest {
         Path tmpFile = tmpDir.resolve("tmp.txt");
         Files.write(tmpFile, "I'm here".getBytes());
 
-
-        Bash bash = configure(Bash.builder()
-            .commands(new String[]{
-                "echo '::{\"outputs\": {\"extract\":\"'$(cat /host/tmp.txt)'\"}}::'",
-            })
+        Bash bash = configure(
+            Bash.builder()
+                .commands(
+                    new String[] {
+                        "echo '::{\"outputs\": {\"extract\":\"'$(cat /host/tmp.txt)'\"}}::'",
+                    }
+                )
         )
-            .dockerOptions(DockerOptions.builder()
-                .image("ubuntu")
-                .volumes(List.of(tmpDir.toFile() + ":/host" ))
-                .build()
+            .dockerOptions(
+                DockerOptions.builder()
+                    .image("ubuntu")
+                    .volumes(List.of(tmpDir.toFile() + ":/host"))
+                    .build()
             )
             .build();
 

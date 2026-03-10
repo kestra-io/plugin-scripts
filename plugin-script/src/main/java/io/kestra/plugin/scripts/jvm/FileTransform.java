@@ -1,29 +1,32 @@
 package io.kestra.plugin.scripts.jvm;
 
+import java.io.*;
+import java.net.URI;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Function;
+
+import javax.script.Bindings;
+import javax.script.ScriptException;
+
+import org.reactivestreams.Publisher;
+
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.executions.metrics.Counter;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.FileSerde;
 import io.kestra.core.serializers.JacksonMapper;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
-import javax.script.Bindings;
-import javax.script.ScriptException;
-import java.io.*;
-import java.net.URI;
-import java.util.Collection;
-import java.util.List;
-import java.util.function.Function;
 
 import static io.kestra.core.utils.Rethrow.throwConsumer;
 import static io.kestra.core.utils.Rethrow.throwFunction;
@@ -84,7 +87,8 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
             } else {
                 this.finalize(
                     runContext,
-                    Flux.create(throwConsumer(emitter -> {
+                    Flux.create(throwConsumer(emitter ->
+                    {
                         Object o = JacksonMapper.toObject(from);
 
                         if (o instanceof List) {
@@ -113,8 +117,7 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
         RunContext runContext,
         Flux<Object> flowable,
         ScriptEngineService.CompiledScript scripts,
-        Writer output
-    ) throws IOException, ScriptException {
+        Writer output) throws IOException, ScriptException {
         Flux<Object> sequential;
 
         if (this.concurrent != null) {
@@ -139,7 +142,8 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
 
     @SuppressWarnings("unchecked")
     protected Function<Object, Publisher<Object>> convert(ScriptEngineService.CompiledScript script) throws ScriptException {
-        return throwFunction(row -> {
+        return throwFunction(row ->
+        {
             Bindings bindings = script.getBindings().get();
             bindings.put("row", row);
 

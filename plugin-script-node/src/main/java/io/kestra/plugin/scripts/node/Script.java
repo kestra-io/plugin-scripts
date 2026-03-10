@@ -1,8 +1,14 @@
 package io.kestra.plugin.scripts.node;
 
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.enums.MonacoLanguages;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
@@ -12,18 +18,11 @@ import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import io.kestra.core.models.enums.MonacoLanguages;
-import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -34,140 +33,142 @@ import io.kestra.core.models.annotations.PluginProperty;
     title = "Run inline Node.js script",
     description = "Executes a multi-line Node.js script inside the default 'node' image unless overridden. Script is written to a temp .js file and run with `node`; install npm packages in beforeCommands. Use the Commands task to run existing files."
 )
-@Plugin(examples = {
-    @Example(
-        title = "Install package, create a Node.js script and execute it.",
-        full = true,
-        code = """
-            id: nodejs_script
-            namespace: company.team
+@Plugin(
+    examples = {
+        @Example(
+            title = "Install package, create a Node.js script and execute it.",
+            full = true,
+            code = """
+                id: nodejs_script
+                namespace: company.team
 
-            tasks:
-              - id: script
-                type: io.kestra.plugin.scripts.node.Script
-                beforeCommands:
-                  - npm install colors
-                script: |
-                  const colors = require("colors");
-                  console.log(colors.red("Hello"));
-            """
-    ),
-    @Example(
-        full = true,
-        title = """
-        If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{ outputDir }}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{ outputs.yourTaskId.outputFiles['yourFileName.fileExtension'] }}`.
+                tasks:
+                  - id: script
+                    type: io.kestra.plugin.scripts.node.Script
+                    beforeCommands:
+                      - npm install colors
+                    script: |
+                      const colors = require("colors");
+                      console.log(colors.red("Hello"));
+                """
+        ),
+        @Example(
+            full = true,
+            title = """
+                If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{ outputDir }}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{ outputs.yourTaskId.outputFiles['yourFileName.fileExtension'] }}`.
 
-        Alternatively, instead of the `{{ outputDir }}` variable, you could use the `outputFiles` property to output files from your script. You can access those files in downstream tasks using the same syntax `{{ outputs.yourTaskId.outputFiles['yourFileName.fileExtension'] }}`, and you can download the files from the UI's Output tab.
-        """,
-        code = """
-            id: nodejs_script
-            namespace: company.team
+                Alternatively, instead of the `{{ outputDir }}` variable, you could use the `outputFiles` property to output files from your script. You can access those files in downstream tasks using the same syntax `{{ outputs.yourTaskId.outputFiles['yourFileName.fileExtension'] }}`, and you can download the files from the UI's Output tab.
+                """,
+            code = """
+                id: nodejs_script
+                namespace: company.team
 
-            tasks:
-              - id: node
-                type: io.kestra.plugin.scripts.node.Script
-                beforeCommands:
-                    - npm install json2csv > /dev/null 2>&1
-                script: |
-                    const fs = require('fs');
-                    const { Parser } = require('json2csv');
+                tasks:
+                  - id: node
+                    type: io.kestra.plugin.scripts.node.Script
+                    beforeCommands:
+                        - npm install json2csv > /dev/null 2>&1
+                    script: |
+                        const fs = require('fs');
+                        const { Parser } = require('json2csv');
 
-                    // Product prices in our simulation
-                    const productPrices = {
-                        'T-shirt': 20,
-                        'Jeans': 75,
-                        'Shoes': 80,
-                        'Socks': 5,
-                        'Hat': 25
-                    }
+                        // Product prices in our simulation
+                        const productPrices = {
+                            'T-shirt': 20,
+                            'Jeans': 75,
+                            'Shoes': 80,
+                            'Socks': 5,
+                            'Hat': 25
+                        }
 
-                    const generateOrder = () => {
-                        const products = ['T-shirt', 'Jeans', 'Shoes', 'Socks', 'Hat'];
-                        const statuses = ['pending', 'shipped', 'delivered', 'cancelled'];
+                        const generateOrder = () => {
+                            const products = ['T-shirt', 'Jeans', 'Shoes', 'Socks', 'Hat'];
+                            const statuses = ['pending', 'shipped', 'delivered', 'cancelled'];
 
-                        const randomProduct = products[Math.floor(Math.random() * products.length)];
-                        const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-                        const randomQuantity = Math.floor(Math.random() * 10) + 1;
+                            const randomProduct = products[Math.floor(Math.random() * products.length)];
+                            const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+                            const randomQuantity = Math.floor(Math.random() * 10) + 1;
 
-                        const order = {
-                            product: randomProduct,
-                            status: randomStatus,
-                            quantity: randomQuantity,
-                            total: randomQuantity * productPrices[randomProduct]
-                        };
+                            const order = {
+                                product: randomProduct,
+                                status: randomStatus,
+                                quantity: randomQuantity,
+                                total: randomQuantity * productPrices[randomProduct]
+                            };
 
-                        return order;
-                    }
+                            return order;
+                        }
 
-                    let totalSales = 0;
-                    let orders = [];
+                        let totalSales = 0;
+                        let orders = [];
 
-                    for (let i = 0; i < 100; i++) {
-                        const order = generateOrder();
-                        orders.push(order);
-                        totalSales += order.total;
-                    }
+                        for (let i = 0; i < 100; i++) {
+                            const order = generateOrder();
+                            orders.push(order);
+                            totalSales += order.total;
+                        }
 
-                    console.log(`Total sales: $${totalSales}`);
+                        console.log(`Total sales: $${totalSales}`);
 
-                    const fields = ['product', 'status', 'quantity', 'total'];
-                    const json2csvParser = new Parser({ fields });
-                    const csvData = json2csvParser.parse(orders);
+                        const fields = ['product', 'status', 'quantity', 'total'];
+                        const json2csvParser = new Parser({ fields });
+                        const csvData = json2csvParser.parse(orders);
 
-                    fs.writeFileSync('{{ outputDir }}/orders.csv', csvData);
+                        fs.writeFileSync('{{ outputDir }}/orders.csv', csvData);
 
-                    console.log('Orders saved to orders.csv');
-            """
-    ),
-    @Example(
-        title = "Install package, create a Node.js script and execute it.",
-        full = true,
-        code = """
-            id: nodejs_script
-            namespace: company.team
+                        console.log('Orders saved to orders.csv');
+                """
+        ),
+        @Example(
+            title = "Install package, create a Node.js script and execute it.",
+            full = true,
+            code = """
+                id: nodejs_script
+                namespace: company.team
 
-            tasks:
-              - id: node
-                type: io.kestra.plugin.scripts.node.Script
-                beforeCommands:
-                  - npm i @kestra-io/libs
-                script: |
-                  const Kestra = require('@kestra-io/libs');
-                  Kestra.outputs({test: 'hello world'});
+                tasks:
+                  - id: node
+                    type: io.kestra.plugin.scripts.node.Script
+                    beforeCommands:
+                      - npm i @kestra-io/libs
+                    script: |
+                      const Kestra = require('@kestra-io/libs');
+                      Kestra.outputs({test: 'hello world'});
 
-              - id: get_outputs
-                type: io.kestra.plugin.core.log.Log
-                message: "{{ outputs.node.vars.test }}"
-            """
-    ),
-    @Example(
-        full = true,
-        title = "Install custom Node packages from package.json before running a Node.js",
-        code = """
-            id: node_custom_package
-            namespace: company.team
+                  - id: get_outputs
+                    type: io.kestra.plugin.core.log.Log
+                    message: "{{ outputs.node.vars.test }}"
+                """
+        ),
+        @Example(
+            full = true,
+            title = "Install custom Node packages from package.json before running a Node.js",
+            code = """
+                id: node_custom_package
+                namespace: company.team
 
-            tasks:
-              - id: script
-                type: io.kestra.plugin.scripts.node.Script
-                inputFiles:
-                  package.json: |
-                    {
-                      "name": "your_project_name",
-                      "version": "1.0.0",
-                      "type": "module",
-                      "dependencies": {
-                        "colors": "^1.4.0"
-                      }
-                    }
-                beforeCommands:
-                  - npm install
-                script: |
-                  import colors from 'colors';
-                  console.log(colors.red("Hello"));
-            """
-    )
-})
+                tasks:
+                  - id: script
+                    type: io.kestra.plugin.scripts.node.Script
+                    inputFiles:
+                      package.json: |
+                        {
+                          "name": "your_project_name",
+                          "version": "1.0.0",
+                          "type": "module",
+                          "dependencies": {
+                            "colors": "^1.4.0"
+                          }
+                        }
+                    beforeCommands:
+                      - npm install
+                    script: |
+                      import colors from 'colors';
+                      console.log(colors.red("Hello"));
+                """
+        )
+    }
+)
 public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "node";
 
@@ -210,16 +211,22 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
 
         TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
         return commands
-            .addEnv(Map.of(
-                "PYTHONUNBUFFERED", "true",
-                "PIP_ROOT_USER_ACTION", "ignore"
-            ))
+            .addEnv(
+                Map.of(
+                    "PYTHONUNBUFFERED", "true",
+                    "PIP_ROOT_USER_ACTION", "ignore"
+                )
+            )
             .withInterpreter(this.interpreter)
             .withBeforeCommands(beforeCommands)
             .withBeforeCommandsWithOptions(true)
-            .withCommands(Property.ofValue(List.of(
-                String.join(" ", "node", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
-            )))
+            .withCommands(
+                Property.ofValue(
+                    List.of(
+                        String.join(" ", "node", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
+                    )
+                )
+            )
             .withTargetOS(os)
             .run();
     }

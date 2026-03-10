@@ -1,8 +1,12 @@
 package io.kestra.plugin.scripts.go;
 
+import java.util.List;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.enums.MonacoLanguages;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
@@ -11,15 +15,11 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.util.List;
-
-import io.kestra.core.models.enums.MonacoLanguages;
-import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -30,42 +30,44 @@ import io.kestra.core.models.annotations.PluginProperty;
     title = "Run inline Go script",
     description = "Executes a multi-line Go program inside the default 'golang' image unless overridden. Script is saved to a temp .go file and run with 'go run'; install modules via beforeCommands. Use Commands task if you prefer to point at existing files."
 )
-@Plugin(examples = {
-    @Example(
-        full = true,
-        title = "Create a Go script, install required packages and execute it. Note that instead of defining the script inline, you could create the Go script in the embedded VS Code editor and read its content using the `{{ read('go_script.go') }}` function.",
-        code = """
-            id: go_script
-            namespace: company.team
+@Plugin(
+    examples = {
+        @Example(
+            full = true,
+            title = "Create a Go script, install required packages and execute it. Note that instead of defining the script inline, you could create the Go script in the embedded VS Code editor and read its content using the `{{ read('go_script.go') }}` function.",
+            code = """
+                id: go_script
+                namespace: company.team
 
-            tasks:
-              - id: script
-                type: io.kestra.plugin.scripts.go.Script
-                allowWarning: true # cause golang redirect ALL to stderr even false positives
-                script: |
-                    package main
-                    import (
-                        "os"
-                        "github.com/go-gota/gota/dataframe"
-                        "github.com/go-gota/gota/series"
-                    )
-                    func main() {
-                        names := series.New([]string{"Alice", "Bob", "Charlie"}, series.String, "Name")
-                        ages := series.New([]int{25, 30, 35}, series.Int, "Age")
-                        df := dataframe.New(names, ages)
-                        file, _ := os.Create("output.csv")
-                        df.WriteCSV(file)
-                        defer file.Close()
-                    }
-                outputFiles:
-                  - output.csv
-                beforeCommands:
-                  - go mod init go_script
-                  - go get github.com/go-gota/gota/dataframe
-                  - go mod tidy
-            """
-    )
-})
+                tasks:
+                  - id: script
+                    type: io.kestra.plugin.scripts.go.Script
+                    allowWarning: true # cause golang redirect ALL to stderr even false positives
+                    script: |
+                        package main
+                        import (
+                            "os"
+                            "github.com/go-gota/gota/dataframe"
+                            "github.com/go-gota/gota/series"
+                        )
+                        func main() {
+                            names := series.New([]string{"Alice", "Bob", "Charlie"}, series.String, "Name")
+                            ages := series.New([]int{25, 30, 35}, series.Int, "Age")
+                            df := dataframe.New(names, ages)
+                            file, _ := os.Create("output.csv")
+                            df.WriteCSV(file)
+                            defer file.Close()
+                        }
+                    outputFiles:
+                      - output.csv
+                    beforeCommands:
+                      - go mod init go_script
+                      - go get github.com/go-gota/gota/dataframe
+                      - go mod tidy
+                """
+        )
+    }
+)
 public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "golang";
 
@@ -113,9 +115,13 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
             .withInterpreter(this.interpreter)
             .withBeforeCommands(beforeCommands)
             .withBeforeCommandsWithOptions(true)
-            .withCommands(Property.ofValue(List.of(
-                String.join(" ", "go run", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
-            )))
+            .withCommands(
+                Property.ofValue(
+                    List.of(
+                        String.join(" ", "go run", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
+                    )
+                )
+            )
             .run();
     }
 }

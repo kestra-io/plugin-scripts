@@ -1,10 +1,10 @@
 package io.kestra.plugin.scripts.jython;
 
+import java.util.UUID;
+
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.property.Property;
 import io.kestra.plugin.scripts.jvm.FileTransform;
-
-import java.util.UUID;
 
 @KestraTest
 class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
@@ -14,12 +14,15 @@ class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
             .id("jython-transform-" + UUID.randomUUID())
             .type(io.kestra.plugin.scripts.jython.FileTransform.class.getName())
             .from(source)
-            .script(Property.ofValue("logger.info('row: {}', row)\n" +
-                "if row['name'] == 'richard': \n" +
-                "  row = None\n" +
-                "else: \n" +
-                "  row['email'] = row['name'] + '@kestra.io'\n"
-            ))
+            .script(
+                Property.ofValue(
+                    "logger.info('row: {}', row)\n" +
+                        "if row['name'] == 'richard': \n" +
+                        "  row = None\n" +
+                        "else: \n" +
+                        "  row['email'] = row['name'] + '@kestra.io'\n"
+                )
+            )
             .build();
     }
 

@@ -1,20 +1,23 @@
 package io.kestra.core.tasks.scripts;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+
+import org.apache.commons.io.IOUtils;
+
 import com.google.common.base.Charsets;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.apache.commons.io.IOUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
 
 import static io.kestra.core.utils.Rethrow.throwSupplier;
 
@@ -25,7 +28,8 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 @NoArgsConstructor
 @Schema(
     title = "Execute a Node.js script (Deprecated).",
-    description = "This task is deprecated, please use the [io.kestra.plugin.scripts.node.Script](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.node.script) or [io.kestra.plugin.scripts.node.Commands](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.node.commands) tasks instead.\n\n" +
+    description = "This task is deprecated, please use the [io.kestra.plugin.scripts.node.Script](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.node.script) or [io.kestra.plugin.scripts.node.Commands](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.node.commands) tasks instead.\n\n"
+        +
         "With the Node task, you can execute a full JavaScript script.\n" +
         "The task will create a temporary folder for each task, and allows you to install some npm packages defined in an optional `package.json` file.\n" +
         "\n" +
@@ -121,10 +125,12 @@ public class Node extends AbstractBash implements RunnableTask<io.kestra.core.ta
     protected Map<String, String> finalInputFiles(RunContext runContext) throws IOException, IllegalVariableEvaluationException {
         Map<String, String> map = super.finalInputFiles(runContext);
 
-        map.put("kestra.js", IOUtils.toString(
-            Objects.requireNonNull(Node.class.getClassLoader().getResourceAsStream("kestra.js")),
-            Charsets.UTF_8
-        ));
+        map.put(
+            "kestra.js", IOUtils.toString(
+                Objects.requireNonNull(Node.class.getClassLoader().getResourceAsStream("kestra.js")),
+                Charsets.UTF_8
+            )
+        );
 
         return map;
     }
@@ -133,10 +139,12 @@ public class Node extends AbstractBash implements RunnableTask<io.kestra.core.ta
     protected Map<String, String> finalInputFiles(RunContext runContext, Map<String, Object> additionalVar) throws IOException, IllegalVariableEvaluationException {
         Map<String, String> map = super.finalInputFiles(runContext, additionalVar);
 
-        map.put("kestra.js", IOUtils.toString(
-            Objects.requireNonNull(Node.class.getClassLoader().getResourceAsStream("kestra.js")),
-            Charsets.UTF_8
-        ));
+        map.put(
+            "kestra.js", IOUtils.toString(
+                Objects.requireNonNull(Node.class.getClassLoader().getResourceAsStream("kestra.js")),
+                Charsets.UTF_8
+            )
+        );
 
         return map;
     }
@@ -149,7 +157,8 @@ public class Node extends AbstractBash implements RunnableTask<io.kestra.core.ta
             throw new Exception("Invalid input files structure, expecting inputFiles property to contain at least a main.js key with javascript code value.");
         }
 
-        return run(runContext, throwSupplier(() -> {
+        return run(runContext, throwSupplier(() ->
+        {
             // final command
             List<String> renderer = new ArrayList<>();
 
@@ -162,11 +171,13 @@ public class Node extends AbstractBash implements RunnableTask<io.kestra.core.ta
 
             String npmInstall = finalInputFiles.containsKey("package.json") ? runContext.render(npmPath).as(String.class).orElse(null) + " i > /dev/null" : "";
 
-            renderer.addAll(Arrays.asList(
-                "PATH=\"$PATH:" + new File(runContext.render(nodePath).as(String.class).orElseThrow()).getParent() + "\"",
-                npmInstall,
-                nodePath + " main.js" + args
-            ));
+            renderer.addAll(
+                Arrays.asList(
+                    "PATH=\"$PATH:" + new File(runContext.render(nodePath).as(String.class).orElseThrow()).getParent() + "\"",
+                    npmInstall,
+                    nodePath + " main.js" + args
+                )
+            );
 
             return String.join("\n", renderer);
         }));

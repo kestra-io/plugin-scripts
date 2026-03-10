@@ -1,10 +1,5 @@
 package io.kestra.plugin.scripts.python.internals;
 
-import io.kestra.core.runners.WorkingDir;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -18,19 +13,24 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
+
+import io.kestra.core.runners.WorkingDir;
+
 /**
  *
- * @param path      the path to python packages.
- * @param lockFile  the requirements locked file.
- * @param hash      the hash associated to the packages.
- * @param version   the python version.
+ * @param path the path to python packages.
+ * @param lockFile the requirements locked file.
+ * @param hash the hash associated to the packages.
+ * @param version the python version.
  */
 public record ResolvedPythonPackages(
     Path path,
     Path lockFile,
     String hash,
-    String version
-) {
+    String version) {
 
     public static final String REQUIREMENTS_TXT = "requirements.txt";
     public static final String REQUIREMENTS_IN = "requirements.in";

@@ -1,13 +1,14 @@
 package io.kestra.core.tasks.scripts;
 
+import java.net.URI;
+import java.util.Map;
+
 import io.kestra.core.models.annotations.PluginProperty;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.net.URI;
-import java.util.Map;
 
 @Builder
 @Getter
