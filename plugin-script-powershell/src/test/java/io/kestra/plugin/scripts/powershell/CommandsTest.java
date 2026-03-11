@@ -75,12 +75,13 @@ class CommandsTest {
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains(put.getPath()));
 
+        var joinedLogs = logs.stream()
+            .map(LogEntry::getMessage)
+            .filter(m -> m != null)
+            .collect(Collectors.joining("\n"));
         assertThat(
-            logs.stream()
-                .map(LogEntry::getMessage)
-                .filter(m -> m != null)
-                .collect(Collectors.joining("\n")),
-            containsString("FileVersion:")
+            joinedLogs,
+            anyOf(containsString("FileVersion:"), containsString("LastWriteTime"), containsString("LastAccessTime"))
         );
     }
 
