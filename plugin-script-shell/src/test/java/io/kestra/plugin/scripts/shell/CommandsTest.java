@@ -1,7 +1,23 @@
 package io.kestra.plugin.scripts.shell;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Stream;
+
+import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
+
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
@@ -17,23 +33,10 @@ import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.runner.docker.PullPolicy;
+
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import reactor.core.publisher.Flux;
-
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -89,7 +92,8 @@ class CommandsTest {
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        RunnableTaskException TaskException = assertThrows(RunnableTaskException.class, () -> {
+        RunnableTaskException TaskException = assertThrows(RunnableTaskException.class, () ->
+        {
             bash.run(runContext);
         });
 
@@ -111,7 +115,8 @@ class CommandsTest {
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        RunnableTaskException TaskException = assertThrows(RunnableTaskException.class, () -> {
+        RunnableTaskException TaskException = assertThrows(RunnableTaskException.class, () ->
+        {
             bash.run(runContext);
         });
 
@@ -155,13 +160,17 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .commands(TestsUtils.propertyFromList(List.of(
-                "mkdir -p {{ outputDir}}/sub/dir/",
-                "echo '::{\"outputs\": {\"extract\":\"'$(cat " + put.toString() + ")'\"}}::'",
-                "echo 1 >> {{ outputDir}}/file.xml",
-                "echo 2 >> {{ outputDir}}/sub/dir/file.csv",
-                "echo 3 >> {{ outputDir}}/file.xml"
-            )))
+            .commands(
+                TestsUtils.propertyFromList(
+                    List.of(
+                        "mkdir -p {{ outputDir}}/sub/dir/",
+                        "echo '::{\"outputs\": {\"extract\":\"'$(cat " + put.toString() + ")'\"}}::'",
+                        "echo 1 >> {{ outputDir}}/file.xml",
+                        "echo 2 >> {{ outputDir}}/sub/dir/file.csv",
+                        "echo 3 >> {{ outputDir}}/file.xml"
+                    )
+                )
+            )
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -189,7 +198,6 @@ class CommandsTest {
         );
     }
 
-
     @ParameterizedTest
     @MethodSource("source")
     void nullOutputs(RunnerType runner, DockerOptions dockerOptions) throws Exception {
@@ -198,9 +206,13 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
-            .commands(Property.ofValue(List.of(
-                "echo '::{\"outputs\": {\"extract\":null}}::'"
-            )))
+            .commands(
+                Property.ofValue(
+                    List.of(
+                        "echo '::{\"outputs\": {\"extract\":null}}::'"
+                    )
+                )
+            )
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -222,10 +234,11 @@ class CommandsTest {
         Commands bash = Commands.builder()
             .id("shell-commands-pull-" + UUID.randomUUID())
             .type(Commands.class.getName())
-            .docker(DockerOptions.builder()
-                .pullPolicy(Property.ofValue(PullPolicy.ALWAYS))
-                .image("alpine:3.15.6")
-                .build()
+            .docker(
+                DockerOptions.builder()
+                    .pullPolicy(Property.ofValue(PullPolicy.ALWAYS))
+                    .image("alpine:3.15.6")
+                    .build()
             )
             .runner(RunnerType.DOCKER)
             .commands(Property.ofValue(List.of("pwd")))
@@ -248,10 +261,11 @@ class CommandsTest {
         Commands bash = Commands.builder()
             .id("shell-commands-invalid-image-" + UUID.randomUUID())
             .type(Commands.class.getName())
-            .docker(DockerOptions.builder()
-                .pullPolicy(Property.ofValue(PullPolicy.IF_NOT_PRESENT))
-                .image("alpine:999.15.6")
-                .build()
+            .docker(
+                DockerOptions.builder()
+                    .pullPolicy(Property.ofValue(PullPolicy.IF_NOT_PRESENT))
+                    .image("alpine:999.15.6")
+                    .build()
             )
             .runner(RunnerType.DOCKER)
             .commands(Property.ofValue(List.of("pwd")))
@@ -260,10 +274,12 @@ class CommandsTest {
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
         Exception exception = assertThrows(Exception.class, () -> bash.run(runContext));
 
-        assertThat(exception.getMessage(), allOf(
-            containsString("alpine:999.15.6"),
-            containsString("not found")
-        ));
+        assertThat(
+            exception.getMessage(), allOf(
+                containsString("alpine:999.15.6"),
+                containsString("not found")
+            )
+        );
     }
 
     @ParameterizedTest

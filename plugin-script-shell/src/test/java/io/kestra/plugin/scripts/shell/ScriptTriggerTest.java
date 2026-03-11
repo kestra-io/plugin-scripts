@@ -1,5 +1,16 @@
 package io.kestra.plugin.scripts.shell;
 
+import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.junit.jupiter.api.Test;
+
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.flows.Flow;
@@ -15,20 +26,11 @@ import io.kestra.jdbc.runner.JdbcScheduler;
 import io.kestra.plugin.core.debug.Return;
 import io.kestra.scheduler.AbstractScheduler;
 import io.kestra.worker.DefaultWorker;
+
 import io.micronaut.context.ApplicationContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
-
-import java.time.Duration;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -69,11 +71,15 @@ class ScriptTriggerTest {
             .id("script-realtime-trigger-flow")
             .namespace("io.kestra.tests")
             .revision(1)
-            .tasks(Collections.singletonList(Return.builder()
-                .id("log-trigger-vars")
-                .type(Return.class.getName())
-                .format(Property.ofValue("exitCode={{ trigger.exitCode }}, condition={{ trigger.condition }}"))
-                .build()))
+            .tasks(
+                Collections.singletonList(
+                    Return.builder()
+                        .id("log-trigger-vars")
+                        .type(Return.class.getName())
+                        .format(Property.ofValue("exitCode={{ trigger.exitCode }}, condition={{ trigger.condition }}"))
+                        .build()
+                )
+            )
             .triggers(Collections.singletonList(trigger))
             .build();
 
@@ -83,7 +89,8 @@ class ScriptTriggerTest {
         CountDownLatch queueCount = new CountDownLatch(1);
         AtomicReference<Execution> lastExecution = new AtomicReference<>();
 
-        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution -> {
+        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution ->
+        {
             if (execution.getLeft().getFlowId().equals("script-realtime-trigger-flow")) {
                 lastExecution.set(execution.getLeft());
                 queueCount.countDown();
@@ -163,11 +170,15 @@ class ScriptTriggerTest {
             .id("script-stdout-match-flow")
             .namespace("io.kestra.tests")
             .revision(1)
-            .tasks(Collections.singletonList(Return.builder()
-                .id("log-trigger-vars")
-                .type(Return.class.getName())
-                .format(Property.ofValue("exitCode={{ trigger.exitCode }}, condition={{ trigger.condition }}"))
-                .build()))
+            .tasks(
+                Collections.singletonList(
+                    Return.builder()
+                        .id("log-trigger-vars")
+                        .type(Return.class.getName())
+                        .format(Property.ofValue("exitCode={{ trigger.exitCode }}, condition={{ trigger.condition }}"))
+                        .build()
+                )
+            )
             .triggers(Collections.singletonList(trigger))
             .build();
 
@@ -177,7 +188,8 @@ class ScriptTriggerTest {
         CountDownLatch queueCount = new CountDownLatch(1);
         AtomicReference<Execution> lastExecution = new AtomicReference<>();
 
-        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution -> {
+        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution ->
+        {
             if (execution.getLeft().getFlowId().equals("script-stdout-match-flow")) {
                 lastExecution.set(execution.getLeft());
                 queueCount.countDown();

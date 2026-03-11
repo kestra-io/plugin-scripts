@@ -1,12 +1,5 @@
 package io.kestra.plugin.scripts.python.internals;
 
-import io.kestra.core.exceptions.KestraRuntimeException;
-import io.kestra.core.runners.WorkingDir;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
-import org.slf4j.Logger;
-
 import java.io.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -18,6 +11,14 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.slf4j.Logger;
+
+import io.kestra.core.exceptions.KestraRuntimeException;
+import io.kestra.core.runners.WorkingDir;
 
 /**
  * Service for resolving python and installing packages.
@@ -64,7 +65,6 @@ public class PythonDependenciesResolver {
         return packageManagerType.getPythonPath(this, version);
     }
 
-
     /**
      * Finds the version of the local Python installation.
      *
@@ -101,7 +101,7 @@ public class PythonDependenciesResolver {
                 }
                 return Optional.empty();
             } catch (IOException | InterruptedException e) {
-                if (e instanceof InterruptedException)  {
+                if (e instanceof InterruptedException) {
                     Thread.currentThread().interrupt();
                 }
                 throw new KestraRuntimeException("Failed to wait for '" + python.get() + " --version' command. Error " + e.getMessage());
@@ -114,8 +114,8 @@ public class PythonDependenciesResolver {
      * Restores and get the resolved pythons packages from the given input stream.
      *
      * @param version The python version.
-     * @param hash    The versioned requirement hash.
-     * @param stream  The {@link InputStream}.
+     * @param hash The versioned requirement hash.
+     * @param stream The {@link InputStream}.
      * @return The {@link ResolvedPythonPackages}.
      * @throws IOException if an error occurred while reading the {@code stream}.
      */
@@ -200,7 +200,7 @@ public class PythonDependenciesResolver {
      * <p>
      * The returned hash key can be used as cached-key.
      *
-     * @param version      The python version.
+     * @param version The python version.
      * @param requirements The python package requirements.
      * @return the SHA-256 hash.
      */
@@ -276,15 +276,15 @@ public class PythonDependenciesResolver {
         try {
             version = getUvVersion(uvCmd);
         } catch (IOException | InterruptedException e) {
-            if (e instanceof InterruptedException)  {
+            if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
         }
         if (version == null) {
             logger.warn(
                 "Unable to detect an installed version of 'uv'. " +
-                "Attempting to install 'uv' from: https://astral.sh/uv/install.sh. " +
-                "Please make sure 'uv' is installed and available on all Kestra workers."
+                    "Attempting to install 'uv' from: https://astral.sh/uv/install.sh. " +
+                    "Please make sure 'uv' is installed and available on all Kestra workers."
             );
             Path script = null;
             try {
@@ -293,20 +293,21 @@ public class PythonDependenciesResolver {
                     Files.copy(in, script, StandardCopyOption.REPLACE_EXISTING);
                 }
                 execCommandAndGetStdOut(List.of("chmod", "+x", script.toString()));
-                execCommandAndGetStdOut(List.of("sh", script.toString()), builder -> {
-                        Map<String, String> env = builder.environment();
-                        env.clear();
-                        env.put("HOME", HOME_ENV);
-                        env.put("PATH", PATH_ENV);
-                        env.put("UV_INSTALL_DIR", workingDir.path().toString());
-                        env.put("UV_NO_MODIFY_PATH", "true");
-                        return builder;
-                    }
+                execCommandAndGetStdOut(List.of("sh", script.toString()), builder ->
+                {
+                    Map<String, String> env = builder.environment();
+                    env.clear();
+                    env.put("HOME", HOME_ENV);
+                    env.put("PATH", PATH_ENV);
+                    env.put("UV_INSTALL_DIR", workingDir.path().toString());
+                    env.put("UV_NO_MODIFY_PATH", "true");
+                    return builder;
+                }
                 );
                 this.uvCmd = workingDir.resolve(Path.of("uv")).toString();
                 version = getUvVersion(uvCmd);
             } catch (IOException | InterruptedException e) {
-                if (e instanceof InterruptedException)  {
+                if (e instanceof InterruptedException) {
                     Thread.currentThread().interrupt();
                 }
                 logger.debug("Failed to install uv", e);
@@ -326,7 +327,7 @@ public class PythonDependenciesResolver {
         } else {
             throw new KestraRuntimeException(
                 "'uv' command could not be found or installed. " +
-                "Please ensure 'uv' is available in PATH or installable on this worker."
+                    "Please ensure 'uv' is available in PATH or installable on this worker."
             );
         }
     }
@@ -350,7 +351,8 @@ public class PythonDependenciesResolver {
 
         final ExecExitStatus exec;
         try {
-            exec = execCommandAndGetStdOut(command, builder -> {
+            exec = execCommandAndGetStdOut(command, builder ->
+            {
                 // Clear and set environment
                 Map<String, String> env = builder.environment();
                 env.clear();
@@ -362,7 +364,7 @@ public class PythonDependenciesResolver {
                 return builder;
             });
         } catch (IOException | InterruptedException e) {
-            if (e instanceof InterruptedException)  {
+            if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
             throw new KestraRuntimeException("Failed to wait for 'uv python install' command. Error " + e.getMessage());
@@ -386,7 +388,8 @@ public class PythonDependenciesResolver {
 
         final ExecExitStatus exec;
         try {
-            exec = execCommandAndGetStdOut(command, builder -> {
+            exec = execCommandAndGetStdOut(command, builder ->
+            {
                 // Clear and set only needed environment variables
                 Map<String, String> env = builder.environment();
                 env.clear();
@@ -401,7 +404,7 @@ public class PythonDependenciesResolver {
                 return builder;
             });
         } catch (IOException | InterruptedException e) {
-            if (e instanceof InterruptedException)  {
+            if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
             throw new KestraRuntimeException("Failed to wait for 'uv python find' command. Error " + e.getMessage());
@@ -445,7 +448,8 @@ public class PythonDependenciesResolver {
     }
 
     record ExecExitStatus(int exitCode, List<String> stdOuts) {
-        public boolean isSuccess() { return exitCode == 0; }
+        public boolean isSuccess() {
+            return exitCode == 0;
+        }
     }
 }
-

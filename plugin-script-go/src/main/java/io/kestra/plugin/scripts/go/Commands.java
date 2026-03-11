@@ -1,5 +1,7 @@
 package io.kestra.plugin.scripts.go;
 
+import java.util.List;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
@@ -10,12 +12,11 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.util.List;
 
 @SuperBuilder
 @ToString
@@ -26,45 +27,47 @@ import java.util.List;
     title = "Execute Go files and commands.",
     description = "Executes provided Go commands in order using the default 'golang' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install modules; use this task when running existing Go files with 'go run'."
 )
-@Plugin(examples = {
-    @Example(
-        full = true,
-        title = "Create a Go script, install required packages and execute it. Note that instead of defining the script inline, you could create the Go script in the embedded VS Code editor and point to its location by path. If you do so, make sure to enable namespace files by setting the `enabled` flag of the `namespaceFiles` property to `true`.",
-        code = """
-            id: go_commands
-            namespace: company.team
+@Plugin(
+    examples = {
+        @Example(
+            full = true,
+            title = "Create a Go script, install required packages and execute it. Note that instead of defining the script inline, you could create the Go script in the embedded VS Code editor and point to its location by path. If you do so, make sure to enable namespace files by setting the `enabled` flag of the `namespaceFiles` property to `true`.",
+            code = """
+                id: go_commands
+                namespace: company.team
 
-            tasks:
-              - id: commands
-                type: io.kestra.plugin.scripts.go.Commands
-                allowWarning: true # cause golang redirect ALL to stderr even false positives
-                inputFiles:
-                    go_script.go: |
-                        package main
-                        import (
-                            "os"
-                            "github.com/go-gota/gota/dataframe"
-                            "github.com/go-gota/gota/series"
-                        )
-                        func main() {
-                            names := series.New([]string{"Alice", "Bob", "Charlie"}, series.String, "Name")
-                            ages := series.New([]int{25, 30, 35}, series.Int, "Age")
-                            df := dataframe.New(names, ages)
-                            file, _ := os.Create("output.csv")
-                            df.WriteCSV(file)
-                            defer file.Close()
-                        }
-                outputFiles:
-                  - output.csv
-                beforeCommands:
-                  - go mod init go_commands
-                  - go get github.com/go-gota/gota/dataframe
-                  - go mod tidy
-                commands:
-                  - go run go_script.go
-            """
-    )
-})
+                tasks:
+                  - id: commands
+                    type: io.kestra.plugin.scripts.go.Commands
+                    allowWarning: true # cause golang redirect ALL to stderr even false positives
+                    inputFiles:
+                        go_script.go: |
+                            package main
+                            import (
+                                "os"
+                                "github.com/go-gota/gota/dataframe"
+                                "github.com/go-gota/gota/series"
+                            )
+                            func main() {
+                                names := series.New([]string{"Alice", "Bob", "Charlie"}, series.String, "Name")
+                                ages := series.New([]int{25, 30, 35}, series.Int, "Age")
+                                df := dataframe.New(names, ages)
+                                file, _ := os.Create("output.csv")
+                                df.WriteCSV(file)
+                                defer file.Close()
+                            }
+                    outputFiles:
+                      - output.csv
+                    beforeCommands:
+                      - go mod init go_commands
+                      - go get github.com/go-gota/gota/dataframe
+                      - go mod tidy
+                    commands:
+                      - go run go_script.go
+                """
+        )
+    }
+)
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "golang";
 

@@ -1,8 +1,14 @@
 package io.kestra.plugin.scripts.deno;
 
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.enums.MonacoLanguages;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
@@ -12,17 +18,11 @@ import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-
-import io.kestra.core.models.enums.MonacoLanguages;
-import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -33,21 +33,23 @@ import io.kestra.core.models.annotations.PluginProperty;
     title = "Run inline Deno script",
     description = "Executes a multi-line Deno script inside the default 'denoland/deno' image unless overridden. Script is written to a temp .ts file and run with 'deno run'; add required --allow-* flags in beforeCommands or interpreter options."
 )
-@Plugin(examples = {
-    @Example(
-        title = "Run a simple inline Deno script.",
-        full = true,
-        code = """
-            id: deno_inline
-            namespace: company.team
-            tasks:
-              - id: deno_script
-                type: io.kestra.plugin.scripts.deno.Script
-                script: |
-                  console.log("Hello from kestra!");
-            """
-    ),
-})
+@Plugin(
+    examples = {
+        @Example(
+            title = "Run a simple inline Deno script.",
+            full = true,
+            code = """
+                id: deno_inline
+                namespace: company.team
+                tasks:
+                  - id: deno_script
+                    type: io.kestra.plugin.scripts.deno.Script
+                    script: |
+                      console.log("Hello from kestra!");
+                """
+        ),
+    }
+)
 public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "denoland/deno";
 
@@ -93,9 +95,13 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
             .withInterpreter(this.interpreter)
             .withBeforeCommands(beforeCommands)
             .withBeforeCommandsWithOptions(true)
-            .withCommands(Property.ofValue(List.of(
-                String.join(" ", "deno", "run", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
-            )))
+            .withCommands(
+                Property.ofValue(
+                    List.of(
+                        String.join(" ", "deno", "run", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
+                    )
+                )
+            )
             .withTargetOS(os)
             .run();
     }

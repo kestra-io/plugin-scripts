@@ -1,6 +1,12 @@
 package io.kestra.core.tasks.scripts;
 
+import java.time.Duration;
+import java.util.*;
+
+import org.junit.jupiter.api.Test;
+
 import com.google.common.collect.ImmutableMap;
+
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.AbstractMetricEntry;
 import io.kestra.core.models.property.Property;
@@ -10,11 +16,8 @@ import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
-import jakarta.inject.Inject;
-import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
-import java.util.*;
+import jakarta.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -59,7 +62,8 @@ class PythonTest {
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, Map.of());
-        RunnableTaskException pythonException = assertThrows(RunnableTaskException.class, () -> {
+        RunnableTaskException pythonException = assertThrows(RunnableTaskException.class, () ->
+        {
             python.run(runContext);
         });
 
@@ -92,10 +96,12 @@ class PythonTest {
         Python python = Python.builder()
             .id("test-python-task")
             .type(Python.class.getName())
-            .inputFiles(Map.of(
-                "main.py", "from kestra import Kestra\n" +
-                    "Kestra.outputs({'ok': True})\n"
-            ))
+            .inputFiles(
+                Map.of(
+                    "main.py", "from kestra import Kestra\n" +
+                        "Kestra.outputs({'ok': True})\n"
+                )
+            )
             .commands(List.of("python main.py"))
             .virtualEnv(false)
             .build();
@@ -117,9 +123,10 @@ class PythonTest {
             .type(Python.class.getName())
             .inputFiles(files)
             .runner(Property.ofValue(RunnerType.DOCKER))
-            .dockerOptions(DockerOptions.builder()
-                .image("python")
-                .build()
+            .dockerOptions(
+                DockerOptions.builder()
+                    .image("python")
+                    .build()
             )
             .requirements(Collections.singletonList("requests"))
             .build();
@@ -215,13 +222,14 @@ class PythonTest {
     @Test
     void outputs() throws Exception {
         Map<String, String> files = new HashMap<>();
-        files.put("main.py", "from kestra import Kestra\n" +
-            "import time\n" +
-            "Kestra.outputs({'test': 'value', 'int': 2, 'bool': True, 'float': 3.65})\n" +
-            "Kestra.counter('count', 1, {'tag1': 'i', 'tag2': 'win'})\n" +
-            "Kestra.counter('count2', 2)\n" +
-            "Kestra.timer('timer1', lambda: time.sleep(1), {'tag1': 'i', 'tag2': 'lost'})\n" +
-            "Kestra.timer('timer2', 2.12, {'tag1': 'i', 'tag2': 'destroy'})\n"
+        files.put(
+            "main.py", "from kestra import Kestra\n" +
+                "import time\n" +
+                "Kestra.outputs({'test': 'value', 'int': 2, 'bool': True, 'float': 3.65})\n" +
+                "Kestra.counter('count', 1, {'tag1': 'i', 'tag2': 'win'})\n" +
+                "Kestra.counter('count2', 2)\n" +
+                "Kestra.timer('timer1', lambda: time.sleep(1), {'tag1': 'i', 'tag2': 'lost'})\n" +
+                "Kestra.timer('timer2', 2.12, {'tag1': 'i', 'tag2': 'destroy'})\n"
         );
 
         Python node = Python.builder()
@@ -251,24 +259,25 @@ class PythonTest {
         assertThat(PythonTest.getMetrics(runContext, "count").getTags().get("tag1"), is("i"));
         assertThat(PythonTest.getMetrics(runContext, "count").getTags().get("tag2"), is("win"));
 
-        assertThat(PythonTest.<Duration>getMetrics(runContext, "timer1").getValue().getNano(), greaterThan(0));
-        assertThat(PythonTest.<Duration>getMetrics(runContext, "timer1").getTags().size(), is(2));
-        assertThat(PythonTest.<Duration>getMetrics(runContext, "timer1").getTags().get("tag1"), is("i"));
-        assertThat(PythonTest.<Duration>getMetrics(runContext, "timer1").getTags().get("tag2"), is("lost"));
+        assertThat(PythonTest.<Duration> getMetrics(runContext, "timer1").getValue().getNano(), greaterThan(0));
+        assertThat(PythonTest.<Duration> getMetrics(runContext, "timer1").getTags().size(), is(2));
+        assertThat(PythonTest.<Duration> getMetrics(runContext, "timer1").getTags().get("tag1"), is("i"));
+        assertThat(PythonTest.<Duration> getMetrics(runContext, "timer1").getTags().get("tag2"), is("lost"));
 
-        assertThat(PythonTest.<Duration>getMetrics(runContext, "timer2").getValue().getNano(), greaterThan(100000000));
-        assertThat(PythonTest.<Duration>getMetrics(runContext, "timer2").getTags().size(), is(2));
-        assertThat(PythonTest.<Duration>getMetrics(runContext, "timer2").getTags().get("tag1"), is("i"));
-        assertThat(PythonTest.<Duration>getMetrics(runContext, "timer2").getTags().get("tag2"), is("destroy"));
+        assertThat(PythonTest.<Duration> getMetrics(runContext, "timer2").getValue().getNano(), greaterThan(100000000));
+        assertThat(PythonTest.<Duration> getMetrics(runContext, "timer2").getTags().size(), is(2));
+        assertThat(PythonTest.<Duration> getMetrics(runContext, "timer2").getTags().get("tag1"), is("i"));
+        assertThat(PythonTest.<Duration> getMetrics(runContext, "timer2").getTags().get("tag2"), is("destroy"));
     }
 
     @Test
     void outputFiles() throws Exception {
         Map<String, String> files = new HashMap<>();
-        files.put("main.py", """
-            with open("{{ outputFiles.test }}", "w", encoding="utf-8") as f:
-                f.write("test")
-            """
+        files.put(
+            "main.py", """
+                with open("{{ outputFiles.test }}", "w", encoding="utf-8") as f:
+                    f.write("test")
+                """
         );
 
         Python node = Python.builder()

@@ -1,20 +1,5 @@
 package io.kestra.core.tasks.scripts;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.CharStreams;
-import io.kestra.core.junit.annotations.KestraTest;
-import io.kestra.core.models.executions.AbstractMetricEntry;
-import io.kestra.core.models.property.Property;
-import io.kestra.core.models.tasks.RunnableTaskException;
-import io.kestra.core.runners.RunContext;
-import io.kestra.core.runners.RunContextFactory;
-import io.kestra.core.serializers.JacksonMapper;
-import io.kestra.core.storages.StorageInterface;
-import io.kestra.core.tenant.TenantService;
-import io.kestra.core.utils.TestsUtils;
-import jakarta.inject.Inject;
-import org.junit.jupiter.api.Test;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -25,6 +10,24 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.util.*;
+
+import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.CharStreams;
+
+import io.kestra.core.junit.annotations.KestraTest;
+import io.kestra.core.models.executions.AbstractMetricEntry;
+import io.kestra.core.models.property.Property;
+import io.kestra.core.models.tasks.RunnableTaskException;
+import io.kestra.core.runners.RunContext;
+import io.kestra.core.runners.RunContextFactory;
+import io.kestra.core.serializers.JacksonMapper;
+import io.kestra.core.storages.StorageInterface;
+import io.kestra.core.tenant.TenantService;
+import io.kestra.core.utils.TestsUtils;
+
+import jakarta.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -43,8 +46,9 @@ abstract class AbstractBashTest {
 
     @Test
     void run() throws Exception {
-        Bash bash = configure(Bash.builder()
-            .commands(new String[]{"echo 0", "echo 1", ">&2 echo 2", ">&2 echo 3"})
+        Bash bash = configure(
+            Bash.builder()
+                .commands(new String[] { "echo 0", "echo 1", ">&2 echo 2", ">&2 echo 3" })
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -57,15 +61,18 @@ abstract class AbstractBashTest {
 
     @Test
     void files() throws Exception {
-        Bash bash = configure(Bash.builder()
-            .outputFiles(Property.ofValue(Arrays.asList("xml", "csv")))
-            .inputFiles(ImmutableMap.of("files/in/in.txt", "I'm here"))
-            .commands(new String[]{
-                "echo '::{\"outputs\": {\"extract\":\"'$(cat files/in/in.txt)'\"}}::'",
-                "echo 1 >> {{ outputFiles.xml }}",
-                "echo 2 >> {{ outputFiles.csv }}",
-                "echo 3 >> {{ outputFiles.xml }}"
-            })
+        Bash bash = configure(
+            Bash.builder()
+                .outputFiles(Property.ofValue(Arrays.asList("xml", "csv")))
+                .inputFiles(ImmutableMap.of("files/in/in.txt", "I'm here"))
+                .commands(
+                    new String[] {
+                        "echo '::{\"outputs\": {\"extract\":\"'$(cat files/in/in.txt)'\"}}::'",
+                        "echo 1 >> {{ outputFiles.xml }}",
+                        "echo 2 >> {{ outputFiles.csv }}",
+                        "echo 3 >> {{ outputFiles.xml }}"
+                    }
+                )
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -94,17 +101,18 @@ abstract class AbstractBashTest {
 
     @Test
     void failed() {
-        Bash bash = configure(Bash.builder()
-            .interpreter(Property.ofValue("/bin/bash"))
-            .commands(new String[]{"echo 1 1>&2", "exit 66", "echo 2"})
-            .interpreter(Property.ofValue("/bin/bash"))
+        Bash bash = configure(
+            Bash.builder()
+                .interpreter(Property.ofValue("/bin/bash"))
+                .commands(new String[] { "echo 1 1>&2", "exit 66", "echo 2" })
+                .interpreter(Property.ofValue("/bin/bash"))
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        RunnableTaskException bashException = assertThrows(RunnableTaskException.class, () -> {
+        RunnableTaskException bashException = assertThrows(RunnableTaskException.class, () ->
+        {
             bash.run(runContext);
         });
-
 
         assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getExitCode(), is(66));
         assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) bashException.getOutput()).getStdOutLineCount(), is(0));
@@ -113,13 +121,15 @@ abstract class AbstractBashTest {
 
     @Test
     void stopOnFirstFailed() {
-        Bash bash = configure(Bash.builder()
-            .commands(new String[]{"unknown", "echo 1"})
-            .interpreter(Property.ofValue("/bin/bash"))
+        Bash bash = configure(
+            Bash.builder()
+                .commands(new String[] { "unknown", "echo 1" })
+                .interpreter(Property.ofValue("/bin/bash"))
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        RunnableTaskException bashException = assertThrows(RunnableTaskException.class, () -> {
+        RunnableTaskException bashException = assertThrows(RunnableTaskException.class, () ->
+        {
             bash.run(runContext);
         });
 
@@ -130,11 +140,12 @@ abstract class AbstractBashTest {
 
     @Test
     void dontStopOnFirstFailed() throws Exception {
-        Bash bash = configure(Bash.builder()
-            .interpreter(Property.ofValue("/bin/bash"))
-            .commands(new String[]{"unknown", "echo 1"})
-            .interpreter(Property.ofValue("/bin/bash"))
-            .exitOnFailed(Property.ofValue(false))
+        Bash bash = configure(
+            Bash.builder()
+                .interpreter(Property.ofValue("/bin/bash"))
+                .commands(new String[] { "unknown", "echo 1" })
+                .interpreter(Property.ofValue("/bin/bash"))
+                .exitOnFailed(Property.ofValue(false))
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -153,10 +164,11 @@ abstract class AbstractBashTest {
         List<String> commands = new ArrayList<>();
         commands.add("source {{workingDir}}/test.sh && tst");
 
-        Bash bash = configure(Bash.builder()
-            .interpreter(Property.ofValue("/bin/bash"))
-            .commands(commands.toArray(String[]::new))
-            .inputFiles(files)
+        Bash bash = configure(
+            Bash.builder()
+                .interpreter(Property.ofValue("/bin/bash"))
+                .commands(commands.toArray(String[]::new))
+                .inputFiles(files)
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -179,11 +191,12 @@ abstract class AbstractBashTest {
         List<String> commands = new ArrayList<>();
         commands.add("cat fscontent.txt > {{ outputFiles.out }} ");
 
-        Bash bash = configure(Bash.builder()
-            .interpreter(Property.ofValue("/bin/bash"))
-            .commands(commands.toArray(String[]::new))
-            .inputFiles(files)
-            .outputFiles(Property.ofValue(Collections.singletonList("out")))
+        Bash bash = configure(
+            Bash.builder()
+                .interpreter(Property.ofValue("/bin/bash"))
+                .commands(commands.toArray(String[]::new))
+                .inputFiles(files)
+                .outputFiles(Property.ofValue(Collections.singletonList("out")))
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -211,11 +224,12 @@ abstract class AbstractBashTest {
         List<String> commands = new ArrayList<>();
         commands.add("cat 1.yml 2.yml > {{ outputFiles.out }} ");
 
-        Bash bash = configure(Bash.builder()
-            .interpreter(Property.ofValue("/bin/bash"))
-            .commands(commands.toArray(String[]::new))
-            .inputFiles(JacksonMapper.ofJson().writeValueAsString(files))
-            .outputFiles(Property.ofValue(Collections.singletonList("out")))
+        Bash bash = configure(
+            Bash.builder()
+                .interpreter(Property.ofValue("/bin/bash"))
+                .commands(commands.toArray(String[]::new))
+                .inputFiles(JacksonMapper.ofJson().writeValueAsString(files))
+                .outputFiles(Property.ofValue(Collections.singletonList("out")))
         ).build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
@@ -234,47 +248,64 @@ abstract class AbstractBashTest {
 
         URI put = putUnique(storageInterface, resource);
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            Bash bash = configure(Bash.builder()
-                .commands(new String[]{"echo 1"})
-                .inputFiles(Map.of(
-                    "{{ inputs.vars }}", put.toString()
-                ))
+        assertThrows(IllegalArgumentException.class, () ->
+        {
+            Bash bash = configure(
+                Bash.builder()
+                    .commands(new String[] { "echo 1" })
+                    .inputFiles(
+                        Map.of(
+                            "{{ inputs.vars }}", put.toString()
+                        )
+                    )
             ).build();
 
-            RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of(
-                "vars", "../../test.txt"
-            ));
+            RunContext runContext = TestsUtils.mockRunContext(
+                runContextFactory, bash, ImmutableMap.of(
+                    "vars", "../../test.txt"
+                )
+            );
 
             bash.run(runContext);
         });
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            Bash bash = configure(Bash.builder()
-                .commands(new String[]{"echo 1"})
-                .inputFiles(Map.of(
-                    "{{ inputs.vars }}", put.toString()
-                ))
+        assertThrows(IllegalArgumentException.class, () ->
+        {
+            Bash bash = configure(
+                Bash.builder()
+                    .commands(new String[] { "echo 1" })
+                    .inputFiles(
+                        Map.of(
+                            "{{ inputs.vars }}", put.toString()
+                        )
+                    )
             ).build();
 
-            RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of(
-                "vars", "../../test.txt"
-            ));
+            RunContext runContext = TestsUtils.mockRunContext(
+                runContextFactory, bash, ImmutableMap.of(
+                    "vars", "../../test.txt"
+                )
+            );
 
             bash.run(runContext);
         });
 
         // we allow dot file starting with a .
-        Bash bash = configure(Bash.builder()
-            .commands(new String[]{"echo 1"})
-            .inputFiles(Map.of(
-                "{{ inputs.vars }}", put.toString()
-            ))
+        Bash bash = configure(
+            Bash.builder()
+                .commands(new String[] { "echo 1" })
+                .inputFiles(
+                    Map.of(
+                        "{{ inputs.vars }}", put.toString()
+                    )
+                )
         ).build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of(
-            "vars", ".test.txt"
-        ));
+        RunContext runContext = TestsUtils.mockRunContext(
+            runContextFactory, bash, ImmutableMap.of(
+                "vars", ".test.txt"
+            )
+        );
 
         ScriptOutput run = bash.run(runContext);
         assertThat(run.getExitCode(), is(0));
@@ -293,15 +324,15 @@ abstract class AbstractBashTest {
         assertThat(AbstractBashTest.getMetrics(runContext, "count").getTags().get("tag1"), is("i"));
         assertThat(AbstractBashTest.getMetrics(runContext, "count").getTags().get("tag2"), is("win"));
 
-        assertThat(AbstractBashTest.<Duration>getMetrics(runContext, "timer1").getValue().getNano(), greaterThan(0));
-        assertThat(AbstractBashTest.<Duration>getMetrics(runContext, "timer1").getTags().size(), is(2));
-        assertThat(AbstractBashTest.<Duration>getMetrics(runContext, "timer1").getTags().get("tag1"), is("i"));
-        assertThat(AbstractBashTest.<Duration>getMetrics(runContext, "timer1").getTags().get("tag2"), is("lost"));
+        assertThat(AbstractBashTest.<Duration> getMetrics(runContext, "timer1").getValue().getNano(), greaterThan(0));
+        assertThat(AbstractBashTest.<Duration> getMetrics(runContext, "timer1").getTags().size(), is(2));
+        assertThat(AbstractBashTest.<Duration> getMetrics(runContext, "timer1").getTags().get("tag1"), is("i"));
+        assertThat(AbstractBashTest.<Duration> getMetrics(runContext, "timer1").getTags().get("tag2"), is("lost"));
 
-        assertThat(AbstractBashTest.<Duration>getMetrics(runContext, "timer2").getValue().getNano(), greaterThan(100000000));
-        assertThat(AbstractBashTest.<Duration>getMetrics(runContext, "timer2").getTags().size(), is(2));
-        assertThat(AbstractBashTest.<Duration>getMetrics(runContext, "timer2").getTags().get("tag1"), is("i"));
-        assertThat(AbstractBashTest.<Duration>getMetrics(runContext, "timer2").getTags().get("tag2"), is("destroy"));
+        assertThat(AbstractBashTest.<Duration> getMetrics(runContext, "timer2").getValue().getNano(), greaterThan(100000000));
+        assertThat(AbstractBashTest.<Duration> getMetrics(runContext, "timer2").getTags().size(), is(2));
+        assertThat(AbstractBashTest.<Duration> getMetrics(runContext, "timer2").getTags().get("tag1"), is("i"));
+        assertThat(AbstractBashTest.<Duration> getMetrics(runContext, "timer2").getTags().get("tag2"), is("destroy"));
     }
 
     @SuppressWarnings("unchecked")

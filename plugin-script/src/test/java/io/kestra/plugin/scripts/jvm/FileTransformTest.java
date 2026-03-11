@@ -1,6 +1,13 @@
 package io.kestra.plugin.scripts.jvm;
 
+import java.io.*;
+import java.net.URI;
+import java.util.*;
+
+import org.junit.jupiter.api.Test;
+
 import com.google.common.collect.ImmutableMap;
+
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.AbstractMetricEntry;
 import io.kestra.core.runners.RunContext;
@@ -10,12 +17,8 @@ import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.tenant.TenantService;
 import io.kestra.core.utils.TestsUtils;
-import jakarta.inject.Inject;
-import org.junit.jupiter.api.Test;
 
-import java.io.*;
-import java.net.URI;
-import java.util.*;
+import jakarta.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
@@ -38,20 +41,26 @@ public abstract class FileTransformTest {
         File tempFile = File.createTempFile(this.getClass().getSimpleName().toLowerCase() + "_", ".trs");
         OutputStream output = new FileOutputStream(tempFile);
 
-        FileSerde.write(output, ImmutableMap.of(
-            "id", "1",
-            "name", "john"
-        ));
+        FileSerde.write(
+            output, ImmutableMap.of(
+                "id", "1",
+                "name", "john"
+            )
+        );
 
-        FileSerde.write(output, ImmutableMap.of(
-            "id", "2",
-            "name", "jane"
-        ));
+        FileSerde.write(
+            output, ImmutableMap.of(
+                "id", "2",
+                "name", "jane"
+            )
+        );
 
-        FileSerde.write(output, ImmutableMap.of(
-            "id", "3",
-            "name", "richard"
-        ));
+        FileSerde.write(
+            output, ImmutableMap.of(
+                "id", "3",
+                "name", "richard"
+            )
+        );
 
         URI source = storageInterface.put(
             TenantService.MAIN_TENANT,
@@ -65,33 +74,37 @@ public abstract class FileTransformTest {
 
     @Test
     void runWithArrayJsonString() throws Exception {
-        test(JacksonMapper.ofJson().writeValueAsString(
-            Arrays.asList(
-                ImmutableMap.of(
-                    "id", "1",
-                    "name", "john"
-                ),
-                ImmutableMap.of(
-                    "id", "2",
-                    "name", "jane"
-                ),
-                ImmutableMap.of(
-                    "id", "3",
-                    "name", "richard"
+        test(
+            JacksonMapper.ofJson().writeValueAsString(
+                Arrays.asList(
+                    ImmutableMap.of(
+                        "id", "1",
+                        "name", "john"
+                    ),
+                    ImmutableMap.of(
+                        "id", "2",
+                        "name", "jane"
+                    ),
+                    ImmutableMap.of(
+                        "id", "3",
+                        "name", "richard"
+                    )
                 )
-            )
-        ), 2);
+            ), 2
+        );
     }
 
     @Test
     void runWithJsonString() throws Exception {
-        test(JacksonMapper.ofJson().writeValueAsString(
-            ImmutableMap.of(
-                "id", "1",
-                "name", "john"
-            )
+        test(
+            JacksonMapper.ofJson().writeValueAsString(
+                ImmutableMap.of(
+                    "id", "1",
+                    "name", "john"
+                )
 
-        ), 1);
+            ), 1
+        );
     }
 
     @SuppressWarnings("unchecked")
@@ -106,21 +119,29 @@ public abstract class FileTransformTest {
         FileSerde.reader(inputStream, result::add);
 
         AbstractMetricEntry<?> metric = runContext.metrics().get(0);
-        assertThat(metric.getValue(), is((double)size));
+        assertThat(metric.getValue(), is((double) size));
 
         assertThat(result.size(), is(size));
-        assertThat(result.stream().filter(o -> ((Map<String, String>) o).get("id").equals("1")).findFirst().orElseThrow(), is(ImmutableMap.of(
-            "id", "1",
-            "name", "john",
-            "email", "john@kestra.io"
-        )));
+        assertThat(
+            result.stream().filter(o -> ((Map<String, String>) o).get("id").equals("1")).findFirst().orElseThrow(), is(
+                ImmutableMap.of(
+                    "id", "1",
+                    "name", "john",
+                    "email", "john@kestra.io"
+                )
+            )
+        );
 
         if (size > 1) {
-            assertThat(result.stream().filter(o -> ((Map<String, String>) o).get("id").equals("2")).findFirst().orElseThrow(), is(ImmutableMap.of(
-                "id", "2",
-                "name", "jane",
-                "email", "jane@kestra.io"
-            )));
+            assertThat(
+                result.stream().filter(o -> ((Map<String, String>) o).get("id").equals("2")).findFirst().orElseThrow(), is(
+                    ImmutableMap.of(
+                        "id", "2",
+                        "name", "jane",
+                        "email", "jane@kestra.io"
+                    )
+                )
+            );
         }
     }
 

@@ -1,5 +1,7 @@
 package io.kestra.plugin.scripts.php;
 
+import java.util.List;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
@@ -10,12 +12,11 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.util.List;
 
 @SuperBuilder
 @ToString
@@ -26,28 +27,30 @@ import java.util.List;
     title = "Execute PHP files and commands.",
     description = "Executes provided PHP commands in order using the default 'php' image unless overridden. Supports inputFiles and beforeCommands to stage scripts and install extensions; enable namespaceFiles if referring to files stored in the Namespace — use this task when running existing PHP files instead of inline scripts."
 )
-@Plugin(examples = {
-    @Example(
-        full = true,
-        title = "Create a PHP script and execute it.",
-        code = """
-            id: php_commands
-            namespace: company.team
+@Plugin(
+    examples = {
+        @Example(
+            full = true,
+            title = "Create a PHP script and execute it.",
+            code = """
+                id: php_commands
+                namespace: company.team
 
-            tasks:
-              - id: commands
-                type: io.kestra.plugin.scripts.php.Commands
-                inputFiles:
-                  main.php: |
-                    #!/usr/bin/php
-                    <?php
-                    echo "Hello, World!\\n";
-                    ?>
-                commands:
-                  - php main.php
-            """
-    )
-})
+                tasks:
+                  - id: commands
+                    type: io.kestra.plugin.scripts.php.Commands
+                    inputFiles:
+                      main.php: |
+                        #!/usr/bin/php
+                        <?php
+                        echo "Hello, World!\\n";
+                        ?>
+                    commands:
+                      - php main.php
+                """
+        )
+    }
+)
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "php";
 

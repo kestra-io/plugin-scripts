@@ -1,9 +1,16 @@
 package io.kestra.plugin.scripts.python;
 
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Metric;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.enums.MonacoLanguages;
 import io.kestra.core.models.executions.metrics.Counter;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
@@ -15,6 +22,7 @@ import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.kestra.plugin.scripts.python.internals.PythonEnvironmentManager;
 import io.kestra.plugin.scripts.python.internals.PythonEnvironmentManager.ResolvedPythonEnvironment;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
@@ -22,14 +30,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import io.kestra.core.models.enums.MonacoLanguages;
-import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -160,8 +160,8 @@ import io.kestra.core.models.annotations.PluginProperty;
         @Example(
             full = true,
             title = """
-            If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `outputFiles` property as shown in the example above. Files will be persisted in Kestra's internal storage. The first task in this example creates a file `'clean_dataset.csv'` and the next task can access it by leveraging the syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`.
-            """,
+                If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `outputFiles` property as shown in the example above. Files will be persisted in Kestra's internal storage. The first task in this example creates a file `'clean_dataset.csv'` and the next task can access it by leveraging the syntax `{{outputs.yourTaskId.outputFiles['yourFileName.fileExtension']}}`.
+                """,
             code = """
                 id: python_outputs
                 namespace: company.team
@@ -198,8 +198,8 @@ import io.kestra.core.models.annotations.PluginProperty;
         @Example(
             full = true,
             title = """
-            Create a Python inline script that takes input using an expression
-            """,
+                Create a Python inline script that takes input using an expression
+                """,
             code = """
                 id: python_use_input_in_inline
                 namespace: company.team
@@ -241,8 +241,8 @@ import io.kestra.core.models.annotations.PluginProperty;
         @Example(
             full = true,
             title = """
-            Pass an input file to a Python script
-            """,
+                Pass an input file to a Python script
+                """,
             code = """
                 id: python_input_file
                 namespace: company.team
@@ -276,8 +276,8 @@ import io.kestra.core.models.annotations.PluginProperty;
         @Example(
             full = true,
             title = """
-            Run a simple Python script to generate outputs and log them
-            """,
+                Run a simple Python script to generate outputs and log them
+                """,
             code = """
                 id: python_generate_outputs
                 namespace: company.team
@@ -358,9 +358,13 @@ public class Script extends AbstractPythonExecScript implements RunnableTask<Scr
             .withInterpreter(this.interpreter)
             .withBeforeCommands(beforeCommands)
             .withBeforeCommandsWithOptions(true)
-            .withCommands(Property.ofValue(List.of(
-                String.join(" ", pythonEnvironment.interpreter(), commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
-            )))
+            .withCommands(
+                Property.ofValue(
+                    List.of(
+                        String.join(" ", pythonEnvironment.interpreter(), commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
+                    )
+                )
+            )
             .withTargetOS(os)
             .run();
 

@@ -1,11 +1,12 @@
 package io.kestra.plugin.scripts.python.internals;
 
+import java.util.List;
+
 import io.kestra.core.models.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
-import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.util.List;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Interface for Python-based plugin.
@@ -23,7 +24,8 @@ public interface PythonBasedPlugin extends Plugin {
 
     @Schema(
         title = "The version of Python to use for the script.",
-        description = "If no version is explicitly specified, the task will attempt to extract the version from the configured container image or from the local python installation depending on configured task runner. If it cannot determine the version, the task will default to Python '" + DEFAULT_PYTHON_VERSION + " '"
+        description = "If no version is explicitly specified, the task will attempt to extract the version from the configured container image or from the local python installation depending on configured task runner. If it cannot determine the version, the task will default to Python '"
+            + DEFAULT_PYTHON_VERSION + " '"
     )
     @PluginProperty
     Property<String> getPythonVersion();
@@ -40,7 +42,7 @@ public interface PythonBasedPlugin extends Plugin {
         description = "Package manager to use for installing Python dependencies. " +
             "Options: 'UV' (default), 'PIP'. " +
             "UV automatically falls back to PIP if not available.",
-        allowableValues = {"PIP", "UV"}
+        allowableValues = { "PIP", "UV" }
     )
     @PluginProperty
     Property<PackageManagerType> getPackageManager();

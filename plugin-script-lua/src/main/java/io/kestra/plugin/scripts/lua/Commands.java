@@ -1,5 +1,7 @@
 package io.kestra.plugin.scripts.lua;
 
+import java.util.List;
+
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.property.Property;
@@ -8,11 +10,10 @@ import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.util.List;
 
 @SuperBuilder
 @ToString
@@ -23,21 +24,23 @@ import java.util.List;
     title = "Execute Lua files and commands.",
     description = "Executes provided Lua commands in order using the default 'nickblah/lua' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install modules; choose this task when running existing Lua files instead of inline scripts."
 )
-@Plugin(examples = {
-    @Example(
-        full = true,
-        title = "Execute one or multiple Lua commands.",
-        code = """
-            id: lua_commands
-            namespace: company.team
-            tasks:
-              - id: lua
-                type: io.kestra.plugin.scripts.lua.Commands
-                commands:
-                  - lua -e 'print("Hello from kestra!")'
-            """
-    )
-})
+@Plugin(
+    examples = {
+        @Example(
+            full = true,
+            title = "Execute one or multiple Lua commands.",
+            code = """
+                id: lua_commands
+                namespace: company.team
+                tasks:
+                  - id: lua
+                    type: io.kestra.plugin.scripts.lua.Commands
+                    commands:
+                      - lua -e 'print("Hello from kestra!")'
+                """
+        )
+    }
+)
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "nickblah/lua";
 

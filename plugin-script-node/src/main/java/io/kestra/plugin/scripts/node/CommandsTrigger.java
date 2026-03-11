@@ -1,13 +1,4 @@
-package io.kestra.plugin.scripts.shell;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+package io.kestra.plugin.scripts.node;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
@@ -20,41 +11,47 @@ import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.core.runner.Process;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @SuperBuilder
 @ToString
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@Schema(title = "Trigger a flow when Shell commands match a condition.")
+@Schema(title = "Trigger a flow when Node.js commands match a condition.")
 @Plugin(
     examples = {
         @Example(
-            title = "Trigger when commands fail with an implicit error (exit 1).",
+            title = "Trigger when Node command fails.",
             full = true,
             code = """
-                id: commands_trigger
+                id: node_commands_trigger
                 namespace: company.team
 
                 triggers:
-                  - id: commands_failure
-                    type: io.kestra.plugin.scripts.shell.CommandsTrigger
-                    interval: PT10S
+                  - id: on_fail
+                    type: io.kestra.plugin.scripts.node.CommandsTrigger
+                    interval: PT5S
                     exitCondition: "exit 1"
-                    edge: true
-                    containerImage: ubuntu
                     commands:
-                      - cat /path/that/does/not/exist
+                      - node -e "throw new Error('boom')"
 
                 tasks:
                   - id: log
                     type: io.kestra.plugin.core.log.Log
-                    message: "Triggered with exitCode={{ trigger.exitCode }} (condition={{ trigger.condition }})"
+                    message: "Triggered with exitCode={{ trigger.exitCode }}"
                 """
         )
     }
@@ -62,21 +59,21 @@ import lombok.experimental.SuperBuilder;
 public class CommandsTrigger extends AbstractTrigger
     implements PollingTriggerInterface, TriggerOutput<CommandsTrigger.Output> {
 
-    private static final String DEFAULT_IMAGE = "ubuntu";
+    private static final String DEFAULT_IMAGE = "node";
 
     @Schema(
         title = "Docker image used to execute the commands.",
         description = """
-            Container image used by the underlying Commands task to run shell commands.
-            Defaults to 'ubuntu'.
+            Container image used by the underlying Commands task to run Node.js commands.
+            Defaults to 'node'.
             """
     )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "Shell commands to execute.",
-        description = "Commands executed on each poll (same semantics as the Shell Commands task)."
+        title = "Node commands to execute.",
+        description = "Commands executed on each poll."
     )
     @NotNull
     protected Property<List<String>> commands;
@@ -84,20 +81,18 @@ public class CommandsTrigger extends AbstractTrigger
     @Schema(
         title = "Condition to match.",
         description = """
-            Condition evaluated after each commands execution. The trigger emits an event only when this condition matches.
+            Condition evaluated after execution.
 
             Supported forms:
-            - 'exit N' (example: 'exit 1'): matches when the process exit code equals N.
-            - Any other string: treated as a regex (or substring if regex is invalid) matched against:
-              - the task 'vars' (when commands emit ::{"outputs":...}::),
-              - and error logs when the task fails (TaskException).
+            - 'exit N'
+            - regex / substring matched against vars + logs
             """
     )
     @NotNull
     protected Property<String> exitCondition;
 
     @Schema(
-        title = "Check interval",
+        title = "Check interval.",
         description = "Interval between polling evaluations."
     )
     @Builder.Default
@@ -133,7 +128,9 @@ public class CommandsTrigger extends AbstractTrigger
             return Optional.empty();
         }
 
-        return Optional.of(TriggerService.generateExecution(this, conditionContext, context, out));
+        return Optional.of(
+            TriggerService.generateExecution(this, conditionContext, context, out)
+        );
     }
 
     private Output runOnce(RunContext runContext) throws Exception {
@@ -143,24 +140,38 @@ public class CommandsTrigger extends AbstractTrigger
             .commands(this.commands)
             .build();
 
-        String renderedCondition = runContext.render(this.exitCondition).as(String.class).orElse("");
+        String renderedCondition = runContext.render(this.exitCondition)
+            .as(String.class)
+            .orElse("");
 
         try {
             ScriptOutput taskOutput = task.run(runContext);
-            Integer exitCode = safeExitCode(taskOutput);
-            Map<String, Object> vars = safeVars(taskOutput);
 
-            return new Output(Instant.now(), renderedCondition, exitCode, vars, null);
+            return new Output(
+                Instant.now(),
+                renderedCondition,
+                safeExitCode(taskOutput),
+                safeVars(taskOutput),
+                null
+            );
         } catch (RunnableTaskException e) {
             ExtractedFailure failure = extractFailure(e);
-            return new Output(Instant.now(), renderedCondition, failure.exitCode, null, failure.logs);
+            return new Output(
+                Instant.now(),
+                renderedCondition,
+                failure.exitCode,
+                null,
+                failure.logs
+            );
         }
     }
 
     private boolean matchesCondition(Output out) {
         String cond = out.getCondition() == null ? "" : out.getCondition().trim();
 
-        Matcher exitMatcher = Pattern.compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE).matcher(cond);
+        Matcher exitMatcher = Pattern.compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE)
+            .matcher(cond);
+
         if (exitMatcher.matches()) {
             int expected = Integer.parseInt(exitMatcher.group(1));
             return out.getExitCode() != null && out.getExitCode() == expected;
@@ -173,7 +184,7 @@ public class CommandsTrigger extends AbstractTrigger
 
         try {
             return Pattern.compile(cond).matcher(haystack).find();
-        } catch (Exception invalidRegex) {
+        } catch (Exception e) {
             return haystack.contains(cond);
         }
     }
@@ -207,8 +218,7 @@ public class CommandsTrigger extends AbstractTrigger
         }
     }
 
-    private record ExtractedFailure(Integer exitCode, String logs) {
-    }
+    private record ExtractedFailure(Integer exitCode, String logs) {}
 
     private ExtractedFailure extractFailure(RunnableTaskException e) {
         Integer exitCode = null;
@@ -220,8 +230,7 @@ public class CommandsTrigger extends AbstractTrigger
                 exitCode = te.getExitCode();
                 try {
                     logs = te.getLogConsumer() != null ? te.getLogConsumer().toString() : null;
-                } catch (Exception ignored) {
-                }
+                } catch (Exception ignored) {}
                 break;
             }
             cur = cur.getCause();
@@ -234,9 +243,29 @@ public class CommandsTrigger extends AbstractTrigger
     @AllArgsConstructor
     public static class Output implements io.kestra.core.models.tasks.Output {
         private Instant timestamp;
+
+        @Schema(
+            title = "Rendered condition.",
+            description = "Rendered value of the exitCondition property for this poll."
+        )
         private String condition;
+
+        @Schema(
+            title = "Commands exit code.",
+            description = "Exit code returned by the process (may be null if not available)."
+        )
         private Integer exitCode;
+
+        @Schema(
+            title = "Commands vars.",
+            description = "Vars produced by the task (e.g. via ::{\"outputs\":{...}}:: convention)."
+        )
         private Map<String, Object> vars;
+
+        @Schema(
+            title = "Captured logs (best effort).",
+            description = "Captured error logs when the commands fail (best effort, depends on the runner)."
+        )
         private String logs;
     }
 }

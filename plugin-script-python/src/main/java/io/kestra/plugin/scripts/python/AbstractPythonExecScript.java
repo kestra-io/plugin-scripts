@@ -1,18 +1,17 @@
 package io.kestra.plugin.scripts.python;
 
-import io.kestra.core.models.annotations.PluginProperty;
+import java.util.List;
+
 import io.kestra.core.models.property.Property;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.python.internals.PackageManagerType;
 import io.kestra.plugin.scripts.python.internals.PythonBasedPlugin;
-import io.swagger.v3.oas.annotations.media.Schema;
+
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
-import java.util.List;
 
 @SuperBuilder
 @EqualsAndHashCode
