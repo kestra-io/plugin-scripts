@@ -18,3 +18,5 @@ kotlin/
 jython/.jython_cache
 plugin-script-shell/src/test/java/io/kestra/plugin/scripts/shell/DockerPrivateTest.java
 plugin-docker/src/test/java/io/kestra/plugin/docker/BuildAndPushTest.java
+.factorypath
+bin/
