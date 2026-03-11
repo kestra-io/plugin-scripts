@@ -1,6 +1,12 @@
 package io.kestra.core.tasks.scripts;
 
+import java.io.IOException;
+import java.util.*;
+
+import org.apache.commons.io.IOUtils;
+
 import com.google.common.base.Charsets;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
@@ -9,15 +15,12 @@ import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.python.internals.PackageManagerType;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.apache.commons.io.IOUtils;
-
-import java.io.IOException;
-import java.util.*;
 
 import static io.kestra.core.utils.Rethrow.throwSupplier;
 
@@ -28,7 +31,8 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 @NoArgsConstructor
 @Schema(
     title = "Execute a Python script (Deprecated).",
-    description = "This task is deprecated, please use the [io.kestra.plugin.scripts.python.Script](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.python.script) or [io.kestra.plugin.scripts.python.Commands](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.python.commands) tasks instead.\n\n" +
+    description = "This task is deprecated, please use the [io.kestra.plugin.scripts.python.Script](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.python.script) or [io.kestra.plugin.scripts.python.Commands](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.python.commands) tasks instead.\n\n"
+        +
         "With the Python task, you can execute a full Python script.\n" +
         "The task will create a fresh `virtualenv` for every tasks and allows to install some Python package define in `requirements` property.\n" +
         "\n" +
@@ -150,7 +154,7 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
         title = "Package manager for Python dependencies",
         description = "Package manager to use for installing Python dependencies. " +
             "Options: 'UV' (default), 'PIP'. ",
-        allowableValues = {"PIP", "UV"}
+        allowableValues = { "PIP", "UV" }
     )
     @Builder.Default
     protected Property<PackageManagerType> packageManager = Property.ofValue(PackageManagerType.PIP);
@@ -171,9 +175,12 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
         } else {
             renderer.add(this.pythonPath + " -m venv --system-site-packages " + workingDirectory + " > /dev/null");
             if (requirements != null && !requirements.isEmpty()) {
-                renderer.addAll(Arrays.asList(
-                    "./bin/pip install pip --upgrade > /dev/null",
-                    "./bin/pip install " + runContext.render(String.join(" ", requirements), additionalVars) + " > /dev/null"));
+                renderer.addAll(
+                    Arrays.asList(
+                        "./bin/pip install pip --upgrade > /dev/null",
+                        "./bin/pip install " + runContext.render(String.join(" ", requirements), additionalVars) + " > /dev/null"
+                    )
+                );
             }
         }
 
@@ -194,11 +201,16 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
     protected Map<String, String> finalInputFiles(RunContext runContext) throws IOException, IllegalVariableEvaluationException {
         Map<String, String> map = super.finalInputFiles(runContext);
 
-        map.put("kestra.py", IOUtils.toString(
-            Objects.requireNonNull(Python.class.getClassLoader().getResourceAsStream(
-                "kestra.py")),
-            Charsets.UTF_8
-        ));
+        map.put(
+            "kestra.py", IOUtils.toString(
+                Objects.requireNonNull(
+                    Python.class.getClassLoader().getResourceAsStream(
+                        "kestra.py"
+                    )
+                ),
+                Charsets.UTF_8
+            )
+        );
 
         return map;
     }
@@ -207,11 +219,16 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
     protected Map<String, String> finalInputFiles(RunContext runContext, Map<String, Object> additionalVar) throws IOException, IllegalVariableEvaluationException {
         Map<String, String> map = super.finalInputFiles(runContext, additionalVar);
 
-        map.put("kestra.py", IOUtils.toString(
-            Objects.requireNonNull(Python.class.getClassLoader().getResourceAsStream(
-                "kestra.py")),
-            Charsets.UTF_8
-        ));
+        map.put(
+            "kestra.py", IOUtils.toString(
+                Objects.requireNonNull(
+                    Python.class.getClassLoader().getResourceAsStream(
+                        "kestra.py"
+                    )
+                ),
+                Charsets.UTF_8
+            )
+        );
 
         return map;
     }
@@ -220,9 +237,11 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
     public ScriptOutput run(RunContext runContext) throws Exception {
         var rPackageManager = PackageManagerType.UV.equals(runContext.render(packageManager).as(PackageManagerType.class).orElse(PackageManagerType.UV));
 
-        if (this.inputFiles == null ||
-            (this.inputFiles instanceof Map && !((Map<?, ?>) this.inputFiles).containsKey("main.py")) ||
-            (this.inputFiles instanceof String && !this.inputFiles.toString().contains("main.py"))) {
+        if (
+            this.inputFiles == null ||
+                (this.inputFiles instanceof Map && !((Map<?, ?>) this.inputFiles).containsKey("main.py")) ||
+                (this.inputFiles instanceof String && !this.inputFiles.toString().contains("main.py"))
+        ) {
 
             if (this.commands != null && this.commands.size() == 1 && this.commands.getFirst().equals("./bin/python main.py")) {
                 throw new Exception("Invalid input files structure, expecting inputFiles property to contain at least a main.py key with python code value.");
@@ -234,7 +253,8 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
             additionalVars.put("outputFiles", rOutputsFiles);
         }
 
-        return run(runContext, throwSupplier(() -> {
+        return run(runContext, throwSupplier(() ->
+        {
             List<String> renderer = new ArrayList<>();
             if (this.virtualEnv) {
                 renderer.add(this.virtualEnvCommand(runContext, requirements));

@@ -1,15 +1,4 @@
-package io.kestra.plugin.scripts.shell;
-
-import java.time.Duration;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.junit.jupiter.api.Test;
+package io.kestra.plugin.scripts.node;
 
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.Execution;
@@ -26,15 +15,23 @@ import io.kestra.jdbc.runner.JdbcScheduler;
 import io.kestra.plugin.core.debug.Return;
 import io.kestra.scheduler.AbstractScheduler;
 import io.kestra.worker.DefaultWorker;
-
 import io.micronaut.context.ApplicationContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 
+import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
+
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
@@ -60,31 +57,21 @@ class CommandsTriggerTest {
             .interval(Duration.ofSeconds(1))
             .exitCondition(Property.ofValue("exit 1"))
             .edge(Property.ofValue(true))
-            .containerImage(Property.ofValue("ubuntu"))
-            .commands(
-                Property.ofValue(
-                    List.of(
-                        // Implicit failure -> non-zero exit code
-                        "cat /path/that/does/not/exist"
-                    )
-                )
-            )
+            .commands(Property.ofValue(List.of(
+                "node -e \"throw new Error('boom')\""
+            )))
             .build();
 
         Flow testFlow = Flow.builder()
             .id("commands-trigger-flow")
             .namespace("io.kestra.tests")
             .revision(1)
-            .tasks(
-                Collections.singletonList(
-                    Return.builder()
-                        .id("log-trigger-vars")
-                        .type(Return.class.getName())
-                        .format(Property.ofValue("exitCode={{ trigger.exitCode }}, condition={{ trigger.condition }}"))
-                        .build()
-                )
-            )
             .triggers(Collections.singletonList(trigger))
+            .tasks(Collections.singletonList(Return.builder()
+                .id("log")
+                .type(Return.class.getName())
+                .format(Property.ofValue("exit={{ trigger.exitCode }}"))
+                .build()))
             .build();
 
         FlowWithSource flow = FlowWithSource.of(testFlow, null);
@@ -93,8 +80,7 @@ class CommandsTriggerTest {
         CountDownLatch queueCount = new CountDownLatch(1);
         AtomicReference<Execution> lastExecution = new AtomicReference<>();
 
-        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution ->
-        {
+        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution -> {
             if (execution.getLeft().getFlowId().equals("commands-trigger-flow")) {
                 lastExecution.set(execution.getLeft());
                 queueCount.countDown();
@@ -128,22 +114,12 @@ class CommandsTriggerTest {
 
             Map<String, Object> triggerVars = execution.getTrigger().getVariables();
             assertThat("condition should be present", triggerVars.get("condition"), is("exit 1"));
-            assertThat("exitCode should be present", triggerVars.get("exitCode"), notNullValue());
             assertThat("exitCode should be 1", triggerVars.get("exitCode"), is(1));
             assertThat("timestamp should be present", triggerVars.get("timestamp"), notNullValue());
         } finally {
-            try {
-                worker.shutdown();
-            } catch (Exception ignored) {
-            }
-            try {
-                scheduler.close();
-            } catch (Exception ignored) {
-            }
-            try {
-                receive.blockLast();
-            } catch (Exception ignored) {
-            }
+            try { worker.shutdown(); } catch (Exception ignored) {}
+            try { scheduler.close(); } catch (Exception ignored) {}
+            try { receive.blockLast(); } catch (Exception ignored) {}
         }
     }
 
@@ -152,39 +128,26 @@ class CommandsTriggerTest {
         FlowListeners flowListenersServiceSpy = spy(this.flowListenersService);
 
         CommandsTrigger trigger = CommandsTrigger.builder()
-            .id("commands-stdout-match-trigger")
+            .id("commands-stdout-trigger")
             .type(CommandsTrigger.class.getName())
             .interval(Duration.ofSeconds(1))
             .exitCondition(Property.ofValue("toto"))
             .edge(Property.ofValue(true))
-            .containerImage(Property.ofValue("ubuntu"))
-            .commands(
-                Property.ofValue(
-                    List.of(
-                        "set -e",
-                        "echo \"toto\" > toto.txt",
-                        "ls -l",
-                        // Emit structured outputs so the trigger has something deterministic to evaluate
-                        "echo '::{\"outputs\":{\"listing\":\"toto\"}}::'"
-                    )
-                )
-            )
+            .commands(Property.ofValue(List.of(
+                "node -e \"console.log('::{\\\"outputs\\\":{\\\"key\\\":\\\"toto\\\"}}::')\""
+            )))
             .build();
 
         Flow testFlow = Flow.builder()
-            .id("commands-stdout-match-flow")
+            .id("commands-stdout-flow")
             .namespace("io.kestra.tests")
             .revision(1)
-            .tasks(
-                Collections.singletonList(
-                    Return.builder()
-                        .id("log-trigger-vars")
-                        .type(Return.class.getName())
-                        .format(Property.ofValue("exitCode={{ trigger.exitCode }}, condition={{ trigger.condition }}"))
-                        .build()
-                )
-            )
             .triggers(Collections.singletonList(trigger))
+            .tasks(Collections.singletonList(Return.builder()
+                .id("log")
+                .type(Return.class.getName())
+                .format(Property.ofValue("ok"))
+                .build()))
             .build();
 
         FlowWithSource flow = FlowWithSource.of(testFlow, null);
@@ -193,9 +156,8 @@ class CommandsTriggerTest {
         CountDownLatch queueCount = new CountDownLatch(1);
         AtomicReference<Execution> lastExecution = new AtomicReference<>();
 
-        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution ->
-        {
-            if (execution.getLeft().getFlowId().equals("commands-stdout-match-flow")) {
+        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution -> {
+            if (execution.getLeft().getFlowId().equals("commands-stdout-flow")) {
                 lastExecution.set(execution.getLeft());
                 queueCount.countDown();
             }
@@ -228,25 +190,13 @@ class CommandsTriggerTest {
 
             Map<String, Object> triggerVars = execution.getTrigger().getVariables();
             assertThat("condition should be present", triggerVars.get("condition"), is("toto"));
-            assertThat("exitCode should be present", triggerVars.get("exitCode"), notNullValue());
             assertThat("exitCode should be 0", triggerVars.get("exitCode"), is(0));
             assertThat("timestamp should be present", triggerVars.get("timestamp"), notNullValue());
-
-            Object vars = triggerVars.get("vars");
-            assertThat("vars should be present (best effort)", vars, notNullValue());
+            assertThat("vars should be present", triggerVars.get("vars"), notNullValue());
         } finally {
-            try {
-                worker.shutdown();
-            } catch (Exception ignored) {
-            }
-            try {
-                scheduler.close();
-            } catch (Exception ignored) {
-            }
-            try {
-                receive.blockLast();
-            } catch (Exception ignored) {
-            }
+            try { worker.shutdown(); } catch (Exception ignored) {}
+            try { scheduler.close(); } catch (Exception ignored) {}
+            try { receive.blockLast(); } catch (Exception ignored) {}
         }
     }
 }

@@ -1,5 +1,13 @@
 package io.kestra.plugin.scripts.shell;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.conditions.ConditionContext;
@@ -11,18 +19,11 @@ import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.core.runner.Process;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @SuperBuilder
 @ToString
@@ -213,7 +214,8 @@ public class ScriptTrigger extends AbstractTrigger
         }
     }
 
-    private record ExtractedFailure(Integer exitCode, String logs) {}
+    private record ExtractedFailure(Integer exitCode, String logs) {
+    }
 
     private ExtractedFailure extractFailure(RunnableTaskException e) {
         Integer exitCode = null;
@@ -226,7 +228,8 @@ public class ScriptTrigger extends AbstractTrigger
                 // Best-effort: TaskException carries a log consumer; toString() usually contains aggregated logs.
                 try {
                     logs = te.getLogConsumer() != null ? te.getLogConsumer().toString() : null;
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
                 break;
             }
             cur = cur.getCause();

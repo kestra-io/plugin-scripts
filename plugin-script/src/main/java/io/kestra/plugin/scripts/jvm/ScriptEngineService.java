@@ -1,13 +1,16 @@
 package io.kestra.plugin.scripts.jvm;
 
-import io.kestra.core.runners.RunContext;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import org.slf4j.Logger;
-
-import javax.script.*;
 import java.util.HashMap;
 import java.util.function.Supplier;
+
+import javax.script.*;
+
+import org.slf4j.Logger;
+
+import io.kestra.core.runners.RunContext;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 @Deprecated
 public abstract class ScriptEngineService {
@@ -26,7 +29,8 @@ public abstract class ScriptEngineService {
         map.put("runContext", runContext);
         map.put("logger", logger);
 
-        return new CompiledScript(engine, ((Compilable) engine).compile(script), () -> {
+        return new CompiledScript(engine, ((Compilable) engine).compile(script), () ->
+        {
             Bindings bindings = engine.createBindings();
             bindings.putAll(map);
 

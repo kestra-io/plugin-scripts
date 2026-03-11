@@ -1,8 +1,14 @@
 package io.kestra.plugin.scripts.powershell;
 
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.enums.MonacoLanguages;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
@@ -12,17 +18,11 @@ import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-
-import io.kestra.core.models.enums.MonacoLanguages;
-import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -52,8 +52,8 @@ import io.kestra.core.models.annotations.PluginProperty;
         @Example(
             full = true,
             title = """
-            If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{ outputDir }}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{ outputs.yourTaskId.outputFiles['yourFileName.fileExtension'] }}`.
-            """,
+                If you want to generate files in your script to make them available for download and use in downstream tasks, you can leverage the `{{ outputDir }}` variable. Files stored in that directory will be persisted in Kestra's internal storage. To access this output in downstream tasks, use the syntax `{{ outputs.yourTaskId.outputFiles['yourFileName.fileExtension'] }}`.
+                """,
             code = """
                 id: powershell_generate_files
                 namespace: company.team
@@ -117,9 +117,13 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         return commands
             .withInterpreter(this.interpreter)
             .withBeforeCommands(Property.ofValue(getBeforeCommandsWithOptions(runContext)))
-            .withCommands(Property.ofValue((List.of(
-                commands.getTaskRunner().toAbsolutePath(runContext, commands, ".\\" + relativeScriptPath, os)
-            ))))
+            .withCommands(
+                Property.ofValue(
+                    (List.of(
+                        commands.getTaskRunner().toAbsolutePath(runContext, commands, ".\\" + relativeScriptPath, os)
+                    ))
+                )
+            )
             .withTargetOS(os)
             .run();
     }

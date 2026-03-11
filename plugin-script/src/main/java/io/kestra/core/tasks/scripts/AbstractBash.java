@@ -1,5 +1,14 @@
 package io.kestra.core.tasks.scripts;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
@@ -15,19 +24,11 @@ import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.kestra.plugin.scripts.runner.docker.Docker;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import static io.kestra.core.utils.Rethrow.throwBiConsumer;
 import static io.kestra.core.utils.Rethrow.throwConsumer;
@@ -64,7 +65,7 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
         title = "Interpreter arguments to be used."
     )
     @PluginProperty
-    protected String[] interpreterArgs = {"-c"};
+    protected String[] interpreterArgs = { "-c" };
 
     @Builder.Default
     @Schema(
@@ -224,7 +225,7 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
         );
 
         var taskRunner = switch (runContext.render(this.runner).as(RunnerType.class).orElseThrow()) {
-            case DOCKER ->  Docker.from(this.getDockerOptions()).toBuilder().fileHandlingStrategy(Property.ofValue(Docker.FileHandlingStrategy.MOUNT)).build();
+            case DOCKER -> Docker.from(this.getDockerOptions()).toBuilder().fileHandlingStrategy(Property.ofValue(Docker.FileHandlingStrategy.MOUNT)).build();
             case PROCESS -> Process.instance();
         };
 
@@ -240,7 +241,8 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
         Map<String, URI> uploaded = new HashMap<>();
 
         // upload regular output files
-        outputFilePaths.forEach(throwBiConsumer((key, filePath) -> {
+        outputFilePaths.forEach(throwBiConsumer((key, filePath) ->
+        {
             File file = new File(runContext.render(filePath, additionalVars));
             if (file.exists() && file.isFile()) {
                 uploaded.put(key, runContext.storage().putFile(file));
@@ -250,13 +252,15 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
         }));
 
         // upload files from deprecated output directories
-        outputDirPaths.forEach(throwBiConsumer((key, dirPath) -> {
+        outputDirPaths.forEach(throwBiConsumer((key, dirPath) ->
+        {
             File dir = new File(runContext.render(dirPath, additionalVars));
             if (dir.exists() && dir.isDirectory()) {
                 try (Stream<Path> walk = Files.walk(dir.toPath())) {
                     walk
                         .filter(Files::isRegularFile)
-                        .forEach(throwConsumer(path -> {
+                        .forEach(throwConsumer(path ->
+                        {
                             String filename = Path.of(
                                 key,
                                 dir.toPath().relativize(path).toString()

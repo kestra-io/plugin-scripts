@@ -1,5 +1,10 @@
 package io.kestra.plugin.scripts.jbang;
 
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
@@ -12,15 +17,11 @@ import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 @SuperBuilder
 @ToString
@@ -134,7 +135,6 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     @Builder.Default
     private Property<Boolean> quiet = Property.ofValue(true);
 
-
     @Override
     protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
         var builder = original.toBuilder();
@@ -164,9 +164,16 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
             .withInterpreter(this.interpreter)
             .withBeforeCommands(beforeCommands)
             .withBeforeCommandsWithOptions(true)
-            .withCommands(Property.ofValue(List.of(
-                String.join(" ", "jbang", runContext.render(quiet).as(Boolean.class).orElseThrow() ? "--quiet" : "", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
-            )))
+            .withCommands(
+                Property.ofValue(
+                    List.of(
+                        String.join(
+                            " ", "jbang", runContext.render(quiet).as(Boolean.class).orElseThrow() ? "--quiet" : "",
+                            commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os)
+                        )
+                    )
+                )
+            )
             .run();
     }
 }

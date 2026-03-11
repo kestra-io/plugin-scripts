@@ -1,10 +1,9 @@
 package io.kestra.plugin.scripts.nashorn;
 
+import java.util.UUID;
 
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.property.Property;
-
-import java.util.UUID;
 
 @KestraTest
 class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
@@ -14,13 +13,16 @@ class FileTransformTest extends io.kestra.plugin.scripts.jvm.FileTransformTest {
             .id("nashorn-transform-" + UUID.randomUUID())
             .type(FileTransform.class.getName())
             .from(source)
-            .script(Property.ofValue("logger.info('row: {}', row)\n" +
-                "if (row['name'] == 'richard') {\n" +
-                "  row = null;\n" +
-                "} else {\n" +
-                "  row['email'] = row['name'] + '@kestra.io';\n" +
-                "}\n"
-            ))
+            .script(
+                Property.ofValue(
+                    "logger.info('row: {}', row)\n" +
+                        "if (row['name'] == 'richard') {\n" +
+                        "  row = null;\n" +
+                        "} else {\n" +
+                        "  row['email'] = row['name'] + '@kestra.io';\n" +
+                        "}\n"
+                )
+            )
             .build();
     }
 

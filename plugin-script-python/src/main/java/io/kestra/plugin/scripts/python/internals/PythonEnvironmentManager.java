@@ -1,14 +1,5 @@
 package io.kestra.plugin.scripts.python.internals;
 
-import io.kestra.core.exceptions.IllegalVariableEvaluationException;
-import io.kestra.core.models.executions.metrics.Timer;
-import io.kestra.core.models.property.Property;
-import io.kestra.core.models.tasks.runners.TaskRunner;
-import io.kestra.core.runners.DefaultRunContext;
-import io.kestra.core.runners.RunContext;
-import io.kestra.plugin.core.runner.Process;
-import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,7 +10,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static io.kestra.plugin.scripts.python.internals.PythonBasedPlugin.DEFAULT_IMAGE;
+import io.kestra.core.exceptions.IllegalVariableEvaluationException;
+import io.kestra.core.models.executions.metrics.Timer;
+import io.kestra.core.models.property.Property;
+import io.kestra.core.models.tasks.runners.TaskRunner;
+import io.kestra.core.runners.DefaultRunContext;
+import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.core.runner.Process;
+import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
+
 import static io.kestra.plugin.scripts.python.internals.PythonBasedPlugin.DEFAULT_PYTHON_VERSION;
 
 public class PythonEnvironmentManager {
@@ -36,10 +35,9 @@ public class PythonEnvironmentManager {
     private final PackageManagerType packageManager;
 
     public PythonEnvironmentManager(final RunContext runContext,
-                                final PythonBasedPlugin plugin) throws IllegalVariableEvaluationException {
+        final PythonBasedPlugin plugin) throws IllegalVariableEvaluationException {
         this(runContext, plugin, runContext.render(plugin.getPackageManager()).as(PackageManagerType.class).orElse(PackageManagerType.UV));
     }
-
 
     /**
      * Creates a new {@link PythonBasedPlugin} instance.
@@ -47,7 +45,7 @@ public class PythonEnvironmentManager {
      * @param plugin The plugin for which the environment will be managed.
      */
     public PythonEnvironmentManager(final RunContext runContext,
-                                    final PythonBasedPlugin plugin, final PackageManagerType packageManager) throws IllegalVariableEvaluationException {
+        final PythonBasedPlugin plugin, final PackageManagerType packageManager) throws IllegalVariableEvaluationException {
         this.plugin = plugin;
         this.runContext = runContext;
         this.isDependencyCacheEnabled = runContext.render(this.plugin.getDependencyCacheEnabled()).as(Boolean.class).orElse(true);
@@ -55,7 +53,8 @@ public class PythonEnvironmentManager {
         this.packageManager = packageManager != null ? packageManager : PackageManagerType.PIP;
     }
 
-    public ResolvedPythonEnvironment setup(final Property<String> containerImage, final TaskRunner<?> taskRunner, final RunnerType runnerType) throws IllegalVariableEvaluationException, IOException {
+    public ResolvedPythonEnvironment setup(final Property<String> containerImage, final TaskRunner<?> taskRunner, final RunnerType runnerType)
+        throws IllegalVariableEvaluationException, IOException {
         List<String> requirements = new ArrayList<>(runContext.render(plugin.getDependencies()).asList(String.class));
 
         final Path localCacheDir = getLocalCacheDir();
@@ -104,7 +103,7 @@ public class PythonEnvironmentManager {
     }
 
     private String getCacheKey() {
-        return "python-dependencies-v"+ CACHE_FORMAT_VERSION + "-" + plugin.getType();
+        return "python-dependencies-v" + CACHE_FORMAT_VERSION + "-" + plugin.getType();
     }
 
     private String logAndGetPythonDefaultVersion() {
@@ -135,7 +134,8 @@ public class PythonEnvironmentManager {
         }
     }
 
-    private Optional<String> getTargetPythonVersion(final Property<String> containerImage, final TaskRunner<?> taskRunner, final RunnerType runnerType) throws IllegalVariableEvaluationException {
+    private Optional<String> getTargetPythonVersion(final Property<String> containerImage, final TaskRunner<?> taskRunner, final RunnerType runnerType)
+        throws IllegalVariableEvaluationException {
         String pyVersion = null;
         if (pythonVersion != null) {
             pyVersion = pythonVersion;
@@ -152,14 +152,13 @@ public class PythonEnvironmentManager {
     /**
      * Resolved Python Environment with Interpreter and Packages.
      *
-     * @param cached      whether the python packages was resolved from cache.
-     * @param packages    the python packages
+     * @param cached whether the python packages was resolved from cache.
+     * @param packages the python packages
      * @param interpreter the python interpreter.
      */
     public record ResolvedPythonEnvironment(
         boolean cached,
         ResolvedPythonPackages packages,
-        String interpreter
-    ) {
+        String interpreter) {
     }
 }

@@ -1,5 +1,8 @@
 package io.kestra.plugin.scripts.powershell;
 
+import java.util.Collections;
+import java.util.List;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
@@ -10,13 +13,11 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.util.Collections;
-import java.util.List;
 
 @SuperBuilder
 @ToString
@@ -27,25 +28,27 @@ import java.util.List;
     title = "Execute PowerShell files and commands.",
     description = "Executes provided PowerShell commands in order using the default 'ghcr.io/kestra-io/powershell:latest' image unless overridden. Supports inputFiles and beforeCommands to stage scripts/modules; enable namespaceFiles if referencing files stored in the Namespace — best for running existing .ps1 files instead of inline scripts."
 )
-@Plugin(examples = {
-    @Example(
-        full = true,
-        title = "Execute PowerShell commands.",
-        code = """
-            id: execute_powershell_commands
-            namespace: company.team
+@Plugin(
+    examples = {
+        @Example(
+            full = true,
+            title = "Execute PowerShell commands.",
+            code = """
+                id: execute_powershell_commands
+                namespace: company.team
 
-            tasks:
-              - id: powershell
-                type: io.kestra.plugin.scripts.powershell.Commands
-                inputFiles:
-                  main.ps1: |
-                    'Hello, World!' | Write-Output
-                commands:
-                  - ./main.ps1
-            """
-    )
-})
+                tasks:
+                  - id: powershell
+                    type: io.kestra.plugin.scripts.powershell.Commands
+                    inputFiles:
+                      main.ps1: |
+                        'Hello, World!' | Write-Output
+                    commands:
+                      - ./main.ps1
+                """
+        )
+    }
+)
 public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "ghcr.io/kestra-io/powershell:latest";
 
