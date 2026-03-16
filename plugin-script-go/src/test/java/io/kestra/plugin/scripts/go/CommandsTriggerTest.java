@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,7 @@ import jakarta.inject.Named;
 import reactor.core.publisher.Flux;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.doReturn;
@@ -242,6 +244,189 @@ class CommandsTriggerTest {
                 receive.blockLast();
             } catch (Exception ignored) {
             }
+        }
+    }
+
+    @Test
+    void commandsTrigger_edgeModeShouldSuppressSecondEmission() throws Exception {
+        FlowListeners flowListenersServiceSpy = spy(this.flowListenersService);
+
+        CommandsTrigger trigger = CommandsTrigger.builder()
+            .id("commands-edge-trigger")
+            .type(CommandsTrigger.class.getName())
+            .interval(Duration.ofSeconds(1))
+            .exitCondition(Property.ofValue("exit 1"))
+            .edge(Property.ofValue(true))
+            .containerImage(Property.ofValue("ubuntu"))
+            .commands(Property.ofValue(List.of("exit 1")))
+            .build();
+
+        Flow testFlow = Flow.builder()
+            .id("commands-edge-flow")
+            .namespace("io.kestra.tests")
+            .revision(1)
+            .tasks(Collections.singletonList(
+                Return.builder()
+                    .id("log")
+                    .type(Return.class.getName())
+                    .format(Property.ofValue("ok"))
+                    .build()
+            ))
+            .triggers(Collections.singletonList(trigger))
+            .build();
+
+        FlowWithSource flow = FlowWithSource.of(testFlow, null);
+        doReturn(List.of(flow)).when(flowListenersServiceSpy).flows();
+
+        AtomicInteger executionCount = new AtomicInteger(0);
+        CountDownLatch firstExecution = new CountDownLatch(1);
+
+        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution -> {
+            if (execution.getLeft().getFlowId().equals("commands-edge-flow")) {
+                executionCount.incrementAndGet();
+                firstExecution.countDown();
+            }
+        });
+
+        DefaultWorker worker = applicationContext.createBean(DefaultWorker.class, IdUtils.create(), 8, null);
+        AbstractScheduler scheduler = new JdbcScheduler(applicationContext, flowListenersServiceSpy);
+
+        try {
+            worker.run();
+            scheduler.run();
+
+            boolean fired = firstExecution.await(20, TimeUnit.SECONDS);
+            assertThat("Should fire at least once", fired, is(true));
+
+            // Wait for additional polls to verify edge suppression
+            Thread.sleep(Duration.ofSeconds(5).toMillis());
+
+            assertThat("Edge mode should suppress repeated emissions", executionCount.get(), is(1));
+        } finally {
+            try { worker.shutdown(); } catch (Exception ignored) {}
+            try { scheduler.close(); } catch (Exception ignored) {}
+            try { receive.blockLast(); } catch (Exception ignored) {}
+        }
+    }
+
+    @Test
+    void commandsTrigger_edgeFalseShouldEmitOnEveryMatch() throws Exception {
+        FlowListeners flowListenersServiceSpy = spy(this.flowListenersService);
+
+        CommandsTrigger trigger = CommandsTrigger.builder()
+            .id("commands-no-edge-trigger")
+            .type(CommandsTrigger.class.getName())
+            .interval(Duration.ofSeconds(1))
+            .exitCondition(Property.ofValue("exit 1"))
+            .edge(Property.ofValue(false))
+            .containerImage(Property.ofValue("ubuntu"))
+            .commands(Property.ofValue(List.of("exit 1")))
+            .build();
+
+        Flow testFlow = Flow.builder()
+            .id("commands-no-edge-flow")
+            .namespace("io.kestra.tests")
+            .revision(1)
+            .tasks(Collections.singletonList(
+                Return.builder()
+                    .id("log")
+                    .type(Return.class.getName())
+                    .format(Property.ofValue("ok"))
+                    .build()
+            ))
+            .triggers(Collections.singletonList(trigger))
+            .build();
+
+        FlowWithSource flow = FlowWithSource.of(testFlow, null);
+        doReturn(List.of(flow)).when(flowListenersServiceSpy).flows();
+
+        CountDownLatch twoExecutions = new CountDownLatch(2);
+
+        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution -> {
+            if (execution.getLeft().getFlowId().equals("commands-no-edge-flow")) {
+                twoExecutions.countDown();
+            }
+        });
+
+        DefaultWorker worker = applicationContext.createBean(DefaultWorker.class, IdUtils.create(), 8, null);
+        AbstractScheduler scheduler = new JdbcScheduler(applicationContext, flowListenersServiceSpy);
+
+        try {
+            worker.run();
+            scheduler.run();
+
+            boolean fired = twoExecutions.await(20, TimeUnit.SECONDS);
+            assertThat("edge=false should emit on every matching poll", fired, is(true));
+        } finally {
+            try { worker.shutdown(); } catch (Exception ignored) {}
+            try { scheduler.close(); } catch (Exception ignored) {}
+            try { receive.blockLast(); } catch (Exception ignored) {}
+        }
+    }
+
+    @Test
+    void commandsTrigger_shouldMatchRegexAgainstStructuredOutputs() throws Exception {
+        FlowListeners flowListenersServiceSpy = spy(this.flowListenersService);
+
+        CommandsTrigger trigger = CommandsTrigger.builder()
+            .id("commands-regex-trigger")
+            .type(CommandsTrigger.class.getName())
+            .interval(Duration.ofSeconds(1))
+            .exitCondition(Property.ofValue("status=\\w+"))
+            .edge(Property.ofValue(true))
+            .containerImage(Property.ofValue("ubuntu"))
+            .commands(Property.ofValue(List.of(
+                "echo '::{\"outputs\":{\"status\":\"status=ready\"}}::'"
+            )))
+            .build();
+
+        Flow testFlow = Flow.builder()
+            .id("commands-regex-flow")
+            .namespace("io.kestra.tests")
+            .revision(1)
+            .tasks(Collections.singletonList(
+                Return.builder()
+                    .id("log")
+                    .type(Return.class.getName())
+                    .format(Property.ofValue("ok"))
+                    .build()
+            ))
+            .triggers(Collections.singletonList(trigger))
+            .build();
+
+        FlowWithSource flow = FlowWithSource.of(testFlow, null);
+        doReturn(List.of(flow)).when(flowListenersServiceSpy).flows();
+
+        CountDownLatch queueCount = new CountDownLatch(1);
+        AtomicReference<Execution> lastExecution = new AtomicReference<>();
+
+        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution -> {
+            if (execution.getLeft().getFlowId().equals("commands-regex-flow")) {
+                lastExecution.set(execution.getLeft());
+                queueCount.countDown();
+            }
+        });
+
+        DefaultWorker worker = applicationContext.createBean(DefaultWorker.class, IdUtils.create(), 8, null);
+        AbstractScheduler scheduler = new JdbcScheduler(applicationContext, flowListenersServiceSpy);
+
+        try {
+            worker.run();
+            scheduler.run();
+
+            boolean await = queueCount.await(20, TimeUnit.SECONDS);
+            assertThat("Regex condition should match", await, is(true));
+
+            Execution execution = lastExecution.get();
+            assertThat(execution, notNullValue());
+
+            Map<String, Object> triggerVars = execution.getTrigger().getVariables();
+            assertThat("exitCode should be 0", triggerVars.get("exitCode"), is(0));
+            assertThat("vars should be present", triggerVars.get("vars"), notNullValue());
+        } finally {
+            try { worker.shutdown(); } catch (Exception ignored) {}
+            try { scheduler.close(); } catch (Exception ignored) {}
+            try { receive.blockLast(); } catch (Exception ignored) {}
         }
     }
 }
