@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -185,7 +188,14 @@ public class CommandsTrigger extends AbstractTrigger
         }
 
         try {
-            return Pattern.compile(cond).matcher(haystack).find();
+            // Guard against catastrophic backtracking (ReDoS) from user-supplied patterns
+            var pattern = Pattern.compile(cond);
+            var future = CompletableFuture.supplyAsync(
+                () -> pattern.matcher(haystack).find()
+            );
+            return future.get(5, TimeUnit.SECONDS);
+        } catch (TimeoutException te) {
+            return haystack.contains(cond);
         } catch (Exception e) {
             return haystack.contains(cond);
         }
