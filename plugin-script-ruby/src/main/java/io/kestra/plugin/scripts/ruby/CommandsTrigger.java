@@ -208,6 +208,9 @@ public class CommandsTrigger extends AbstractTrigger
     private String buildHaystack(Output out) {
         StringBuilder sb = new StringBuilder();
 
+        // Note: uses Map.toString() which produces {key=value, ...} format.
+        // This is intentional for simple substring/regex matching against output vars,
+        // but the exact format depends on the Map implementation.
         if (out.getVars() != null && !out.getVars().isEmpty()) {
             sb.append(out.getVars()).append("\n");
         }
