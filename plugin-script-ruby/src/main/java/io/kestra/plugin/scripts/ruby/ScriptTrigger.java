@@ -66,6 +66,9 @@ public class ScriptTrigger extends AbstractTrigger
 
     private static final String DEFAULT_IMAGE = "ruby";
 
+    private static final Pattern EXIT_CONDITION_PATTERN =
+        Pattern.compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE);
+
     @Schema(
         title = "Container image for script execution.",
         description = "Image used by the Script task to run the inline Ruby script; defaults to 'ruby'."
@@ -171,9 +174,7 @@ public class ScriptTrigger extends AbstractTrigger
     private boolean matchesCondition(Output out) {
         String cond = out.getCondition() == null ? "" : out.getCondition().trim();
 
-        Matcher exitMatcher = Pattern
-            .compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE)
-            .matcher(cond);
+        Matcher exitMatcher = EXIT_CONDITION_PATTERN.matcher(cond);
 
         if (exitMatcher.matches()) {
             int expected = Integer.parseInt(exitMatcher.group(1));

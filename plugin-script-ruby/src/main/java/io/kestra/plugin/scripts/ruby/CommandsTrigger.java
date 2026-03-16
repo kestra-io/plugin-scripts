@@ -66,6 +66,9 @@ public class CommandsTrigger extends AbstractTrigger
 
     private static final String DEFAULT_IMAGE = "ruby";
 
+    private static final Pattern EXIT_CONDITION_PATTERN =
+        Pattern.compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE);
+
     @Schema(
         title = "Docker image used to execute the commands.",
         description = """
@@ -176,8 +179,7 @@ public class CommandsTrigger extends AbstractTrigger
     private boolean matchesCondition(Output out) {
         String cond = out.getCondition() == null ? "" : out.getCondition().trim();
 
-        Matcher exitMatcher = Pattern.compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE)
-            .matcher(cond);
+        Matcher exitMatcher = EXIT_CONDITION_PATTERN.matcher(cond);
 
         if (exitMatcher.matches()) {
             int expected = Integer.parseInt(exitMatcher.group(1));
