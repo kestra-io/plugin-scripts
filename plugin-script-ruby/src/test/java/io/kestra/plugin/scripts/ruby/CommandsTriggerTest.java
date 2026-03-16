@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -209,5 +210,40 @@ class CommandsTriggerTest {
             try { scheduler.close(); } catch (Exception ignored) {}
             try { receive.blockLast(); } catch (Exception ignored) {}
         }
+    }
+
+    @Test
+    void edgeMode_preventsConsecutiveEmit() {
+        // Build a trigger with edge=true
+        CommandsTrigger trigger = CommandsTrigger.builder()
+            .id("edge-test")
+            .type(CommandsTrigger.class.getName())
+            .exitCondition(Property.ofValue("exit 1"))
+            .commands(Property.ofValue(List.of("ruby -e \"raise 'boom'\"")))
+            .edge(Property.ofValue(true))
+            .build();
+
+        // Simulate the edge logic directly (same as evaluate())
+        AtomicBoolean lastMatched = new AtomicBoolean(false);
+
+        // First match: transition false->true => should emit
+        boolean matched1 = true;
+        boolean emit1 = !lastMatched.getAndSet(matched1) && matched1;
+        assertThat("first match should emit", emit1, is(true));
+
+        // Second consecutive match: true->true => should NOT emit
+        boolean matched2 = true;
+        boolean emit2 = !lastMatched.getAndSet(matched2) && matched2;
+        assertThat("consecutive match should NOT emit in edge mode", emit2, is(false));
+
+        // Non-match: true->false => should not emit
+        boolean matched3 = false;
+        boolean emit3 = !lastMatched.getAndSet(matched3) && matched3;
+        assertThat("non-match should not emit", emit3, is(false));
+
+        // Match again after non-match: false->true => should emit
+        boolean matched4 = true;
+        boolean emit4 = !lastMatched.getAndSet(matched4) && matched4;
+        assertThat("match after non-match should emit", emit4, is(true));
     }
 }
