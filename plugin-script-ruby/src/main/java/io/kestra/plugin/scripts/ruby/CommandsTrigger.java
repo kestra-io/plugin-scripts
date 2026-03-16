@@ -254,6 +254,10 @@ public class CommandsTrigger extends AbstractTrigger
     @Data
     @AllArgsConstructor
     public static class Output implements io.kestra.core.models.tasks.Output {
+        @Schema(
+            title = "Poll timestamp.",
+            description = "Timestamp when this trigger evaluation occurred."
+        )
         private Instant timestamp;
 
         @Schema(
