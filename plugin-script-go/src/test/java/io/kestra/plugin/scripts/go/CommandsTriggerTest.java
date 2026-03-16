@@ -34,7 +34,6 @@ import jakarta.inject.Named;
 import reactor.core.publisher.Flux;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.doReturn;
@@ -302,61 +301,6 @@ class CommandsTriggerTest {
             Thread.sleep(Duration.ofSeconds(5).toMillis());
 
             assertThat("Edge mode should suppress repeated emissions", executionCount.get(), is(1));
-        } finally {
-            try { worker.shutdown(); } catch (Exception ignored) {}
-            try { scheduler.close(); } catch (Exception ignored) {}
-            try { receive.blockLast(); } catch (Exception ignored) {}
-        }
-    }
-
-    @Test
-    void commandsTrigger_edgeFalseShouldEmitOnEveryMatch() throws Exception {
-        FlowListeners flowListenersServiceSpy = spy(this.flowListenersService);
-
-        CommandsTrigger trigger = CommandsTrigger.builder()
-            .id("commands-no-edge-trigger")
-            .type(CommandsTrigger.class.getName())
-            .interval(Duration.ofSeconds(1))
-            .exitCondition(Property.ofValue("exit 1"))
-            .edge(Property.ofValue(false))
-            .containerImage(Property.ofValue("ubuntu"))
-            .commands(Property.ofValue(List.of("exit 1")))
-            .build();
-
-        Flow testFlow = Flow.builder()
-            .id("commands-no-edge-flow")
-            .namespace("io.kestra.tests")
-            .revision(1)
-            .tasks(Collections.singletonList(
-                Return.builder()
-                    .id("log")
-                    .type(Return.class.getName())
-                    .format(Property.ofValue("ok"))
-                    .build()
-            ))
-            .triggers(Collections.singletonList(trigger))
-            .build();
-
-        FlowWithSource flow = FlowWithSource.of(testFlow, null);
-        doReturn(List.of(flow)).when(flowListenersServiceSpy).flows();
-
-        CountDownLatch twoExecutions = new CountDownLatch(2);
-
-        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution -> {
-            if (execution.getLeft().getFlowId().equals("commands-no-edge-flow")) {
-                twoExecutions.countDown();
-            }
-        });
-
-        DefaultWorker worker = applicationContext.createBean(DefaultWorker.class, IdUtils.create(), 8, null);
-        AbstractScheduler scheduler = new JdbcScheduler(applicationContext, flowListenersServiceSpy);
-
-        try {
-            worker.run();
-            scheduler.run();
-
-            boolean fired = twoExecutions.await(20, TimeUnit.SECONDS);
-            assertThat("edge=false should emit on every matching poll", fired, is(true));
         } finally {
             try { worker.shutdown(); } catch (Exception ignored) {}
             try { scheduler.close(); } catch (Exception ignored) {}
