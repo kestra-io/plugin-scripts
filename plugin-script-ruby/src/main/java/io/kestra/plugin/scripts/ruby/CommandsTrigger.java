@@ -108,6 +108,8 @@ public class CommandsTrigger extends AbstractTrigger
     @Builder.Default
     protected Property<Boolean> edge = Property.ofValue(true);
 
+    // Known limitation: in-memory only — resets when the trigger is rehydrated (e.g. after restart),
+    // so edge mode may re-fire once after a scheduler restart.
     @Builder.Default
     @Getter(AccessLevel.NONE)
     private final AtomicBoolean lastMatched = new AtomicBoolean(false);
