@@ -59,6 +59,8 @@ import java.util.regex.Pattern;
         )
     }
 )
+// TODO: extract shared trigger logic (evaluate, matchesCondition, extractFailure, Output)
+//  into an AbstractScriptTrigger in plugin-script to reduce duplication across Shell, Node, Ruby, etc.
 public class ScriptTrigger extends AbstractTrigger
     implements PollingTriggerInterface, TriggerOutput<ScriptTrigger.Output> {
 
