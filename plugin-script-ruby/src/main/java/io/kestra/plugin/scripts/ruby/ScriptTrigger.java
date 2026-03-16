@@ -171,7 +171,7 @@ public class ScriptTrigger extends AbstractTrigger
         }
     }
 
-    private boolean matchesCondition(Output out) {
+    boolean matchesCondition(Output out) {
         String cond = out.getCondition() == null ? "" : out.getCondition().trim();
 
         Matcher exitMatcher = EXIT_CONDITION_PATTERN.matcher(cond);
