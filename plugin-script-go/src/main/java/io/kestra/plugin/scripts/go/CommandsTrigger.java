@@ -58,7 +58,7 @@ import lombok.experimental.SuperBuilder;
                     interval: PT10S
                     exitCondition: "exit 1"
                     edge: true
-                    containerImage: ubuntu
+                    containerImage: golang
                     commands:
                       - go run missing.go
 
@@ -73,13 +73,13 @@ import lombok.experimental.SuperBuilder;
 public class CommandsTrigger extends AbstractTrigger
     implements PollingTriggerInterface, TriggerOutput<CommandsTrigger.Output> {
 
-    private static final String DEFAULT_IMAGE = "ubuntu";
+    private static final String DEFAULT_IMAGE = "golang";
 
     @Schema(
         title = "Docker image used to execute the commands.",
         description = """
             Container image used by the underlying Commands task to run Go commands.
-            Defaults to 'ubuntu'.
+            Defaults to 'golang'.
             """
     )
     @Builder.Default

@@ -43,7 +43,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Schema(
     title = "Trigger on Go script condition",
-    description = "Polls by running an inline Go script in a container (default image ubuntu) and emits when exitCondition matches. Supports edge mode to emit only on transitions and polls every 60s by default. Accepts 'exit N' or a regex (fallback substring) matched against emitted vars and failure logs."
+    description = "Polls by running an inline Go script in a container (default image golang) and emits when exitCondition matches. Supports edge mode to emit only on transitions and polls every 60s by default. Accepts 'exit N' or a regex (fallback substring) matched against emitted vars and failure logs."
 )
 @Plugin(
     examples = {
@@ -60,7 +60,7 @@ import lombok.experimental.SuperBuilder;
                     interval: PT10S
                     exitCondition: "exit 1"
                     edge: true
-                    containerImage: ubuntu
+                    containerImage: golang
                     script: |
                       package main
                       import "os"
@@ -80,12 +80,12 @@ import lombok.experimental.SuperBuilder;
 public class ScriptTrigger extends AbstractTrigger
     implements PollingTriggerInterface, TriggerOutput<ScriptTrigger.Output> {
 
-    private static final String DEFAULT_IMAGE = "ubuntu";
+    private static final String DEFAULT_IMAGE = "golang";
 
     @Schema(
         title = "Container image for script execution",
         description = """
-            Image used by the Script task to run the inline Go script; defaults to 'ubuntu'.
+            Image used by the Script task to run the inline Go script; defaults to 'golang'.
             Provide an image that includes Go runtime tooling.
             """
     )
