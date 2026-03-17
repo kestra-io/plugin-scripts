@@ -287,7 +287,7 @@ class ScriptTest {
 
         assertThat(run.getVars().get("test"), is("value"));
         assertThat(run.getVars().get("int"), is(2));
-        assertThat(run.getVars().get("bool"), is(true));
+        assertThat(run.getVars().get("bool"), is("True"));
         assertThat(run.getVars().get("float"), is(3.65));
 
         assertThat(getMetrics(runContext, "count").getValue(), is(1D));

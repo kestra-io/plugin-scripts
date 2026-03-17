@@ -110,7 +110,7 @@ class PythonTest {
         ScriptOutput run = python.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
-        assertThat(run.getVars().get("ok"), is(true));
+        assertThat(run.getVars().get("ok"), is("True"));
     }
 
     @Test
@@ -244,12 +244,12 @@ class PythonTest {
 
         assertThat(run.getVars().get("test"), is("value"));
         assertThat(run.getVars().get("int"), is(2));
-        assertThat(run.getVars().get("bool"), is(true));
+        assertThat(run.getVars().get("bool"), is("True"));
         assertThat(run.getVars().get("float"), is(3.65));
 
         assertThat(run.getVars().get("test"), is("value"));
         assertThat(run.getVars().get("int"), is(2));
-        assertThat(run.getVars().get("bool"), is(true));
+        assertThat(run.getVars().get("bool"), is("True"));
         assertThat(run.getVars().get("float"), is(3.65));
 
         assertThat(getMetrics(runContext, "count").getValue(), is(1D));

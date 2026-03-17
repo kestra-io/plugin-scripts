@@ -23,9 +23,19 @@ class Kestra:
         })
 
     @staticmethod
+    def _convert_booleans(obj):
+        if isinstance(obj, bool):
+            return str(obj)
+        elif isinstance(obj, dict):
+            return {k: Kestra._convert_booleans(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [Kestra._convert_booleans(item) for item in obj]
+        return obj
+
+    @staticmethod
     def outputs(map):
         Kestra._send({
-            "outputs": map
+            "outputs": Kestra._convert_booleans(map)
         })
 
     @staticmethod
