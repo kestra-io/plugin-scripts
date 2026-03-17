@@ -18,6 +18,7 @@ import lombok.experimental.SuperBuilder;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -125,6 +126,9 @@ public class ScriptTrigger extends AbstractTrigger
             .taskRunner(Process.instance())
             .containerImage(this.containerImage)
             .script(this.script)
+            .pythonVersion(Property.ofValue("3.13"))
+            .dependencies(Property.ofValue(Collections.emptyList()))
+            .dependencyCacheEnabled(Property.ofValue(false))
             .build();
 
         String renderedCondition = runContext.render(this.exitCondition)
