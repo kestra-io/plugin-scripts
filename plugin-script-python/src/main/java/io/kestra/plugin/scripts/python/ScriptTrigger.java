@@ -248,12 +248,28 @@ public class ScriptTrigger extends AbstractTrigger
 
         private Instant timestamp;
 
+        @Schema(
+            title = "Rendered condition.",
+            description = "Rendered value of the exitCondition property for this poll."
+        )
         private String condition;
 
+        @Schema(
+            title = "Script exit code.",
+            description = "Exit code returned by the Python process (may be null if not available)."
+        )
         private Integer exitCode;
 
+        @Schema(
+            title = "Script vars.",
+            description = "Vars produced by the task (e.g. via ::{\"outputs\":{...}}:: convention)."
+        )
         private Map<String, Object> vars;
 
+        @Schema(
+            title = "Captured logs (best effort).",
+            description = "Captured error logs when the script fails (best effort, depends on the runner)."
+        )
         private String logs;
     }
 }
