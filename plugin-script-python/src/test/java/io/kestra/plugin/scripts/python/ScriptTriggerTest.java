@@ -59,9 +59,7 @@ class ScriptTriggerTest {
             .exitCondition(Property.ofValue("exit 1"))
             .edge(Property.ofValue(true))
             .containerImage(Property.ofValue("python:3.11-slim"))
-            .script(Property.ofValue(
-                "python3 -c \"raise Exception('boom')\""
-            ))
+            .script(Property.ofValue("raise Exception('boom')"))
             .build();
 
         Flow testFlow = Flow.builder()
@@ -138,9 +136,8 @@ class ScriptTriggerTest {
             .exitCondition(Property.ofValue("toto"))
             .edge(Property.ofValue(true))
             .containerImage(Property.ofValue("python:3.11-slim"))
-            .script(Property.ofValue(
-                "print('::' + '{\"outputs\":{\"key\":\"toto\"}}' + '::')"
-            ))
+            .script(Property.ofValue("print('::{\"outputs\":{\"key\":\"toto\"}}::')"))
+
             .build();
 
         Flow testFlow = Flow.builder()
