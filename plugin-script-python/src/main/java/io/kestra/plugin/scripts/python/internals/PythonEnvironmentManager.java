@@ -112,9 +112,8 @@ public class PythonEnvironmentManager {
     }
 
     private Path getLocalCacheDir() {
-        return ((DefaultRunContext) runContext).getApplicationContext().getEnvironment().getProperty("kestra.tasks.tmp-dir.path", String.class)
-            .map(Path::of)
-            .orElse(Path.of(System.getProperty("java.io.tmpdir")));
+        // get the parent of the working dir to avoid cleaning the cache when cleaning the working dir
+        return runContext.workingDir().path().getParent();
     }
 
     public boolean isCacheEnabled() {
