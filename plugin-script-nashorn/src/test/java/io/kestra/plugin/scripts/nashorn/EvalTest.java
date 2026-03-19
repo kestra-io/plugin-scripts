@@ -15,7 +15,7 @@ class EvalTest extends io.kestra.plugin.scripts.jvm.EvalTest {
             .type(Eval.class.getName())
             .outputs(Property.ofValue(Arrays.asList("out", "map")))
             .script(
-                new Property<>(
+                Property.ofExpression(
                     "var Counter = Java.type('io.kestra.core.models.executions.metrics.Counter');\n" +
                         "var File = Java.type('java.io.File');\n" +
                         "var FileOutputStream = Java.type('java.io.FileOutputStream');\n" +
