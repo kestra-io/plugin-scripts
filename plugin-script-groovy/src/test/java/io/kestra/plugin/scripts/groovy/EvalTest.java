@@ -15,7 +15,7 @@ class EvalTest extends io.kestra.plugin.scripts.jvm.EvalTest {
             .type(Eval.class.getName())
             .outputs(Property.ofValue(Arrays.asList("out", "map")))
             .script(
-                new Property<>(
+                Property.ofExpression(
                     "import io.kestra.core.models.executions.metrics.Counter\n" +
                         "\n" +
                         "logger.info('executionId: {}', runContext.render('{{ execution.id }}'))\n" +
