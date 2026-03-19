@@ -232,7 +232,7 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
         ScriptOutput run = new CommandsWrapper(runContext)
             .withEnv(this.finalEnv(runContext))
             .withTaskRunner(taskRunner)
-            .withCommands(Property.ofValue(JacksonMapper.ofJson().writeValueAsString(commandsArgs)))
+            .withCommands(Property.ofValue(commandsArgs))
             .withOutputFiles(allOutputs)
             .addAdditionalVars(this.additionalVars)
             .run();
