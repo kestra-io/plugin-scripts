@@ -17,7 +17,6 @@ import io.kestra.core.models.tasks.Task;
 import io.kestra.core.models.tasks.runners.PluginUtilsService;
 import io.kestra.core.models.tasks.runners.ScriptService;
 import io.kestra.core.runners.RunContext;
-import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.plugin.core.runner.Process;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
