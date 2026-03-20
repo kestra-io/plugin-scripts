@@ -107,7 +107,19 @@ public class PythonEnvironmentManager {
     }
 
     private String logAndGetPythonDefaultVersion() {
-        runContext.logger().warn("No Python Version found. Using default version: '{}'", DEFAULT_PYTHON_VERSION);
+        runContext.logger().warn(
+            "Could not determine Python version automatically. Using fallback version '{}' for dependency resolution and cache key computation. Set 'pythonVersion' explicitly if needed.",
+            DEFAULT_PYTHON_VERSION
+        );
+        return DEFAULT_PYTHON_VERSION;
+    }
+
+    private String logAndGetPythonDefaultVersionForContainer(final String containerImage) {
+        runContext.logger().warn(
+            "Could not infer Python version from container image '{}'. Using fallback version '{}' for dependency resolution and cache key computation; container runtime Python may differ. Set 'pythonVersion' explicitly or use a versioned Python image tag.",
+            containerImage,
+            DEFAULT_PYTHON_VERSION
+        );
         return DEFAULT_PYTHON_VERSION;
     }
 
@@ -144,7 +156,7 @@ public class PythonEnvironmentManager {
                 .filter(PythonEnvironmentManager::looksLikePythonVersion)
                 .orElse(null);
             if (pyVersion == null) {
-                pyVersion = logAndGetPythonDefaultVersion();
+                pyVersion = logAndGetPythonDefaultVersionForContainer(container);
             }
         }
         return Optional.ofNullable(pyVersion);

@@ -23,9 +23,8 @@ public abstract class AbstractPythonExecScript extends AbstractExecScript implem
 
     @Schema(
         title = "The container image to use for the script.",
-        description = """
-            Defaults to `python:3.13-slim`. The Python version is auto-detected from the image tag when it matches the pattern `python:<version>` (e.g. `python:3.12`, `python:3.13-slim`). For other images, set `pythonVersion` explicitly.
-            """
+        description = "Defaults to `" + DEFAULT_IMAGE + "`. The Python version is auto-detected from the image tag when it matches the pattern `python:<version>` (e.g. `python:3.12`, `" + DEFAULT_IMAGE + "`). Tags like `latest` or custom images will not be detected.\n" +
+            "If version inference fails, Kestra uses Python " + DEFAULT_PYTHON_VERSION + " for dependency resolution and cache key computation, while the interpreter available in the container may differ. Set `pythonVersion` explicitly or use a versioned Python image tag to avoid mismatches."
     )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
