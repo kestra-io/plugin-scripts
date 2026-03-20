@@ -140,12 +140,24 @@ public class PythonEnvironmentManager {
             pyVersion = pythonVersion;
         } else if (!(taskRunner instanceof Process || RunnerType.PROCESS.equals(runnerType))) {
             String container = runContext.render(containerImage).as(String.class).orElse(null);
-            pyVersion = PythonVersionParser.parsePyVersionFromDockerImage(container).orElse(null);
+            pyVersion = PythonVersionParser.parsePyVersionFromDockerImage(container)
+                .filter(PythonEnvironmentManager::looksLikePythonVersion)
+                .orElse(null);
             if (pyVersion == null) {
                 pyVersion = logAndGetPythonDefaultVersion();
             }
         }
         return Optional.ofNullable(pyVersion);
+    }
+
+    /**
+     * Returns true if the version looks like a real Python version (major >= 2).
+     * This filters out non-Python version tags (e.g. "0.0.10" from a custom image)
+     * that the parser extracted because the image name contained "python".
+     */
+    static boolean looksLikePythonVersion(String version) {
+        int major = Integer.parseInt(version.split("\\.")[0]);
+        return major >= 2;
     }
 
     /**
