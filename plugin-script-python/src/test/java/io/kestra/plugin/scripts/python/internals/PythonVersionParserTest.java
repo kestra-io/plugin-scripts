@@ -42,28 +42,23 @@ class PythonVersionParserTest {
     }
 
     @Test
-    void shouldReturnEmptyForCustomImageWithNonPythonVersionTag() {
-        // This is the reported bug: a custom ECR image named "python" but with a non-Python version tag
+    void shouldParseCustomEcrImageWithNumericTag() {
+        // The parser extracts the version; filtering happens in PythonEnvironmentManager
         var result = PythonVersionParser.parsePyVersionFromDockerImage(
             "123456789.dkr.ecr.ap-southeast-2.amazonaws.com/python:0.0.10"
         );
-        assertThat(result, is(Optional.empty()));
+        assertThat(result, is(Optional.of("0.0.10")));
     }
 
     @Test
-    void shouldReturnEmptyForCustomImageWithLowMajorVersion() {
+    void shouldParsePython27() {
         var result = PythonVersionParser.parsePyVersionFromDockerImage("python:2.7");
-        assertThat(result, is(Optional.empty()));
-    }
-
-    @Test
-    void shouldReturnEmptyForCustomImageWithVersion1() {
-        var result = PythonVersionParser.parsePyVersionFromDockerImage("python:1.5.2");
-        assertThat(result, is(Optional.empty()));
+        assertThat(result, is(Optional.of("2.7")));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
+        "python:3.6",
         "python:3.7",
         "python:3.8",
         "python:3.9",
@@ -79,30 +74,42 @@ class PythonVersionParserTest {
     }
 
     @Test
-    void shouldReturnEmptyForPython36() {
-        // Python 3.6 is below the minimum supported 3.7
-        var result = PythonVersionParser.parsePyVersionFromDockerImage("python:3.6");
-        assertThat(result, is(Optional.empty()));
-    }
-
-    @Test
     void shouldHandleNullInput() {
         var result = PythonVersionParser.parsePyVersionFromDockerImage(null);
         assertThat(result, is(Optional.empty()));
     }
 
     @Test
-    void shouldParseMajorOnlyVersion3() {
-        // "python:3" is valid - major version 3
+    void shouldParseMajorOnlyVersion() {
         var result = PythonVersionParser.parsePyVersionFromDockerImage("python:3");
         assertThat(result, is(Optional.of("3")));
     }
 
     @Test
-    void shouldReturnEmptyForRegistryPrefixedImageWithLowVersion() {
+    void shouldParseRegistryPrefixedImage() {
         var result = PythonVersionParser.parsePyVersionFromDockerImage(
-            "my-registry.example.com/python:0.1.2"
+            "my-registry.example.com/python:3.11"
         );
-        assertThat(result, is(Optional.empty()));
+        assertThat(result, is(Optional.of("3.11")));
+    }
+
+    @Test
+    void looksLikePythonVersion_acceptsPython2() {
+        assertThat(PythonEnvironmentManager.looksLikePythonVersion("2.7"), is(true));
+    }
+
+    @Test
+    void looksLikePythonVersion_acceptsPython3() {
+        assertThat(PythonEnvironmentManager.looksLikePythonVersion("3.11"), is(true));
+    }
+
+    @Test
+    void looksLikePythonVersion_rejectsVersion0() {
+        assertThat(PythonEnvironmentManager.looksLikePythonVersion("0.0.10"), is(false));
+    }
+
+    @Test
+    void looksLikePythonVersion_rejectsVersion1() {
+        assertThat(PythonEnvironmentManager.looksLikePythonVersion("1.5.2"), is(false));
     }
 }
