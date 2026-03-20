@@ -27,11 +27,10 @@ public interface PythonBasedPlugin extends Plugin {
 
     @Schema(
         title = "The version of Python to use for the script.",
-        description = """
-            If no version is explicitly specified, the task will attempt to extract the version from the configured container image or from the local Python installation depending on the configured task runner.
-            The version is parsed from `containerImage` only when it matches the pattern `python:<numeric-version>` (e.g. `python:3.12`, `python:3.13-slim`). Tags like `latest` or custom images (e.g. `ghcr.io/kestra-io/pydata:latest`) will not be detected.
-            If it cannot determine the version, the task will default to Python 3.13. It is recommended to set this property explicitly when using non-standard images.
-            """
+        description = "If no version is explicitly specified, the task will attempt to extract the version from the configured container image or from the local Python installation depending on the configured task runner.\n" +
+            "The version is parsed from `containerImage` only when it matches the pattern `python:<numeric-version>` (e.g. `python:3.12`, `" + DEFAULT_IMAGE + "`). Tags like `latest` or custom images (e.g. `ghcr.io/kestra-io/pydata:latest`) will not be detected.\n" +
+            "If it cannot determine the version, the task will default to Python " + DEFAULT_PYTHON_VERSION + " for dependency resolution and cache key computation, while the interpreter available in the container may differ.\n" +
+            "Set this property explicitly or use a versioned Python image tag to avoid version mismatches."
     )
     @PluginProperty
     Property<String> getPythonVersion();

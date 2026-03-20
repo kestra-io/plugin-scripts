@@ -57,10 +57,8 @@ public class CommandsTrigger extends AbstractPythonTrigger {
 
     @Schema(
         title = "Docker image used to execute the commands.",
-        description = """
-            Container image used by the underlying Commands task to run Python commands.
-            Defaults to 'python:3.13-slim'.
-            """
+        description = "Container image used by the underlying Commands task to run Python commands.\n" +
+            "Defaults to '" + DEFAULT_IMAGE + "'."
     )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);

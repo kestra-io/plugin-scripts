@@ -54,7 +54,7 @@ public class ScriptTrigger extends AbstractPythonTrigger {
 
     @Schema(
         title = "Container image for script execution.",
-        description = "Image used by the Script task to run the inline Python script; defaults to 'python:3.13-slim'."
+        description = "Image used by the Script task to run the inline Python script; defaults to '" + DEFAULT_IMAGE + "'."
     )
     @Builder.Default
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
