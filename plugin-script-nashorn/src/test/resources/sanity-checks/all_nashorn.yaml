@@ -1,0 +1,50 @@
+id: all_nashorn
+namespace: sanitychecks.plugin-scripts
+
+tasks:
+  - id: write_rows
+    type: io.kestra.plugin.core.storage.Write
+    extension: .json
+    content: |
+      [
+        {"id": 1, "name": "jane"},
+        {"id": 2, "name": "richard"}
+      ]
+
+  - id: eval
+    type: io.kestra.plugin.scripts.nashorn.Eval
+    outputs:
+      - out
+      - map
+    script: |
+      var FileOutputStream = Java.type('java.io.FileOutputStream');
+
+      map = {status: 'ok'};
+      var tempFile = runContext.workingDir().createTempFile().toFile();
+      var output = new FileOutputStream(tempFile);
+      output.write('hello nashorn'.getBytes());
+      output.close();
+      out = runContext.storage().putFile(tempFile);
+
+  - id: transform
+    type: io.kestra.plugin.scripts.nashorn.FileTransform
+    from: "{{ outputs.write_rows.uri }}"
+    script: |
+      if (row['name'] === 'richard') {
+        row = null;
+      } else {
+        row['email'] = row['name'] + '@kestra.io';
+      }
+
+  - id: assert
+    type: io.kestra.plugin.core.execution.Assert
+    conditions:
+      - "{{ outputs.eval.outputs.out is not null }}"
+      - "{{ outputs.eval.outputs.map.status == 'ok' }}"
+      - "{{ read(outputs.eval.outputs.out) contains 'hello nashorn' }}"
+      - "{{ fromIon(read(outputs.transform.uri), allRows=true) | length == 1 }}"
+      - "{{ read(outputs.transform.uri) contains 'jane' }}"
+
+finally:
+  - id: purge
+    type: io.kestra.plugin.core.storage.PurgeCurrentExecutionFiles
