@@ -107,14 +107,25 @@ public class PythonEnvironmentManager {
     }
 
     private String logAndGetPythonDefaultVersion() {
-        runContext.logger().warn("No Python Version found. Using default version: '{}'", DEFAULT_PYTHON_VERSION);
+        runContext.logger().warn(
+            "Could not determine Python version automatically. Using fallback version '{}' for dependency resolution and cache key computation. Set 'pythonVersion' explicitly if needed.",
+            DEFAULT_PYTHON_VERSION
+        );
+        return DEFAULT_PYTHON_VERSION;
+    }
+
+    private String logAndGetPythonDefaultVersionForContainer(final String containerImage) {
+        runContext.logger().warn(
+            "Could not infer Python version from container image '{}'. Using fallback version '{}' for dependency resolution and cache key computation; container runtime Python may differ. Set 'pythonVersion' explicitly or use a versioned Python image tag.",
+            containerImage,
+            DEFAULT_PYTHON_VERSION
+        );
         return DEFAULT_PYTHON_VERSION;
     }
 
     private Path getLocalCacheDir() {
-        return ((DefaultRunContext) runContext).getApplicationContext().getEnvironment().getProperty("kestra.tasks.tmp-dir.path", String.class)
-            .map(Path::of)
-            .orElse(Path.of(System.getProperty("java.io.tmpdir")));
+        // get the parent of the working dir to avoid cleaning the cache when cleaning the working dir
+        return runContext.workingDir().path().getParent();
     }
 
     public boolean isCacheEnabled() {
@@ -141,12 +152,24 @@ public class PythonEnvironmentManager {
             pyVersion = pythonVersion;
         } else if (!(taskRunner instanceof Process || RunnerType.PROCESS.equals(runnerType))) {
             String container = runContext.render(containerImage).as(String.class).orElse(null);
-            pyVersion = PythonVersionParser.parsePyVersionFromDockerImage(container).orElse(null);
+            pyVersion = PythonVersionParser.parsePyVersionFromDockerImage(container)
+                .filter(PythonEnvironmentManager::looksLikePythonVersion)
+                .orElse(null);
             if (pyVersion == null) {
-                pyVersion = logAndGetPythonDefaultVersion();
+                pyVersion = logAndGetPythonDefaultVersionForContainer(container);
             }
         }
         return Optional.ofNullable(pyVersion);
+    }
+
+    /**
+     * Returns true if the version looks like a real Python version (major >= 2).
+     * This filters out non-Python version tags (e.g. "0.0.10" from a custom image)
+     * that the parser extracted because the image name contained "python".
+     */
+    static boolean looksLikePythonVersion(String version) {
+        int major = Integer.parseInt(version.split("\\.")[0]);
+        return major >= 2;
     }
 
     /**

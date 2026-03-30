@@ -17,15 +17,20 @@ public interface PythonBasedPlugin extends Plugin {
     String DEFAULT_IMAGE = "python:" + DEFAULT_PYTHON_VERSION + "-slim";
 
     @Schema(
-        title = "The script dependencies."
+        title = "Python package dependencies.",
+        description = """
+            List of pip-compatible package specifiers (e.g. `pandas==2.0.0`, `requests>=2.28`) installed via the configured package manager before script execution.
+            """
     )
     @PluginProperty
     Property<List<String>> getDependencies();
 
     @Schema(
         title = "The version of Python to use for the script.",
-        description = "If no version is explicitly specified, the task will attempt to extract the version from the configured container image or from the local python installation depending on configured task runner. If it cannot determine the version, the task will default to Python '"
-            + DEFAULT_PYTHON_VERSION + " '"
+        description = "If no version is explicitly specified, the task will attempt to extract the version from the configured container image or from the local Python installation depending on the configured task runner.\n" +
+            "The version is parsed from `containerImage` only when it matches the pattern `python:<numeric-version>` (e.g. `python:3.12`, `" + DEFAULT_IMAGE + "`). Tags like `latest` or custom images (e.g. `ghcr.io/kestra-io/pydata:latest`) will not be detected.\n" +
+            "If it cannot determine the version, the task will default to Python " + DEFAULT_PYTHON_VERSION + " for dependency resolution and cache key computation, while the interpreter available in the container may differ.\n" +
+            "Set this property explicitly or use a versioned Python image tag to avoid version mismatches."
     )
     @PluginProperty
     Property<String> getPythonVersion();
