@@ -14,6 +14,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @EqualsAndHashCode
@@ -27,6 +28,7 @@ public abstract class AbstractPythonExecScript extends AbstractExecScript implem
             "If version inference fails, Kestra uses Python " + DEFAULT_PYTHON_VERSION + " for dependency resolution and cache key computation, while the interpreter available in the container may differ. Set `pythonVersion` explicitly or use a versioned Python image tag to avoid mismatches."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     protected Property<List<String>> dependencies;

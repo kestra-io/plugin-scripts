@@ -76,6 +76,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Docker image used to run the script; defaults to 'golang'. Include required toolchain or install in beforeCommands."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -83,7 +84,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Go source code as a multi-line string; written to a temporary .go file and executed with 'go run'. For existing files, use the Commands task."
     )
     @NotNull
-    @PluginProperty(language = MonacoLanguages.GO)
+    @PluginProperty(language = MonacoLanguages.GO, group = "main")
     protected Property<String> script;
 
     @Override

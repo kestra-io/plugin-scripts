@@ -7,6 +7,7 @@ import java.util.Map;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
@@ -75,12 +76,14 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     private static final String DEFAULT_IMAGE = "groovy";
 
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file."
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<String> script;
 
     @Override

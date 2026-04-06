@@ -59,6 +59,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Docker image used to run the script; defaults to 'nickblah/lua'. Include needed Lua modules or install them in beforeCommands."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -66,7 +67,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Lua source as a multi-line string; saved to a temporary .lua file and executed with `lua`."
     )
     @NotNull
-    @PluginProperty(language = MonacoLanguages.LUA)
+    @PluginProperty(language = MonacoLanguages.LUA, group = "main")
     protected Property<String> script;
 
     @Override

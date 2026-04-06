@@ -168,7 +168,7 @@ public class Bash extends AbstractBash implements RunnableTask<io.kestra.core.ta
         title = "The commands to run.",
         description = "Default command will be launched with `/bin/sh -c \"commands\"`."
     )
-    @PluginProperty(dynamic = true)
+    @PluginProperty(dynamic = true, group = "main")
     @NotNull
     @NotEmpty
     protected String[] commands;

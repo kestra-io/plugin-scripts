@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -53,6 +54,7 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
         description = "Docker image used to run the commands; defaults to 'jbangdev/jbang-action'. Override only with an image that includes JBang."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     private Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -60,6 +62,7 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
         description = "List of JBang commands executed in order inside the container."
     )
     @NotNull
+    @PluginProperty(group = "main")
     private Property<List<String>> commands;
 
     @Override

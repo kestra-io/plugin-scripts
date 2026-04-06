@@ -77,13 +77,14 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     private static final String DEFAULT_IMAGE = "oven/bun";
 
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
         title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file."
     )
     @NotNull
-    @PluginProperty(language = MonacoLanguages.JAVASCRIPT)
+    @PluginProperty(language = MonacoLanguages.JAVASCRIPT, group = "main")
     protected Property<String> script;
 
     @Override

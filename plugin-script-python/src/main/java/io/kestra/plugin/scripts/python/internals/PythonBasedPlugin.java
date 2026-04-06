@@ -22,7 +22,7 @@ public interface PythonBasedPlugin extends Plugin {
             List of pip-compatible package specifiers (e.g. `pandas==2.0.0`, `requests>=2.28`) installed via the configured package manager before script execution.
             """
     )
-    @PluginProperty
+    @PluginProperty(group = "advanced")
     Property<List<String>> getDependencies();
 
     @Schema(
@@ -32,14 +32,14 @@ public interface PythonBasedPlugin extends Plugin {
             "If it cannot determine the version, the task will default to Python " + DEFAULT_PYTHON_VERSION + " for dependency resolution and cache key computation, while the interpreter available in the container may differ.\n" +
             "Set this property explicitly or use a versioned Python image tag to avoid version mismatches."
     )
-    @PluginProperty
+    @PluginProperty(group = "advanced")
     Property<String> getPythonVersion();
 
     @Schema(
         title = "Enable Python dependency caching",
         description = "When enabled, Python dependencies will be cached across task executions. This locks dependency versions and speeds up subsequent runs by avoiding redundant installations."
     )
-    @PluginProperty
+    @PluginProperty(group = "advanced")
     Property<Boolean> getDependencyCacheEnabled();
 
     @Schema(
@@ -49,6 +49,6 @@ public interface PythonBasedPlugin extends Plugin {
             "UV automatically falls back to PIP if not available.",
         allowableValues = { "PIP", "UV" }
     )
-    @PluginProperty
+    @PluginProperty(group = "advanced")
     Property<PackageManagerType> getPackageManager();
 }

@@ -17,22 +17,26 @@ public class ScriptOutput implements io.kestra.core.models.tasks.Output {
     @Schema(
         title = "The value extracted from the output of the commands."
     )
+    @PluginProperty(group = "advanced")
     private final Map<String, Object> vars;
 
     @Schema(
         title = "The standard output line count."
     )
+    @PluginProperty(group = "advanced")
     private final int stdOutLineCount;
 
     @Schema(
         title = "The standard error line count."
     )
+    @PluginProperty(group = "advanced")
     private final int stdErrLineCount;
 
     @Schema(
         title = "The exit code of the whole execution."
     )
     @NotNull
+    @PluginProperty(group = "main")
     private final int exitCode;
 
     @Schema(
@@ -41,12 +45,12 @@ public class ScriptOutput implements io.kestra.core.models.tasks.Output {
         deprecated = true
     )
     @Deprecated
-    @PluginProperty(additionalProperties = URI.class)
+    @PluginProperty(additionalProperties = URI.class, group = "advanced")
     private final Map<String, URI> files;
 
     @Schema(
         title = "The output files' URIs in Kestra's internal storage."
     )
-    @PluginProperty(additionalProperties = URI.class)
+    @PluginProperty(additionalProperties = URI.class, group = "destination")
     private final Map<String, URI> outputFiles;
 }

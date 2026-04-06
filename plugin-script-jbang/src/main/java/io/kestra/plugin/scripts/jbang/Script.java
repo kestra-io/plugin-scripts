@@ -8,6 +8,7 @@ import java.util.Map;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
@@ -110,6 +111,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Docker image used to run the script; defaults to 'jbangdev/jbang-action'. Provide an image that includes JBang if overriding."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     private Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -117,6 +119,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Script body as a multi-line string; written to a temp file and executed with `jbang`. For existing files or JARs, use the Commands task."
     )
     @NotNull
+    @PluginProperty(group = "main")
     private Property<String> script;
 
     @Schema(
@@ -125,6 +128,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     )
     @Builder.Default
     @NotNull
+    @PluginProperty(group = "advanced")
     private Property<String> extension = Property.ofValue(".java");
 
     @Schema(
@@ -133,6 +137,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     )
     @NotNull
     @Builder.Default
+    @PluginProperty(group = "advanced")
     private Property<Boolean> quiet = Property.ofValue(true);
 
     @Override

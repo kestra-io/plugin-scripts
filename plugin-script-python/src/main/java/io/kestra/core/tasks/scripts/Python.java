@@ -111,7 +111,7 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
         title = "The python interpreter to use",
         description = "Set the python interpreter path to use"
     )
-    @PluginProperty(dynamic = true)
+    @PluginProperty(dynamic = true, group = "main")
     @NotNull
     @NotEmpty
     private final String pythonPath = "python";
@@ -120,21 +120,21 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
         title = "Python command args",
         description = "Arguments list to pass to main python script"
     )
-    @PluginProperty(dynamic = true)
+    @PluginProperty(dynamic = true, group = "advanced")
     private List<String> args;
 
     @Schema(
         title = "Requirements are python dependencies to add to the python execution process",
         description = "Python dependencies list to setup in the virtualenv, in the same format than requirements.txt"
     )
-    @PluginProperty(dynamic = true)
+    @PluginProperty(dynamic = true, group = "advanced")
     protected List<String> requirements;
 
     @Schema(
         title = "The commands to run",
         description = "Default command will be launched with `./bin/python main.py {{args}}`"
     )
-    @PluginProperty(dynamic = true)
+    @PluginProperty(dynamic = true, group = "main")
     @NotNull
     @NotEmpty
     @Builder.Default
@@ -146,7 +146,7 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
             "Disabled it if all the requirements is already on the file system.\n" +
             "If you disabled the virtual env creation, the `requirements` will be ignored."
     )
-    @PluginProperty
+    @PluginProperty(group = "advanced")
     @Builder.Default
     protected Boolean virtualEnv = true;
 
@@ -157,6 +157,7 @@ public class Python extends AbstractBash implements RunnableTask<ScriptOutput> {
         allowableValues = { "PIP", "UV" }
     )
     @Builder.Default
+    @PluginProperty(group = "advanced")
     protected Property<PackageManagerType> packageManager = Property.ofValue(PackageManagerType.PIP);
 
     protected String virtualEnvCommand(RunContext runContext, List<String> requirements) throws IllegalVariableEvaluationException {

@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -57,6 +58,7 @@ public class ScriptTrigger extends AbstractPythonTrigger {
         description = "Image used by the Script task to run the inline Python script; defaults to '" + DEFAULT_IMAGE + "'."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -64,6 +66,7 @@ public class ScriptTrigger extends AbstractPythonTrigger {
         description = "Multi-line script executed on each poll."
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<String> script;
 
     @Override

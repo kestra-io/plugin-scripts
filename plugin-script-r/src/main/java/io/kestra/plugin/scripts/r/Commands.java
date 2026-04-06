@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -61,6 +62,7 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
         description = "Docker image used to run the commands; defaults to 'r-base'. Include required packages or install them in beforeCommands."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -68,6 +70,7 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
         description = "List of R commands executed in order inside the container; combine with beforeCommands for package installs and inputFiles/namespaceFiles to stage scripts."
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<List<String>> commands;
 
     @Override

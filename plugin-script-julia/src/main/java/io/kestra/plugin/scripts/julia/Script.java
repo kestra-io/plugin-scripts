@@ -65,6 +65,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Docker image used to run the script; defaults to 'julia'. Include dependencies or install them in beforeCommands."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -72,7 +73,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Julia source as a multi-line string; saved to a temporary .jl file and executed with 'julia'. For existing files, use the Commands task."
     )
     @NotNull
-    @PluginProperty(language = MonacoLanguages.JULIA)
+    @PluginProperty(language = MonacoLanguages.JULIA, group = "main")
     protected Property<String> script;
 
     @Override

@@ -12,6 +12,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -61,6 +62,7 @@ public class CommandsTrigger extends AbstractPythonTrigger {
             "Defaults to '" + DEFAULT_IMAGE + "'."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -68,6 +70,7 @@ public class CommandsTrigger extends AbstractPythonTrigger {
         description = "Commands executed on each poll (same semantics as the Python Commands task)."
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<List<String>> commands;
 
     @Override

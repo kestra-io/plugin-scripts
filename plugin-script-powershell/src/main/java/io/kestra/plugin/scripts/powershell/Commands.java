@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -57,6 +58,7 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
         description = "Docker image used to run the commands; defaults to 'ghcr.io/kestra-io/powershell:latest'. Include required modules or install them in beforeCommands."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -64,12 +66,14 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
         description = "List of PowerShell commands executed in order; combine with beforeCommands for setup and inputFiles/namespaceFiles to stage scripts."
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<List<String>> commands;
 
     @Builder.Default
     @Schema(
         title = "Which interpreter to use."
     )
+    @PluginProperty(group = "execution")
     protected Property<List<String>> interpreter = Property.ofValue(List.of("pwsh", "-NoProfile", "-NonInteractive", "-Command"));
 
     @Override

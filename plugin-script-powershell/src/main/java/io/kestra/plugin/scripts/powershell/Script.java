@@ -75,6 +75,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Docker image used to run the script; defaults to 'ghcr.io/kestra-io/powershell:latest'. Include required modules or install them in beforeCommands."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -82,13 +83,14 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "PowerShell script body as a multi-line string; written to a temporary .ps1 file and executed with pwsh. For existing files, use the Commands task."
     )
     @NotNull
-    @PluginProperty(language = MonacoLanguages.POWERSHELL)
+    @PluginProperty(language = MonacoLanguages.POWERSHELL, group = "main")
     protected Property<String> script;
 
     @Builder.Default
     @Schema(
         title = "Which interpreter to use."
     )
+    @PluginProperty(group = "execution")
     protected Property<List<String>> interpreter = Property.ofValue(List.of("pwsh", "-NoProfile", "-NonInteractive", "-Command"));
 
     @Override
