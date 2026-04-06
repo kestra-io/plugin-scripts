@@ -314,7 +314,7 @@ public class Script extends AbstractPythonExecScript implements RunnableTask<Scr
         description = "Python source as a multi-line string; written to a temporary .py file and executed with the resolved interpreter. For existing files, use the Commands task."
     )
     @NotNull
-    @PluginProperty(language = MonacoLanguages.PYTHON)
+    @PluginProperty(language = MonacoLanguages.PYTHON, group = "main")
     protected Property<String> script;
 
     @Override

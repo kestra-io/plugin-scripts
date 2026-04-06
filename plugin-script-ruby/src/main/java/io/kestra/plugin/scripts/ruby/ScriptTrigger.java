@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -74,6 +75,7 @@ public class ScriptTrigger extends AbstractTrigger
         description = "Image used by the Script task to run the inline Ruby script; defaults to 'ruby'."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -81,6 +83,7 @@ public class ScriptTrigger extends AbstractTrigger
         description = "Multi-line script executed on each poll."
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<String> script;
 
     @Schema(
@@ -92,6 +95,7 @@ public class ScriptTrigger extends AbstractTrigger
             """
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<String> exitCondition;
 
     @Schema(
@@ -99,6 +103,7 @@ public class ScriptTrigger extends AbstractTrigger
         description = "Interval between polling evaluations."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     private final Duration interval = Duration.ofSeconds(60);
 
     @Schema(
@@ -109,6 +114,7 @@ public class ScriptTrigger extends AbstractTrigger
             """
     )
     @Builder.Default
+    @PluginProperty(group = "advanced")
     protected Property<Boolean> edge = Property.ofValue(true);
 
     // Known limitation: in-memory only — resets when the trigger is rehydrated (e.g. after restart),

@@ -57,6 +57,7 @@ import lombok.experimental.SuperBuilder;
                         groovy -e '
                           @Grab("info.picocli:picocli:4.7.5")
                           import picocli.CommandLine
+import io.kestra.core.models.annotations.PluginProperty;
                           @CommandLine.Command(name = "hello")
                           class HelloWorld implements Runnable {
                             @CommandLine.Parameters(paramLabel = "NAME", defaultValue = "Kestra")
@@ -76,12 +77,14 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
     private static final String DEFAULT_IMAGE = "groovy";
 
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
         title = "The commands to run."
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<List<String>> commands;
 
     @Override

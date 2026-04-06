@@ -177,6 +177,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Docker image used to run the script; defaults to 'node'. Include required tooling or install via beforeCommands."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -184,7 +185,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "JavaScript source as a multi-line string; saved to a temporary .js file and executed with `node`. For existing files, use the Commands task."
     )
     @NotNull
-    @PluginProperty(language = MonacoLanguages.JAVASCRIPT)
+    @PluginProperty(language = MonacoLanguages.JAVASCRIPT, group = "main")
     protected Property<String> script;
 
     @Override

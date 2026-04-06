@@ -44,12 +44,13 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
         title = "The task runner."
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<RunnerType> runner = Property.ofValue(RunnerType.PROCESS);
 
     @Schema(
         title = "Docker options when using the `DOCKER` runner."
     )
-    @PluginProperty
+    @PluginProperty(group = "advanced")
     protected DockerOptions dockerOptions;
 
     @Builder.Default
@@ -57,13 +58,14 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
         title = "Interpreter to use when launching the process."
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<String> interpreter = Property.ofValue("/bin/sh");
 
     @Builder.Default
     @Schema(
         title = "Interpreter arguments to be used."
     )
-    @PluginProperty
+    @PluginProperty(group = "execution")
     protected String[] interpreterArgs = { "-c" };
 
     @Builder.Default
@@ -73,6 +75,7 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
             "Setting this to `true` helps catch cases where a command fails and the script continues to run anyway."
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<Boolean> exitOnFailed = Property.ofValue(true);
 
     @Schema(
@@ -81,6 +84,7 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
         deprecated = true
     )
     @Deprecated
+    @PluginProperty(group = "advanced")
     protected Property<List<String>> files;
 
     @Schema(
@@ -89,6 +93,7 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
         deprecated = true
     )
     @Deprecated
+    @PluginProperty(group = "advanced")
     protected Property<List<String>> outputsFiles;
 
     @Schema(
@@ -98,6 +103,7 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
             "If you add a file with `[\"first\"]`, you can use the special var `echo 1 >> {[ outputFiles.first }}`," +
             " and on other tasks, you can reference it using `{{ outputs.taskId.outputFiles.first }}`."
     )
+    @PluginProperty(group = "destination")
     protected Property<List<String>> outputFiles;
 
     @Schema(
@@ -109,6 +115,7 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
             "You can reference them in other tasks using `{{ outputs.taskId.outputFiles['myDir/file1.txt'] }}`."
     )
     @Deprecated
+    @PluginProperty(group = "advanced")
     protected Property<List<String>> outputDirs;
 
     @Schema(
@@ -118,7 +125,7 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
             "In both cases, you can either specify the file's content inline, or reference a file from Kestra's internal " +
             "storage by its URI, e.g. a file from an input, output of a previous task, or a [Namespace File](https://kestra.io/docs/developer-guide/namespace-files)."
     )
-    @PluginProperty(
+    @PluginProperty(group = "source", 
         additionalProperties = String.class,
         dynamic = true
     )
@@ -127,12 +134,14 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
     @Schema(
         title = "One or more additional environment variable(s) to add to the task run."
     )
+    @PluginProperty(group = "execution")
     protected Property<Map<String, String>> env;
 
     @Schema(
         title = "Not used anymore, will be removed soon"
     )
     @Deprecated
+    @PluginProperty(group = "advanced")
     protected Property<Boolean> warningOnStdErr;
 
     @Getter(AccessLevel.NONE)

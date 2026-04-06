@@ -64,6 +64,7 @@ import lombok.experimental.SuperBuilder;
                     script: |
                       package main
                       import "os"
+import io.kestra.core.models.annotations.PluginProperty;
                       func main() {
                         // This fails with non-zero exit code.
                         os.Exit(1)
@@ -91,6 +92,7 @@ public class ScriptTrigger extends AbstractTrigger
             """
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -100,6 +102,7 @@ public class ScriptTrigger extends AbstractTrigger
             """
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<String> script;
 
     @Schema(
@@ -110,6 +113,7 @@ public class ScriptTrigger extends AbstractTrigger
             """
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<String> exitCondition;
 
     @Schema(
@@ -119,6 +123,7 @@ public class ScriptTrigger extends AbstractTrigger
             """
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     private final Duration interval = Duration.ofSeconds(60);
 
     @Schema(
@@ -128,6 +133,7 @@ public class ScriptTrigger extends AbstractTrigger
             """
     )
     @Builder.Default
+    @PluginProperty(group = "advanced")
     protected Property<Boolean> edge = Property.ofValue(true);
 
     @Builder.Default

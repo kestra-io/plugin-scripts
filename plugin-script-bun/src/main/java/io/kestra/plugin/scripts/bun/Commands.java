@@ -56,6 +56,7 @@ import lombok.experimental.SuperBuilder;
                     inputFiles:
                       index.ts: |
                         import { say } from "cowsay";
+import io.kestra.core.models.annotations.PluginProperty;
 
                         console.log(say({ text: "I love Kestra!" }));
                     beforeCommands:
@@ -70,12 +71,14 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
     private static final String DEFAULT_IMAGE = "oven/bun";
 
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
         title = "The commands to run."
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<List<String>> commands;
 
     @Override

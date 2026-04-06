@@ -279,6 +279,7 @@ import lombok.experimental.SuperBuilder;
                     inputFiles:
                       main.py: |
                         import requests
+import io.kestra.core.models.annotations.PluginProperty;
                         from kestra import Kestra
 
                         response = requests.get('https://google.com')
@@ -305,6 +306,7 @@ public class Commands extends AbstractPythonExecScript implements RunnableTask<S
         description = "List of Python commands run in order inside the container; combine with beforeCommands for env setup and inputFiles/namespaceFiles to stage scripts."
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<List<String>> commands;
 
     @Override

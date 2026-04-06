@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -22,6 +23,7 @@ public abstract class AbstractJvmScript extends Task {
     @Schema(
         title = "A full script."
     )
+    @PluginProperty(group = "processing")
     protected Property<String> script;
 
     protected String generateScript(RunContext runContext) throws IllegalVariableEvaluationException {

@@ -71,6 +71,7 @@ import lombok.experimental.SuperBuilder;
 
                       import org.apache.log4j.Logger;
                       import org.apache.log4j.BasicConfigurator;
+import io.kestra.core.models.annotations.PluginProperty;
 
                       class classpath_example {
 
@@ -110,6 +111,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Docker image used to run the script; defaults to 'jbangdev/jbang-action'. Provide an image that includes JBang if overriding."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     private Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -117,6 +119,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Script body as a multi-line string; written to a temp file and executed with `jbang`. For existing files or JARs, use the Commands task."
     )
     @NotNull
+    @PluginProperty(group = "main")
     private Property<String> script;
 
     @Schema(
@@ -125,6 +128,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     )
     @Builder.Default
     @NotNull
+    @PluginProperty(group = "advanced")
     private Property<String> extension = Property.ofValue(".java");
 
     @Schema(
@@ -133,6 +137,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     )
     @NotNull
     @Builder.Default
+    @PluginProperty(group = "advanced")
     private Property<Boolean> quiet = Property.ofValue(true);
 
     @Override

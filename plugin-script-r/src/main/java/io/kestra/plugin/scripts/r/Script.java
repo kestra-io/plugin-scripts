@@ -154,6 +154,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Docker image used to run the script; defaults to 'r-base'. Include required packages or install them in beforeCommands."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -161,7 +162,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "R source as a multi-line string; saved to a temporary .R file and executed with `Rscript`. For existing files, use the Commands task."
     )
     @NotNull
-    @PluginProperty(language = MonacoLanguages.R)
+    @PluginProperty(language = MonacoLanguages.R, group = "main")
     protected Property<String> script;
 
     @Override

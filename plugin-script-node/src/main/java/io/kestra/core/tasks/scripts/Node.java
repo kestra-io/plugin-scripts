@@ -20,6 +20,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import static io.kestra.core.utils.Rethrow.throwSupplier;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -105,6 +106,7 @@ public class Node extends AbstractBash implements RunnableTask<io.kestra.core.ta
         title = "The node interpreter to use.",
         description = "Set the node interpreter path to use."
     )
+    @PluginProperty(group = "advanced")
     private final Property<String> nodePath = Property.ofValue("node");
 
     @Builder.Default
@@ -112,6 +114,7 @@ public class Node extends AbstractBash implements RunnableTask<io.kestra.core.ta
         title = "The npm binary to use.",
         description = "Set the npm binary path for node dependencies setup."
     )
+    @PluginProperty(group = "advanced")
     private final Property<String> npmPath = Property.ofValue("npm");
 
     @Schema(
@@ -119,6 +122,7 @@ public class Node extends AbstractBash implements RunnableTask<io.kestra.core.ta
         description = "Arguments list to pass to main JavaScript script."
 
     )
+    @PluginProperty(group = "advanced")
     private Property<List<String>> args;
 
     @Override

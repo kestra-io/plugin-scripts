@@ -58,6 +58,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Docker image used to run the script; defaults to 'denoland/deno'. Include dependencies or install them in beforeCommands."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -65,7 +66,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Script content written inline; saved as a temporary .ts file and executed with 'deno run'."
     )
     @NotNull
-    @PluginProperty(language = MonacoLanguages.TYPESCRIPT)
+    @PluginProperty(language = MonacoLanguages.TYPESCRIPT, group = "main")
     protected Property<String> script;
 
     @Override

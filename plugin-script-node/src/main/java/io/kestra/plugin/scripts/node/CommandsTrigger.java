@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -69,6 +70,7 @@ public class CommandsTrigger extends AbstractTrigger
             """
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -76,6 +78,7 @@ public class CommandsTrigger extends AbstractTrigger
         description = "Commands executed on each poll."
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<List<String>> commands;
 
     @Schema(
@@ -89,6 +92,7 @@ public class CommandsTrigger extends AbstractTrigger
             """
     )
     @NotNull
+    @PluginProperty(group = "main")
     protected Property<String> exitCondition;
 
     @Schema(
@@ -96,6 +100,7 @@ public class CommandsTrigger extends AbstractTrigger
         description = "Interval between polling evaluations."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     private final Duration interval = Duration.ofSeconds(60);
 
     @Schema(
@@ -106,6 +111,7 @@ public class CommandsTrigger extends AbstractTrigger
             """
     )
     @Builder.Default
+    @PluginProperty(group = "advanced")
     protected Property<Boolean> edge = Property.ofValue(true);
 
     @Builder.Default

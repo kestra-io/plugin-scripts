@@ -47,7 +47,7 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
         title = "Source rows",
         description = "Kestra internal storage URI (kestra://...) or rendered JSON map/list to stream into the script."
     )
-    @PluginProperty(dynamic = true)
+    @PluginProperty(dynamic = true, group = "main")
     private String from;
 
     @Min(2)
@@ -55,7 +55,7 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
         title = "Concurrent transforms",
         description = "Number of parallel workers; ordering is not preserved when greater than 1."
     )
-    @PluginProperty
+    @PluginProperty(group = "advanced")
     private Integer concurrent;
 
     @SuppressWarnings("unchecked")

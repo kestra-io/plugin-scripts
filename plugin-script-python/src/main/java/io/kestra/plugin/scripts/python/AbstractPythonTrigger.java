@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -38,6 +39,7 @@ public abstract class AbstractPythonTrigger extends AbstractTrigger
             (or substring fallback) against emitted vars (from ::{"outputs":...}::) and failure logs.
             """
     )
+    @PluginProperty(group = "advanced")
     protected Property<String> exitCondition;
 
     @Schema(
@@ -45,6 +47,7 @@ public abstract class AbstractPythonTrigger extends AbstractTrigger
         description = "Interval between polling evaluations."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     private final Duration interval = Duration.ofSeconds(60);
 
     @Schema(
@@ -55,6 +58,7 @@ public abstract class AbstractPythonTrigger extends AbstractTrigger
             """
     )
     @Builder.Default
+    @PluginProperty(group = "advanced")
     protected Property<Boolean> edge = Property.ofValue(true);
 
     @Builder.Default

@@ -14,6 +14,7 @@ import io.kestra.core.runners.RunContext;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -30,6 +31,7 @@ public abstract class Eval extends AbstractJvmScript implements RunnableTask<Eva
         title = "Binding names to return",
         description = "List of binding keys to copy into task outputs after execution."
     )
+    @PluginProperty(group = "advanced")
     protected Property<List<String>> outputs;
 
     protected Eval.Output run(RunContext runContext, String engineName) throws Exception {

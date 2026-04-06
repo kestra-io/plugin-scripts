@@ -59,6 +59,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Docker image used to run the script; defaults to 'perl'. Include required modules or install them in beforeCommands."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
@@ -66,7 +67,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         description = "Perl source as a multi-line string; saved to a temporary .pl file and executed with `perl`. For existing files, use the Commands task."
     )
     @NotNull
-    @PluginProperty(language = MonacoLanguages.PERL)
+    @PluginProperty(language = MonacoLanguages.PERL, group = "main")
     protected Property<String> script;
 
     @Override
