@@ -5,6 +5,7 @@ import java.util.List;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
@@ -56,7 +57,6 @@ import lombok.experimental.SuperBuilder;
                     inputFiles:
                       index.ts: |
                         import { say } from "cowsay";
-import io.kestra.core.models.annotations.PluginProperty;
 
                         console.log(say({ text: "I love Kestra!" }));
                     beforeCommands:

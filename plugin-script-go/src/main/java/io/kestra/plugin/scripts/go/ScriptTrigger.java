@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.conditions.ConditionContext;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.property.Property;
@@ -64,7 +65,6 @@ import lombok.experimental.SuperBuilder;
                     script: |
                       package main
                       import "os"
-import io.kestra.core.models.annotations.PluginProperty;
                       func main() {
                         // This fails with non-zero exit code.
                         os.Exit(1)
