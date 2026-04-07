@@ -308,6 +308,37 @@ class ScriptTest {
         assertThat(ScriptTest.<Duration> getMetrics(runContext, "timer2").getTags().get("tag2"), is("destroy"));
     }
 
+    @ParameterizedTest
+    @MethodSource("source")
+    void pebbleLiterals(RunnerType runner, DockerOptions dockerOptions) throws Exception {
+        // Pebble renders boolean/null outputs from upstream tasks as lowercase JSON literals:
+        //   {{outputs.prev.vars.flag}} → true / false / null
+        // These are not valid Python identifiers, causing NameError without the preamble fix.
+        Script python = Script.builder()
+            .id("python-pebble-literals-" + UUID.randomUUID())
+            .type(Script.class.getName())
+            .docker(dockerOptions)
+            .runner(runner)
+            .script(
+                Property.ofValue(
+                    "import json\n" +
+                        "t = true\n" +
+                        "f = false\n" +
+                        "n = null\n" +
+                        "print('::' + json.dumps({'outputs': {'t': t, 'f': f, 'n': n}}) + '::')\n"
+                )
+            )
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
+        ScriptOutput run = python.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+        assertThat(run.getVars().get("t"), is(true));
+        assertThat(run.getVars().get("f"), is(false));
+        assertThat(run.getVars().get("n"), nullValue());
+    }
+
     @SuppressWarnings("unchecked")
     static <T> AbstractMetricEntry<T> getMetrics(RunContext runContext, String name) {
         return (AbstractMetricEntry<T>) runContext.metrics()
