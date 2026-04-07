@@ -336,9 +336,15 @@ public class Script extends AbstractPythonExecScript implements RunnableTask<Scr
         // Pebble renders booleans and null as lowercase (true/false/null — JSON convention),
         // but Python requires True/False/None. Prepending these aliases avoids NameError
         // when Pebble-rendered values are used directly in the script (e.g. `x = {{ myBool }}`).
+        String compatibilityPrelude = """
+            true = True
+            false = False
+            null = None
+            """;
+
         inputFiles.put(
             relativeScriptPath.toString(),
-            "true = True\nfalse = False\nnull = None\n" + commands.render(runContext, this.script)
+            compatibilityPrelude + commands.render(runContext, this.script)
         );
         commands = commands.withInputFiles(inputFiles);
 
