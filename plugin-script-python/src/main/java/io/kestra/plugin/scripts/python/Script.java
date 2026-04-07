@@ -335,7 +335,7 @@ public class Script extends AbstractPythonExecScript implements RunnableTask<Scr
         Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(".py"));
         inputFiles.put(
             relativeScriptPath.toString(),
-            commands.render(runContext, this.script)
+            "true = True\nfalse = False\nnull = None\n" + commands.render(runContext, this.script)
         );
         commands = commands.withInputFiles(inputFiles);
 
