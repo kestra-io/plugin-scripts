@@ -333,6 +333,9 @@ public class Script extends AbstractPythonExecScript implements RunnableTask<Scr
 
         Map<String, String> inputFiles = FilesService.inputFiles(runContext, commands.getTaskRunner().additionalVars(runContext, commands), this.getInputFiles());
         Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(".py"));
+        // Pebble renders booleans and null as lowercase (true/false/null — JSON convention),
+        // but Python requires True/False/None. Prepending these aliases avoids NameError
+        // when Pebble-rendered values are used directly in the script (e.g. `x = {{ myBool }}`).
         inputFiles.put(
             relativeScriptPath.toString(),
             "true = True\nfalse = False\nnull = None\n" + commands.render(runContext, this.script)
