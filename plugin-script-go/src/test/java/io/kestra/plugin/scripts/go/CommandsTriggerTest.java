@@ -17,9 +17,8 @@ import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.flows.Flow;
 import io.kestra.core.models.flows.FlowWithSource;
 import io.kestra.core.models.property.Property;
-import io.kestra.core.queues.QueueFactoryInterface;
-import io.kestra.core.queues.QueueInterface;
-import io.kestra.core.runners.FlowListeners;
+import io.kestra.core.queues.DispatchQueueInterface;
+
 import io.kestra.core.utils.Await;
 import io.kestra.core.utils.IdUtils;
 import io.kestra.core.utils.TestsUtils;
@@ -30,8 +29,6 @@ import io.kestra.worker.DefaultWorker;
 
 import io.micronaut.context.ApplicationContext;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import reactor.core.publisher.Flux;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -48,13 +45,10 @@ class CommandsTriggerTest {
     protected FlowListeners flowListenersService;
 
     @Inject
-    @Named(QueueFactoryInterface.EXECUTION_NAMED)
-    protected QueueInterface<Execution> executionQueue;
+    protected DispatchQueueInterface<Execution> executionQueue;
 
     @Test
     void commandsTrigger_shouldTriggerOnImplicitFailureExit1() throws Exception {
-        FlowListeners flowListenersServiceSpy = spy(this.flowListenersService);
-
         CommandsTrigger trigger = CommandsTrigger.builder()
             .id("commands-trigger")
             .type(CommandsTrigger.class.getName())
@@ -93,10 +87,10 @@ class CommandsTriggerTest {
         CountDownLatch queueCount = new CountDownLatch(1);
         AtomicReference<Execution> lastExecution = new AtomicReference<>();
 
-        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution ->
+        executionQueue.addListener(execution ->
         {
-            if (execution.getLeft().getFlowId().equals("commands-trigger-flow")) {
-                lastExecution.set(execution.getLeft());
+            if (execution.getFlowId().equals("commands-trigger-flow")) {
+                lastExecution.set(execution);
                 queueCount.countDown();
             }
         });
@@ -138,10 +132,6 @@ class CommandsTriggerTest {
             }
             try {
                 scheduler.close();
-            } catch (Exception ignored) {
-            }
-            try {
-                receive.blockLast();
             } catch (Exception ignored) {
             }
         }
@@ -189,10 +179,10 @@ class CommandsTriggerTest {
         CountDownLatch queueCount = new CountDownLatch(1);
         AtomicReference<Execution> lastExecution = new AtomicReference<>();
 
-        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution ->
+        executionQueue.addListener(execution ->
         {
-            if (execution.getLeft().getFlowId().equals("commands-stdout-match-flow")) {
-                lastExecution.set(execution.getLeft());
+            if (execution.getFlowId().equals("commands-stdout-match-flow")) {
+                lastExecution.set(execution);
                 queueCount.countDown();
             }
         });
@@ -239,10 +229,6 @@ class CommandsTriggerTest {
                 scheduler.close();
             } catch (Exception ignored) {
             }
-            try {
-                receive.blockLast();
-            } catch (Exception ignored) {
-            }
         }
     }
 
@@ -280,8 +266,8 @@ class CommandsTriggerTest {
         AtomicInteger executionCount = new AtomicInteger(0);
         CountDownLatch firstExecution = new CountDownLatch(1);
 
-        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution -> {
-            if (execution.getLeft().getFlowId().equals("commands-edge-flow")) {
+        executionQueue.addListener(execution -> {
+            if (execution.getFlowId().equals("commands-edge-flow")) {
                 executionCount.incrementAndGet();
                 firstExecution.countDown();
             }
@@ -304,7 +290,6 @@ class CommandsTriggerTest {
         } finally {
             try { worker.shutdown(); } catch (Exception ignored) {}
             try { scheduler.close(); } catch (Exception ignored) {}
-            try { receive.blockLast(); } catch (Exception ignored) {}
         }
     }
 
@@ -344,9 +329,9 @@ class CommandsTriggerTest {
         CountDownLatch queueCount = new CountDownLatch(1);
         AtomicReference<Execution> lastExecution = new AtomicReference<>();
 
-        Flux<Execution> receive = TestsUtils.receive(executionQueue, execution -> {
-            if (execution.getLeft().getFlowId().equals("commands-regex-flow")) {
-                lastExecution.set(execution.getLeft());
+        executionQueue.addListener(execution -> {
+            if (execution.getFlowId().equals("commands-regex-flow")) {
+                lastExecution.set(execution);
                 queueCount.countDown();
             }
         });
@@ -370,7 +355,6 @@ class CommandsTriggerTest {
         } finally {
             try { worker.shutdown(); } catch (Exception ignored) {}
             try { scheduler.close(); } catch (Exception ignored) {}
-            try { receive.blockLast(); } catch (Exception ignored) {}
         }
     }
 }
