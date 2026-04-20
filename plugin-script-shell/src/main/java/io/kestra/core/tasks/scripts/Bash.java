@@ -41,7 +41,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 
                 tasks:
                   - id: bash
-                    type: io.kestra.core.tasks.scripts.Bash
+                    type: io.kestra.plugin.core.scripts.Bash
                     commands:
                       - 'echo "The current execution is : {{ execution.id }}"'
                 """
@@ -55,7 +55,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 
                 tasks:
                   - id: bash
-                    type: io.kestra.core.tasks.scripts.Bash
+                    type: io.kestra.plugin.core.scripts.Bash
                     outputFiles:
                       - first
                       - second
@@ -73,7 +73,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 
                 tasks:
                   - id: bash
-                    type: io.kestra.core.tasks.scripts.Bash
+                    type: io.kestra.plugin.core.scripts.Bash
                     inputFiles:
                       script.sh: |
                         echo {{ workingDir }}
@@ -90,7 +90,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 
                 tasks:
                   - id: bash
-                    type: io.kestra.core.tasks.scripts.Bash
+                    type: io.kestra.plugin.core.scripts.Bash
                     inputFiles:
                       data.csv: {{ outputs.previousTaskId.uri }}
                     commands:
@@ -106,7 +106,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 
                 tasks:
                   - id: bash
-                    type: io.kestra.core.tasks.scripts.Bash
+                    type: io.kestra.plugin.core.scripts.Bash
                     runner: DOCKER
                     dockerOptions:
                       image: php
@@ -123,7 +123,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 
                 tasks:
                   - id: bash
-                    type: io.kestra.core.tasks.scripts.Bash
+                    type: io.kestra.plugin.core.scripts.Bash
                     commands:
                       - 'echo "The current execution is : {{ execution.id }}"'
                     exitOnFailed: false
@@ -141,7 +141,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 
                 tasks:
                   - id: bash
-                    type: io.kestra.core.tasks.scripts.Bash
+                    type: io.kestra.plugin.core.scripts.Bash
                     commands:
                       - echo '::{"outputs":{"test":"value","int":2,"bool":true,"float":3.65}}::'
                 """
@@ -155,7 +155,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 
                 tasks:
                   - id: bash
-                    type: io.kestra.core.tasks.scripts.Bash
+                    type: io.kestra.plugin.core.scripts.Bash
                     commands:
                       - echo '::{"metrics":[{"name":"count","type":"counter","value":1,"tags":{"tag1":"i","tag2":"win"}}]}::'
                 """

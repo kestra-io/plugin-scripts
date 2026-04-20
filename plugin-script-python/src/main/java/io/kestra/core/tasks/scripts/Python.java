@@ -63,7 +63,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 
                 tasks:
                   - id: python
-                    type: io.kestra.core.tasks.scripts.Python
+                    type: io.kestra.plugin.core.scripts.Python
                     inputFiles:
                       data.json: |
                         {"status": "OK"}
@@ -94,7 +94,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 
                 tasks:
                   - id: python
-                    type: io.kestra.core.tasks.scripts.Python
+                    type: io.kestra.plugin.core.scripts.Python
                     inputFiles:
                       data.csv: {{outputs.previousTaskId.uri}}
                       main.py: |
