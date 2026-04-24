@@ -97,7 +97,7 @@ import lombok.experimental.SuperBuilder;
                   - id: python_logger
                     type: io.kestra.plugin.scripts.python.Script
                     allowFailure: true
-                    dependencies
+                    dependencies:
                       - kestra
                     script: |
                       import time
