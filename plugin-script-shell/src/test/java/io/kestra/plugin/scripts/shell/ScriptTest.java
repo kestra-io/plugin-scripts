@@ -177,6 +177,29 @@ class ScriptTest {
         );
     }
 
+    @Test
+    void outputFilesPebbleExpression() throws Exception {
+        // Verifies that {{ outputFiles.outfile }} resolves to the correct absolute path inside the script body.
+        // This is the fix for https://github.com/kestra-io/kestra/issues/13765.
+        // Use Property.ofExpression to simulate YAML deserialization (value=null → Pebble rendering runs).
+        Script bash = Script.builder()
+            .id("shell-output-files-pebble-" + UUID.randomUUID())
+            .type(Script.class.getName())
+            .outputFiles(Property.ofValue(List.of("outfile")))
+            .script(Property.ofExpression("echo -n {{ outputFiles.outfile }} > outfile"))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
+        ScriptOutput run = bash.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+        assertThat(run.getOutputFiles().get("outfile").toString(), startsWith("kestra://"));
+        assertThat(
+            new String(storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("outfile")).readAllBytes()),
+            endsWith("/outfile")
+        );
+    }
+
     private URI internalFiles(String path) throws IOException, URISyntaxException {
         var resource = ScriptTest.class.getClassLoader().getResource("application.yml");
 
