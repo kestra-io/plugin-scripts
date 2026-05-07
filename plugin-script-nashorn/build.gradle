@@ -17,5 +17,5 @@ dependencies {
 
     implementation group: 'org.openjdk.nashorn', name: 'nashorn-core', version: '15.7'
 
-    testImplementation project(':plugin-script').sourceSets.test.output
+    testImplementation project(path: ':plugin-script', configuration: 'testOutput')
 }
