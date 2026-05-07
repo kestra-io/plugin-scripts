@@ -22,8 +22,7 @@ import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
-import io.kestra.core.queues.QueueFactoryInterface;
-import io.kestra.core.queues.QueueInterface;
+import io.kestra.core.queues.DispatchQueueInterface;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
@@ -35,8 +34,6 @@ import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.runner.docker.PullPolicy;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import reactor.core.publisher.Flux;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -51,8 +48,7 @@ class CommandsTest {
     StorageInterface storageInterface;
 
     @Inject
-    @Named(QueueFactoryInterface.WORKERTASKLOG_NAMED)
-    private QueueInterface<LogEntry> logQueue;
+    private DispatchQueueInterface<LogEntry> logQueue;
 
     static Stream<Arguments> source() {
         return Stream.of(
@@ -229,7 +225,7 @@ class CommandsTest {
     @Test
     void pull() throws Exception {
         List<LogEntry> logs = new CopyOnWriteArrayList<>();
-        Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
+        logQueue.addListener(logs::add);
 
         Commands bash = Commands.builder()
             .id("shell-commands-pull-" + UUID.randomUUID())
@@ -252,7 +248,6 @@ class CommandsTest {
         assertThat(run.getExitCode(), is(0));
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("Image pulled"));
-        receive.blockLast();
         assertThat(List.copyOf(logs).stream().filter(m -> m.getMessage().contains("pulled")).count(), greaterThan(1L));
     }
 

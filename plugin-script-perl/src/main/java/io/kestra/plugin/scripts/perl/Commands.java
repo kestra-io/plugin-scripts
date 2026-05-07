@@ -60,6 +60,15 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
     @PluginProperty(group = "main")
     protected Property<List<String>> commands;
 
+    @io.swagger.v3.oas.annotations.media.Schema(
+        title = "Deprecated - use the 'taskRunner' property instead.",
+        description = "Only used if the `taskRunner` property is not set",
+        deprecated = true
+    )
+    @Deprecated
+    protected io.kestra.plugin.scripts.exec.scripts.models.DockerOptions docker;
+
+
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
         TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);

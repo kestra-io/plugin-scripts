@@ -35,7 +35,7 @@ class CommandsTriggerTest {
             .build();
 
         var context = TestsUtils.mockTrigger(runContextFactory, trigger);
-        Optional<Execution> execution = trigger.evaluate(context.getKey(), context.getValue());
+        Optional<Execution> execution = trigger.evaluate(context.getKey(), context.getValue().context());
 
         assertThat(execution.isPresent(), is(true));
 
@@ -58,7 +58,7 @@ class CommandsTriggerTest {
             .build();
 
         var context = TestsUtils.mockTrigger(runContextFactory, trigger);
-        Optional<Execution> execution = trigger.evaluate(context.getKey(), context.getValue());
+        Optional<Execution> execution = trigger.evaluate(context.getKey(), context.getValue().context());
 
         assertThat(execution.isPresent(), is(true));
 
@@ -82,12 +82,12 @@ class CommandsTriggerTest {
             .build();
 
         var context = TestsUtils.mockTrigger(runContextFactory, trigger);
-        Optional<Execution> first = trigger.evaluate(context.getKey(), context.getValue());
+        Optional<Execution> first = trigger.evaluate(context.getKey(), context.getValue().context());
         assertThat("First evaluation should fire", first.isPresent(), is(true));
 
         // Second evaluation with edge=true should suppress
         context = TestsUtils.mockTrigger(runContextFactory, trigger);
-        Optional<Execution> second = trigger.evaluate(context.getKey(), context.getValue());
+        Optional<Execution> second = trigger.evaluate(context.getKey(), context.getValue().context());
         assertThat("Edge mode should suppress repeated emission", second.isPresent(), is(false));
     }
 
@@ -103,7 +103,7 @@ class CommandsTriggerTest {
             .build();
 
         var context = TestsUtils.mockTrigger(runContextFactory, trigger);
-        Optional<Execution> execution = trigger.evaluate(context.getKey(), context.getValue());
+        Optional<Execution> execution = trigger.evaluate(context.getKey(), context.getValue().context());
 
         assertThat("Regex condition should match", execution.isPresent(), is(true));
 
