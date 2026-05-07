@@ -7,9 +7,16 @@ kestra:
     type: memory
   repository:
     type: memory
+  controller:
+    port: ${random.port}
   worker:
     controllers:
       type: STATIC
       static:
         endpoints:
           - host: localhost
+            port: ${kestra.controller.port}
+
+grpc:
+  server:
+    enabled: false

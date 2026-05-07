@@ -82,7 +82,6 @@ subprojects {
 
     test {
         useJUnitPlatform()
-        forkEvery = 1
     }
 
     testlogger {
