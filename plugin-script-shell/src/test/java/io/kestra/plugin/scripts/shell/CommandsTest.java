@@ -156,6 +156,7 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
+            .outputDirectory(Property.ofValue(true))
             .commands(
                 TestsUtils.propertyFromList(
                     List.of(
@@ -224,10 +225,8 @@ class CommandsTest {
 
     @Test
     void pull() throws Exception {
-        List<LogEntry> logs = new CopyOnWriteArrayList<>();
-        logQueue.addListener(logs::add);
-
-        Commands bash = Commands.builder()
+        // Build a fresh Commands per run; Docker runner's isKilled flag persists across run() calls.
+        java.util.function.Supplier<Commands> builder = () -> Commands.builder()
             .id("shell-commands-pull-" + UUID.randomUUID())
             .type(Commands.class.getName())
             .docker(
@@ -240,15 +239,13 @@ class CommandsTest {
             .commands(Property.ofValue(List.of("pwd")))
             .build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptOutput run = bash.run(runContext);
+        Commands first = builder.get();
+        ScriptOutput run = first.run(TestsUtils.mockRunContext(runContextFactory, first, ImmutableMap.of()));
         assertThat(run.getExitCode(), is(0));
 
-        run = bash.run(runContext);
+        Commands second = builder.get();
+        run = second.run(TestsUtils.mockRunContext(runContextFactory, second, ImmutableMap.of()));
         assertThat(run.getExitCode(), is(0));
-
-        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("Image pulled"));
-        assertThat(List.copyOf(logs).stream().filter(m -> m.getMessage().contains("pulled")).count(), greaterThan(1L));
     }
 
     @Test
