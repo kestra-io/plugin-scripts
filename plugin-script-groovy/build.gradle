@@ -17,5 +17,5 @@ dependencies {
 
     api group: 'org.apache.groovy', name: 'groovy-jsr223', version: '5.0.5'
 
-    testImplementation project(':plugin-script').sourceSets.test.output
+    testImplementation project(path: ':plugin-script', configuration: 'testOutput')
 }
