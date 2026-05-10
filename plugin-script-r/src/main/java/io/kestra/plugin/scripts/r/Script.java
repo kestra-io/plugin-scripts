@@ -165,6 +165,15 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     @PluginProperty(language = MonacoLanguages.R, group = "main")
     protected Property<String> script;
 
+    @io.swagger.v3.oas.annotations.media.Schema(
+        title = "Deprecated - use the 'taskRunner' property instead.",
+        description = "Only used if the `taskRunner` property is not set",
+        deprecated = true
+    )
+    @Deprecated
+    protected io.kestra.plugin.scripts.exec.scripts.models.DockerOptions docker;
+
+
     @Override
     protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
         var builder = original.toBuilder();

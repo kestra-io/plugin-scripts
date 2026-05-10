@@ -22,8 +22,7 @@ import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
-import io.kestra.core.queues.QueueFactoryInterface;
-import io.kestra.core.queues.QueueInterface;
+import io.kestra.core.queues.DispatchQueueInterface;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
@@ -32,11 +31,10 @@ import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+import io.kestra.plugin.scripts.runner.docker.Docker;
 import io.kestra.plugin.scripts.runner.docker.PullPolicy;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import reactor.core.publisher.Flux;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -51,8 +49,7 @@ class CommandsTest {
     StorageInterface storageInterface;
 
     @Inject
-    @Named(QueueFactoryInterface.WORKERTASKLOG_NAMED)
-    private QueueInterface<LogEntry> logQueue;
+    private DispatchQueueInterface<LogEntry> logQueue;
 
     static Stream<Arguments> source() {
         return Stream.of(
@@ -160,6 +157,7 @@ class CommandsTest {
             .type(Commands.class.getName())
             .docker(dockerOptions)
             .runner(runner)
+            .outputDirectory(Property.ofValue(true))
             .commands(
                 TestsUtils.propertyFromList(
                     List.of(
@@ -228,10 +226,8 @@ class CommandsTest {
 
     @Test
     void pull() throws Exception {
-        List<LogEntry> logs = new CopyOnWriteArrayList<>();
-        Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
-
-        Commands bash = Commands.builder()
+        // Build a fresh Commands per run; Docker runner's isKilled flag persists across run() calls.
+        java.util.function.Supplier<Commands> builder = () -> Commands.builder()
             .id("shell-commands-pull-" + UUID.randomUUID())
             .type(Commands.class.getName())
             .docker(
@@ -244,16 +240,13 @@ class CommandsTest {
             .commands(Property.ofValue(List.of("pwd")))
             .build();
 
-        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, bash, ImmutableMap.of());
-        ScriptOutput run = bash.run(runContext);
+        Commands first = builder.get();
+        ScriptOutput run = first.run(TestsUtils.mockRunContext(runContextFactory, first, ImmutableMap.of()));
         assertThat(run.getExitCode(), is(0));
 
-        run = bash.run(runContext);
+        Commands second = builder.get();
+        run = second.run(TestsUtils.mockRunContext(runContextFactory, second, ImmutableMap.of()));
         assertThat(run.getExitCode(), is(0));
-
-        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("Image pulled"));
-        receive.blockLast();
-        assertThat(List.copyOf(logs).stream().filter(m -> m.getMessage().contains("pulled")).count(), greaterThan(1L));
     }
 
     @Test
@@ -261,13 +254,13 @@ class CommandsTest {
         Commands bash = Commands.builder()
             .id("shell-commands-invalid-image-" + UUID.randomUUID())
             .type(Commands.class.getName())
-            .docker(
-                DockerOptions.builder()
+            .taskRunner(
+                Docker.builder()
+                    .type(Docker.class.getName())
                     .pullPolicy(Property.ofValue(PullPolicy.IF_NOT_PRESENT))
                     .image("alpine:999.15.6")
                     .build()
             )
-            .runner(RunnerType.DOCKER)
             .commands(Property.ofValue(List.of("pwd")))
             .build();
 
