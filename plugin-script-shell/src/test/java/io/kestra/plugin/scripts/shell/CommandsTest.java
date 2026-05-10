@@ -31,6 +31,7 @@ import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+import io.kestra.plugin.scripts.runner.docker.Docker;
 import io.kestra.plugin.scripts.runner.docker.PullPolicy;
 
 import jakarta.inject.Inject;
@@ -253,13 +254,13 @@ class CommandsTest {
         Commands bash = Commands.builder()
             .id("shell-commands-invalid-image-" + UUID.randomUUID())
             .type(Commands.class.getName())
-            .docker(
-                DockerOptions.builder()
+            .taskRunner(
+                Docker.builder()
+                    .type(Docker.class.getName())
                     .pullPolicy(Property.ofValue(PullPolicy.IF_NOT_PRESENT))
                     .image("alpine:999.15.6")
                     .build()
             )
-            .runner(RunnerType.DOCKER)
             .commands(Property.ofValue(List.of("pwd")))
             .build();
 

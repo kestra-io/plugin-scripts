@@ -31,6 +31,7 @@ import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.runner.docker.Credentials;
+import io.kestra.plugin.scripts.runner.docker.Docker;
 
 import jakarta.inject.Inject;
 
@@ -110,8 +111,9 @@ class ScriptTest {
         Function<String, Script> function = (String username) -> Script.builder()
             .id("shell-script-overwrite-" + UUID.randomUUID())
             .type(Script.class.getName())
-            .docker(
-                DockerOptions.builder()
+            .taskRunner(
+                Docker.builder()
+                    .type(Docker.class.getName())
                     .image("ubuntu")
                     .credentials(
                         Credentials.builder()

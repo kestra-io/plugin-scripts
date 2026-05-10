@@ -26,6 +26,8 @@ import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+import io.kestra.plugin.scripts.runner.docker.Docker;
+import org.junit.jupiter.api.Test;
 
 import jakarta.inject.Inject;
 import jakarta.validation.ConstraintViolationException;
@@ -121,14 +123,12 @@ class ScriptTest {
         assertThat(run.getVars().get("extract"), is("200"));
     }
 
-    @ParameterizedTest
-    @MethodSource("source")
-    void shouldExecScriptGivenDependency(RunnerType runner, DockerOptions dockerOptions) throws Exception {
+    @Test
+    void shouldExecScriptGivenDependency() throws Exception {
         Script python = Script.builder()
             .id("python-script-deps-" + UUID.randomUUID())
             .type(Script.class.getName())
-            .docker(dockerOptions)
-            .runner(runner)
+            .taskRunner(Docker.builder().type(Docker.class.getName()).image("python:3.13").build())
             .dependencies(Property.ofValue(List.of("kestra", "pandas")))
             .dependencyCacheEnabled(Property.ofValue(false))
             .pythonVersion(Property.ofValue("3.13"))
