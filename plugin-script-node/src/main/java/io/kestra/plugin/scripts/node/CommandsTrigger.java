@@ -31,7 +31,11 @@ import io.kestra.core.models.annotations.PluginProperty;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@Schema(title = "Trigger a flow when Node.js commands match a condition.")
+//  New trigger description
+@Schema(
+    title = "Trigger a flow when Node.js commands match a condition.",
+    description = "Polls and triggers a flow by running Node.js commands within a script container."
+)
 @Plugin(
     examples = {
         @Example(
