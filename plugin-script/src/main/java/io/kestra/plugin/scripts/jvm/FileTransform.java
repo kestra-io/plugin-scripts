@@ -73,10 +73,10 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
         );
 
         try (
-            var output = new BufferedWriter(new FileWriter(tempFile), FileSerde.BUFFER_SIZE)
+            var output = new BufferedOutputStream(new FileOutputStream(tempFile), FileSerde.BUFFER_SIZE)
         ) {
             if (from.startsWith("kestra://")) {
-                try (BufferedReader inputStream = new BufferedReader(new InputStreamReader(runContext.storage().getFile(URI.create(from))), FileSerde.BUFFER_SIZE)) {
+                try (InputStream inputStream = new BufferedInputStream(runContext.storage().getFile(URI.create(from)), FileSerde.BUFFER_SIZE)) {
                     this.finalize(
                         runContext,
                         FileSerde.readAll(inputStream),
@@ -117,7 +117,7 @@ public abstract class FileTransform extends AbstractJvmScript implements Runnabl
         RunContext runContext,
         Flux<Object> flowable,
         ScriptEngineService.CompiledScript scripts,
-        Writer output) throws IOException, ScriptException {
+        OutputStream output) throws IOException, ScriptException {
         Flux<Object> sequential;
 
         if (this.concurrent != null) {
