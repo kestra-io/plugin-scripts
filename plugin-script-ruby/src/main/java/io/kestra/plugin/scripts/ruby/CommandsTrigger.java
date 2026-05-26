@@ -34,8 +34,10 @@ import io.kestra.core.models.annotations.PluginProperty;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@Schema(title = "Trigger a flow when Ruby commands match a condition.")
-@Plugin(
+@Schema(
+    title = "Trigger a flow when Ruby commands match a condition.",
+    description = "Polls and triggers a flow by executing inline Ruby scripts and commands."
+)@Plugin(
     examples = {
         @Example(
             title = "Trigger when Ruby command fails.",
