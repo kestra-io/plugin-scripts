@@ -129,9 +129,14 @@ public class ScriptTrigger extends AbstractTrigger
         RunContext runContext = conditionContext.getRunContext();
         boolean rEdge = runContext.render(this.edge).as(Boolean.class).orElse(true);
 
-        Output out = runOnce(runContext);
+        Output out;
+        try {
+            out = runOnce(runContext);
+        } catch (Exception e) {
+            runContext.logger().warn("Trigger evaluation failed, returning empty result to avoid blocking the scheduler", e);
+            return Optional.empty();
+        }
 
-        // USE exitCondition to decide whether to emit
         boolean matched = matchesCondition(out);
 
         boolean emit = rEdge

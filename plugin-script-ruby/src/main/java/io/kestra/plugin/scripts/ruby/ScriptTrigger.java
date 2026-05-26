@@ -128,7 +128,14 @@ public class ScriptTrigger extends AbstractTrigger
         RunContext runContext = conditionContext.getRunContext();
         boolean edgeEnabled = runContext.render(this.edge).as(Boolean.class).orElse(true);
 
-        Output output = runOnce(runContext);
+        Output output;
+        try {
+            output = runOnce(runContext);
+        } catch (Exception e) {
+            runContext.logger().warn("Trigger evaluation failed, returning empty result to avoid blocking the scheduler", e);
+            return Optional.empty();
+        }
+
         boolean matched = matchesCondition(output);
 
         boolean emit = edgeEnabled

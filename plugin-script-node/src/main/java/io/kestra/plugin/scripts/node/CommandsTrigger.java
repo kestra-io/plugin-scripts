@@ -127,7 +127,14 @@ public class CommandsTrigger extends AbstractTrigger
         RunContext runContext = conditionContext.getRunContext();
         boolean rEdge = runContext.render(this.edge).as(Boolean.class).orElse(true);
 
-        Output out = runOnce(runContext);
+        Output out;
+        try {
+            out = runOnce(runContext);
+        } catch (Exception e) {
+            runContext.logger().warn("Trigger evaluation failed, returning empty result to avoid blocking the scheduler", e);
+            return Optional.empty();
+        }
+
         boolean matched = matchesCondition(out);
 
         boolean emit = rEdge
@@ -176,7 +183,7 @@ public class CommandsTrigger extends AbstractTrigger
         }
     }
 
-    private boolean matchesCondition(Output out) {
+    boolean matchesCondition(Output out) {
         String cond = out.getCondition() == null ? "" : out.getCondition().trim();
 
         Matcher exitMatcher = Pattern.compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE)
