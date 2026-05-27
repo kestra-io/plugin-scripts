@@ -18,61 +18,55 @@ class ScriptTriggerTest {
 
     @Test
     void matchesCondition_exitCodeCondition_shouldMatchWhenExitCodeEquals() {
-        var output = new ScriptTrigger.Output(Instant.now(), "exit 1", 1, null, null);
+        var output = new ScriptTrigger.Output(Instant.now(), "exit 1", 1, null);
         assertThat(exitConditionMatches(output), is(true));
     }
 
     @Test
     void matchesCondition_exitCodeCondition_shouldNotMatchWhenExitCodeDiffers() {
-        var output = new ScriptTrigger.Output(Instant.now(), "exit 1", 127, null, null);
+        var output = new ScriptTrigger.Output(Instant.now(), "exit 1", 127, null);
         assertThat("exit 1 condition with exitCode=127 should not match", exitConditionMatches(output), is(false));
     }
 
     @Test
     void matchesCondition_exitCodeCondition_shouldNotMatchWhenExitCodeIsNull() {
-        var output = new ScriptTrigger.Output(Instant.now(), "exit 1", null, null, null);
+        var output = new ScriptTrigger.Output(Instant.now(), "exit 1", null, null);
         assertThat(exitConditionMatches(output), is(false));
     }
 
     @Test
     void matchesCondition_substringCondition_shouldMatchAgainstVars() {
-        var output = new ScriptTrigger.Output(Instant.now(), "toto", 0, Map.of("listing", "toto"), null);
+        var output = new ScriptTrigger.Output(Instant.now(), "toto", 0, Map.of("listing", "toto"));
         assertThat(exitConditionMatches(output), is(true));
     }
 
     @Test
     void matchesCondition_substringCondition_shouldNotMatchWhenAbsent() {
-        var output = new ScriptTrigger.Output(Instant.now(), "toto", 0, Map.of("listing", "something_else"), null);
+        var output = new ScriptTrigger.Output(Instant.now(), "toto", 0, Map.of("listing", "something_else"));
         assertThat(exitConditionMatches(output), is(false));
     }
 
     @Test
     void matchesCondition_regexCondition_shouldMatchAgainstVars() {
-        var output = new ScriptTrigger.Output(Instant.now(), "status=\\w+", 0, Map.of("status", "status=ready"), null);
-        assertThat(exitConditionMatches(output), is(true));
-    }
-
-    @Test
-    void matchesCondition_substringCondition_shouldMatchAgainstLogs() {
-        var output = new ScriptTrigger.Output(Instant.now(), "fatal error", 1, null, "Something went wrong: fatal error in main");
+        var output = new ScriptTrigger.Output(Instant.now(), "status=\\w+", 0, Map.of("status", "status=ready"));
         assertThat(exitConditionMatches(output), is(true));
     }
 
     @Test
     void matchesCondition_emptyCondition_shouldNotMatch() {
-        var output = new ScriptTrigger.Output(Instant.now(), "", 0, null, null);
+        var output = new ScriptTrigger.Output(Instant.now(), "", 0, null);
         assertThat(exitConditionMatches(output), is(false));
     }
 
     @Test
     void matchesCondition_nullCondition_shouldNotMatch() {
-        var output = new ScriptTrigger.Output(Instant.now(), null, 0, null, null);
+        var output = new ScriptTrigger.Output(Instant.now(), null, 0, null);
         assertThat(exitConditionMatches(output), is(false));
     }
 
     @Test
     void matchesCondition_exitZero_shouldMatchSuccessfulExecution() {
-        var output = new ScriptTrigger.Output(Instant.now(), "exit 0", 0, null, null);
+        var output = new ScriptTrigger.Output(Instant.now(), "exit 0", 0, null);
         assertThat(exitConditionMatches(output), is(true));
     }
 
@@ -88,14 +82,9 @@ class ScriptTriggerTest {
             return out.getExitCode() != null && out.getExitCode() == expected;
         }
 
-        var sb = new StringBuilder();
-        if (out.getVars() != null && !out.getVars().isEmpty()) {
-            sb.append(out.getVars()).append("\n");
-        }
-        if (out.getLogs() != null && !out.getLogs().isBlank()) {
-            sb.append(out.getLogs()).append("\n");
-        }
-        var haystack = sb.toString();
+        var haystack = out.getVars() != null && !out.getVars().isEmpty()
+            ? out.getVars().toString()
+            : "";
 
         if (haystack.isEmpty() || cond.isEmpty()) {
             return false;

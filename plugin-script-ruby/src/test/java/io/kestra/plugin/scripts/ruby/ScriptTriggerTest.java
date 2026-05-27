@@ -20,58 +20,53 @@ class ScriptTriggerTest {
 
     private final ScriptTrigger trigger = ScriptTrigger.builder().build();
 
-    private ScriptTrigger.Output output(String condition, Integer exitCode, Map<String, Object> vars, String logs) {
-        return new ScriptTrigger.Output(Instant.now(), condition, exitCode, vars, logs);
+    private ScriptTrigger.Output output(String condition, Integer exitCode, Map<String, Object> vars) {
+        return new ScriptTrigger.Output(Instant.now(), condition, exitCode, vars);
     }
 
     @Test
     void exitCodeCondition_shouldMatchWhenExitCodeEquals() {
-        assertThat(trigger.matchesCondition(output("exit 1", 1, null, null)), is(true));
+        assertThat(trigger.matchesCondition(output("exit 1", 1, null)), is(true));
     }
 
     @Test
     void exitCodeCondition_shouldNotMatchWhenExitCodeDiffers() {
-        assertThat(trigger.matchesCondition(output("exit 1", 127, null, null)), is(false));
+        assertThat(trigger.matchesCondition(output("exit 1", 127, null)), is(false));
     }
 
     @Test
     void exitCodeCondition_shouldNotMatchWhenExitCodeIsNull() {
-        assertThat(trigger.matchesCondition(output("exit 1", null, null, null)), is(false));
+        assertThat(trigger.matchesCondition(output("exit 1", null, null)), is(false));
     }
 
     @Test
     void substringCondition_shouldMatchAgainstVars() {
-        assertThat(trigger.matchesCondition(output("toto", 0, Map.of("listing", "toto"), null)), is(true));
+        assertThat(trigger.matchesCondition(output("toto", 0, Map.of("listing", "toto"))), is(true));
     }
 
     @Test
     void substringCondition_shouldNotMatchWhenAbsent() {
-        assertThat(trigger.matchesCondition(output("toto", 0, Map.of("listing", "something_else"), null)), is(false));
+        assertThat(trigger.matchesCondition(output("toto", 0, Map.of("listing", "something_else"))), is(false));
     }
 
     @Test
     void regexCondition_shouldMatchAgainstVars() {
-        assertThat(trigger.matchesCondition(output("status=\\w+", 0, Map.of("status", "status=ready"), null)), is(true));
-    }
-
-    @Test
-    void substringCondition_shouldMatchAgainstLogs() {
-        assertThat(trigger.matchesCondition(output("fatal error", 1, null, "Something went wrong: fatal error in main")), is(true));
+        assertThat(trigger.matchesCondition(output("status=\\w+", 0, Map.of("status", "status=ready"))), is(true));
     }
 
     @Test
     void emptyCondition_shouldNotMatch() {
-        assertThat(trigger.matchesCondition(output("", 0, null, null)), is(false));
+        assertThat(trigger.matchesCondition(output("", 0, null)), is(false));
     }
 
     @Test
     void nullCondition_shouldNotMatch() {
-        assertThat(trigger.matchesCondition(output(null, 0, null, null)), is(false));
+        assertThat(trigger.matchesCondition(output(null, 0, null)), is(false));
     }
 
     @Test
     void exitZeroCondition_shouldMatchSuccessfulExecution() {
-        assertThat(trigger.matchesCondition(output("exit 0", 0, null, null)), is(true));
+        assertThat(trigger.matchesCondition(output("exit 0", 0, null)), is(true));
     }
 
     @Test
