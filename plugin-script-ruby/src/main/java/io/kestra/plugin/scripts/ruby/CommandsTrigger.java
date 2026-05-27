@@ -176,8 +176,7 @@ public class CommandsTrigger extends AbstractTrigger
                 Instant.now(),
                 renderedCondition,
                 safeExitCode(taskOutput),
-                safeVars(taskOutput),
-                null
+                safeVars(taskOutput)
             );
         } catch (RunnableTaskException e) {
             ExtractedFailure failure = extractFailure(e);
@@ -185,8 +184,7 @@ public class CommandsTrigger extends AbstractTrigger
                 Instant.now(),
                 renderedCondition,
                 failure.exitCode,
-                null,
-                failure.logs
+                null
             );
         }
     }
@@ -221,19 +219,11 @@ public class CommandsTrigger extends AbstractTrigger
     }
 
     private String buildHaystack(Output out) {
-        StringBuilder sb = new StringBuilder();
-
-        // Note: uses Map.toString() which produces {key=value, ...} format.
-        // This is intentional for simple substring/regex matching against output vars,
-        // but the exact format depends on the Map implementation.
-        if (out.getVars() != null && !out.getVars().isEmpty()) {
-            sb.append(out.getVars()).append("\n");
+        if (out.getVars() == null || out.getVars().isEmpty()) {
+            return "";
         }
-        if (out.getLogs() != null && !out.getLogs().isBlank()) {
-            sb.append(out.getLogs()).append("\n");
-        }
-
-        return sb.toString();
+        // Map.toString() produces {key=value, ...} — intentional for substring/regex matching.
+        return out.getVars().toString();
     }
 
     private Integer safeExitCode(ScriptOutput taskOutput) {
@@ -252,25 +242,21 @@ public class CommandsTrigger extends AbstractTrigger
         }
     }
 
-    private record ExtractedFailure(Integer exitCode, String logs) {}
+    private record ExtractedFailure(Integer exitCode) {}
 
     private ExtractedFailure extractFailure(RunnableTaskException e) {
         Integer exitCode = null;
-        String logs = null;
 
         Throwable cur = e.getCause();
         while (cur != null) {
             if (cur instanceof TaskException te) {
                 exitCode = te.getExitCode();
-                try {
-                    logs = te.getLogConsumer() != null ? te.getLogConsumer().toString() : null;
-                } catch (Exception ignored) {}
                 break;
             }
             cur = cur.getCause();
         }
 
-        return new ExtractedFailure(exitCode, logs);
+        return new ExtractedFailure(exitCode);
     }
 
     @Data
@@ -299,11 +285,5 @@ public class CommandsTrigger extends AbstractTrigger
             description = "Vars produced by the task (e.g. via ::{\"outputs\":{...}}:: convention)."
         )
         private Map<String, Object> vars;
-
-        @Schema(
-            title = "Captured logs (best effort).",
-            description = "Captured error logs when the commands fail (best effort, depends on the runner)."
-        )
-        private String logs;
     }
 }

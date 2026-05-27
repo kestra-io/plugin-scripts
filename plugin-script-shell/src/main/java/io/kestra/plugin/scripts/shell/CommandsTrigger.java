@@ -166,10 +166,10 @@ public class CommandsTrigger extends AbstractTrigger
             Integer exitCode = safeExitCode(taskOutput);
             Map<String, Object> vars = safeVars(taskOutput);
 
-            return new Output(Instant.now(), renderedCondition, exitCode, vars, null);
+            return new Output(Instant.now(), renderedCondition, exitCode, vars);
         } catch (RunnableTaskException e) {
             ExtractedFailure failure = extractFailure(e);
-            return new Output(Instant.now(), renderedCondition, failure.exitCode, null, failure.logs);
+            return new Output(Instant.now(), renderedCondition, failure.exitCode, null);
         }
     }
 
@@ -195,16 +195,10 @@ public class CommandsTrigger extends AbstractTrigger
     }
 
     private String buildHaystack(Output out) {
-        StringBuilder sb = new StringBuilder();
-
-        if (out.getVars() != null && !out.getVars().isEmpty()) {
-            sb.append(out.getVars()).append("\n");
+        if (out.getVars() == null || out.getVars().isEmpty()) {
+            return "";
         }
-        if (out.getLogs() != null && !out.getLogs().isBlank()) {
-            sb.append(out.getLogs()).append("\n");
-        }
-
-        return sb.toString();
+        return out.getVars().toString();
     }
 
     private Integer safeExitCode(ScriptOutput taskOutput) {
@@ -223,27 +217,22 @@ public class CommandsTrigger extends AbstractTrigger
         }
     }
 
-    private record ExtractedFailure(Integer exitCode, String logs) {
+    private record ExtractedFailure(Integer exitCode) {
     }
 
     private ExtractedFailure extractFailure(RunnableTaskException e) {
         Integer exitCode = null;
-        String logs = null;
 
         Throwable cur = e.getCause();
         while (cur != null) {
             if (cur instanceof TaskException te) {
                 exitCode = te.getExitCode();
-                try {
-                    logs = te.getLogConsumer() != null ? te.getLogConsumer().toString() : null;
-                } catch (Exception ignored) {
-                }
                 break;
             }
             cur = cur.getCause();
         }
 
-        return new ExtractedFailure(exitCode, logs);
+        return new ExtractedFailure(exitCode);
     }
 
     @Data
@@ -253,6 +242,5 @@ public class CommandsTrigger extends AbstractTrigger
         private String condition;
         private Integer exitCode;
         private Map<String, Object> vars;
-        private String logs;
     }
 }

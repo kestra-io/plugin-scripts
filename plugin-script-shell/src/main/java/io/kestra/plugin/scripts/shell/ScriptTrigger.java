@@ -166,10 +166,10 @@ public class ScriptTrigger extends AbstractTrigger
             // vars are the only reliable structured "result" we can read on success
             Map<String, Object> vars = safeVars(taskOutput);
 
-            return new Output(Instant.now(), rExitCondition, exitCode, vars, null);
+            return new Output(Instant.now(), rExitCondition, exitCode, vars);
         } catch (RunnableTaskException e) {
             ExtractedFailure failure = extractFailure(e);
-            return new Output(Instant.now(), rExitCondition, failure.exitCode, null, failure.logs);
+            return new Output(Instant.now(), rExitCondition, failure.exitCode, null);
         }
     }
 
@@ -197,16 +197,10 @@ public class ScriptTrigger extends AbstractTrigger
     }
 
     private String buildHaystack(Output out) {
-        StringBuilder sb = new StringBuilder();
-
-        if (out.getVars() != null && !out.getVars().isEmpty()) {
-            sb.append(out.getVars()).append("\n");
+        if (out.getVars() == null || out.getVars().isEmpty()) {
+            return "";
         }
-        if (out.getLogs() != null && !out.getLogs().isBlank()) {
-            sb.append(out.getLogs()).append("\n");
-        }
-
-        return sb.toString();
+        return out.getVars().toString();
     }
 
     private Integer safeExitCode(ScriptOutput taskOutput) {
@@ -225,28 +219,22 @@ public class ScriptTrigger extends AbstractTrigger
         }
     }
 
-    private record ExtractedFailure(Integer exitCode, String logs) {
+    private record ExtractedFailure(Integer exitCode) {
     }
 
     private ExtractedFailure extractFailure(RunnableTaskException e) {
         Integer exitCode = null;
-        String logs = null;
 
         Throwable cur = e.getCause();
         while (cur != null) {
             if (cur instanceof TaskException te) {
                 exitCode = te.getExitCode();
-                // Best-effort: TaskException carries a log consumer; toString() usually contains aggregated logs.
-                try {
-                    logs = te.getLogConsumer() != null ? te.getLogConsumer().toString() : null;
-                } catch (Exception ignored) {
-                }
                 break;
             }
             cur = cur.getCause();
         }
 
-        return new ExtractedFailure(exitCode, logs);
+        return new ExtractedFailure(exitCode);
     }
 
     @Data
@@ -274,11 +262,5 @@ public class ScriptTrigger extends AbstractTrigger
                 """
         )
         private Map<String, Object> vars;
-
-        @Schema(
-            title = "Captured logs (best effort).",
-            description = "Captured error logs when the script fails (best effort, depends on the runner)."
-        )
-        private String logs;
     }
 }
