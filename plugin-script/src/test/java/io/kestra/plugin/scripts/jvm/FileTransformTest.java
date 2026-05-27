@@ -114,34 +114,35 @@ public abstract class FileTransformTest {
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());
         FileTransform.Output runOutput = task.run(runContext);
 
-        BufferedReader inputStream = new BufferedReader(new InputStreamReader(storageInterface.get(TenantService.MAIN_TENANT, null, runOutput.getUri())));
-        List<Object> result = new ArrayList<>();
-        FileSerde.reader(inputStream, result::add);
+        try (InputStream in = new BufferedInputStream(storageInterface.get(TenantService.MAIN_TENANT, null, runOutput.getUri()), FileSerde.BUFFER_SIZE)) {
+            List<Object> result = new ArrayList<>();
+            FileSerde.read(in, result::add);
 
-        AbstractMetricEntry<?> metric = runContext.metrics().get(0);
-        assertThat(metric.getValue(), is((double) size));
+            AbstractMetricEntry<?> metric = runContext.metrics().get(0);
+            assertThat(metric.getValue(), is((double) size));
 
-        assertThat(result.size(), is(size));
-        assertThat(
-            result.stream().filter(o -> ((Map<String, String>) o).get("id").equals("1")).findFirst().orElseThrow(), is(
-                ImmutableMap.of(
-                    "id", "1",
-                    "name", "john",
-                    "email", "john@kestra.io"
-                )
-            )
-        );
-
-        if (size > 1) {
+            assertThat(result.size(), is(size));
             assertThat(
-                result.stream().filter(o -> ((Map<String, String>) o).get("id").equals("2")).findFirst().orElseThrow(), is(
+                result.stream().filter(o -> ((Map<String, String>) o).get("id").equals("1")).findFirst().orElseThrow(), is(
                     ImmutableMap.of(
-                        "id", "2",
-                        "name", "jane",
-                        "email", "jane@kestra.io"
+                        "id", "1",
+                        "name", "john",
+                        "email", "john@kestra.io"
                     )
                 )
             );
+
+            if (size > 1) {
+                assertThat(
+                    result.stream().filter(o -> ((Map<String, String>) o).get("id").equals("2")).findFirst().orElseThrow(), is(
+                        ImmutableMap.of(
+                            "id", "2",
+                            "name", "jane",
+                            "email", "jane@kestra.io"
+                        )
+                    )
+                );
+            }
         }
     }
 
@@ -169,13 +170,14 @@ public abstract class FileTransformTest {
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());
         io.kestra.plugin.scripts.jvm.FileTransform.Output runOutput = task.run(runContext);
 
-        BufferedReader inputStream = new BufferedReader(new InputStreamReader(storageInterface.get(TenantService.MAIN_TENANT, null, runOutput.getUri())));
-        List<Object> result = new ArrayList<>();
-        FileSerde.reader(inputStream, result::add);
+        try (InputStream in = new BufferedInputStream(storageInterface.get(TenantService.MAIN_TENANT, null, runOutput.getUri()), FileSerde.BUFFER_SIZE)) {
+            List<Object> result = new ArrayList<>();
+            FileSerde.read(in, result::add);
 
-        assertThat(result.size(), is(4));
-        assertThat(result, hasItems(1, 2));
-        assertThat(result.get(2), is(map));
-        assertThat(result.get(3), is(Map.of("action", "insert")));
+            assertThat(result.size(), is(4));
+            assertThat(result, hasItems(1, 2));
+            assertThat(result.get(2), is(map));
+            assertThat(result.get(3), is(Map.of("action", "insert")));
+        }
     }
 }
