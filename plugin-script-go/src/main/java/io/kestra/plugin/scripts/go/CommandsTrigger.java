@@ -43,7 +43,10 @@ import io.kestra.core.models.annotations.PluginProperty;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@Schema(title = "Trigger a flow when Go commands match a condition.")
+@Schema(
+    title = "Trigger a flow when Go commands match a condition.",
+    description = "Polls and triggers a flow by running Go commands within a script container."
+)
 @Plugin(
     examples = {
         @Example(
