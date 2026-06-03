@@ -82,6 +82,7 @@ subprojects {
 
     test {
         useJUnitPlatform()
+        maxParallelForks = Math.max(1, Runtime.runtime.availableProcessors().intdiv(2))
     }
 
     testlogger {
