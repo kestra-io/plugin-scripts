@@ -14,8 +14,8 @@ class CommandsTriggerConditionTest {
 
     private final CommandsTrigger trigger = CommandsTrigger.builder().build();
 
-    private CommandsTrigger.Output output(String condition, Integer exitCode, Map<String, Object> vars, String logs) {
-        return new CommandsTrigger.Output(Instant.now(), condition, exitCode, vars, logs);
+    private CommandsTrigger.Output output(String condition, Integer exitCode, Map<String, Object> vars) {
+        return new CommandsTrigger.Output(Instant.now(), condition, exitCode, vars);
     }
 
     @ParameterizedTest
@@ -28,44 +28,32 @@ class CommandsTriggerConditionTest {
         "exit 42, 42, true",
     })
     void exitCodeCondition(String condition, int exitCode, boolean expected) {
-        assertThat(trigger.matchesCondition(output(condition, exitCode, null, null)), is(expected));
+        assertThat(trigger.matchesCondition(output(condition, exitCode, null)), is(expected));
     }
 
     @Test
     void exitCondition_nullExitCode_doesNotMatch() {
-        assertThat(trigger.matchesCondition(output("exit 1", null, null, null)), is(false));
+        assertThat(trigger.matchesCondition(output("exit 1", null, null)), is(false));
     }
 
     @Test
     void substringMatch_inVars() {
         assertThat(trigger.matchesCondition(
-            output("toto", 0, Map.of("key", "toto"), null)), is(true));
-    }
-
-    @Test
-    void substringMatch_inLogs() {
-        assertThat(trigger.matchesCondition(
-            output("error", 1, null, "some error occurred")), is(true));
-    }
-
-    @Test
-    void regexMatch_inLogs() {
-        assertThat(trigger.matchesCondition(
-            output("err.*red", 1, null, "some error occurred")), is(true));
+            output("toto", 0, Map.of("key", "toto"))), is(true));
     }
 
     @Test
     void noMatch_emptyHaystack() {
-        assertThat(trigger.matchesCondition(output("something", 0, null, null)), is(false));
+        assertThat(trigger.matchesCondition(output("something", 0, null)), is(false));
     }
 
     @Test
     void noMatch_emptyCondition() {
-        assertThat(trigger.matchesCondition(output("", 0, Map.of("k", "v"), null)), is(false));
+        assertThat(trigger.matchesCondition(output("", 0, Map.of("k", "v"))), is(false));
     }
 
     @Test
     void nullCondition_doesNotMatch() {
-        assertThat(trigger.matchesCondition(output(null, 0, Map.of("k", "v"), null)), is(false));
+        assertThat(trigger.matchesCondition(output(null, 0, Map.of("k", "v"))), is(false));
     }
 }
