@@ -22,6 +22,7 @@ import io.kestra.core.models.triggers.TriggerContext;
 import io.kestra.core.models.triggers.TriggerOutput;
 import io.kestra.core.models.triggers.TriggerService;
 import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -165,6 +166,8 @@ public class CommandsTrigger extends AbstractTrigger
 
     private Output runOnce(RunContext runContext) throws Exception {
         Commands task = Commands.builder()
+            .id(this.getId())
+            .type(Commands.class.getName())
             .containerImage(this.containerImage)
             .commands(this.commands)
             .build();
@@ -172,7 +175,7 @@ public class CommandsTrigger extends AbstractTrigger
         String renderedCondition = runContext.render(this.exitCondition).as(String.class).orElse("");
 
         try {
-            ScriptOutput taskOutput = task.run(runContext);
+            ScriptOutput taskOutput = task.run(TriggerRunContext.forEmbeddedTask(runContext, task));
             Integer exitCode = safeExitCode(taskOutput);
             Map<String, Object> vars = safeVars(taskOutput);
 

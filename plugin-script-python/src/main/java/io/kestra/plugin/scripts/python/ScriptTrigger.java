@@ -4,6 +4,7 @@ import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -71,10 +72,12 @@ public class ScriptTrigger extends AbstractPythonTrigger {
     @Override
     protected ScriptOutput executeTask(RunContext runContext) throws Exception {
         Script task = Script.builder()
+            .id(this.getId())
+            .type(Script.class.getName())
             .containerImage(this.containerImage)
             .script(this.script)
             .build();
 
-        return task.run(runContext);
+        return task.run(TriggerRunContext.forEmbeddedTask(runContext, task));
     }
 }

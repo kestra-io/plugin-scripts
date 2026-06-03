@@ -17,6 +17,7 @@ import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -151,6 +152,8 @@ public class ScriptTrigger extends AbstractTrigger
 
     private Output runOnce(RunContext runContext) throws Exception {
         Script task = Script.builder()
+            .id(this.getId())
+            .type(Script.class.getName())
             .containerImage(this.containerImage)
             .script(this.script)
             .build();
@@ -158,7 +161,7 @@ public class ScriptTrigger extends AbstractTrigger
         String rExitCondition = runContext.render(this.exitCondition).as(String.class).orElse("");
 
         try {
-            ScriptOutput taskOutput = task.run(runContext);
+            ScriptOutput taskOutput = task.run(TriggerRunContext.forEmbeddedTask(runContext, task));
             Integer exitCode = safeExitCode(taskOutput);
 
             // vars are the only reliable structured "result" we can read on success

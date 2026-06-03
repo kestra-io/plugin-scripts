@@ -9,6 +9,7 @@ import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -142,6 +143,8 @@ public class ScriptTrigger extends AbstractTrigger
 
     private Output runOnce(RunContext runContext) throws Exception {
         Script task = Script.builder()
+            .id(this.getId())
+            .type(Script.class.getName())
             .containerImage(this.containerImage)
             .script(this.script)
             .build();
@@ -151,7 +154,7 @@ public class ScriptTrigger extends AbstractTrigger
             .orElse("");
 
         try {
-            ScriptOutput taskOutput = task.run(runContext);
+            ScriptOutput taskOutput = task.run(TriggerRunContext.forEmbeddedTask(runContext, task));
 
             return new Output(
                 Instant.now(),
