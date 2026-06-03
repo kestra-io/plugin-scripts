@@ -4,6 +4,7 @@ import java.util.List;
 
 import io.kestra.core.models.property.Property;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
+import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.python.internals.PackageManagerType;
 import io.kestra.plugin.scripts.python.internals.PythonBasedPlugin;
 
@@ -40,4 +41,12 @@ public abstract class AbstractPythonExecScript extends AbstractExecScript implem
 
     @Builder.Default
     protected Property<PackageManagerType> packageManager = Property.ofValue(PackageManagerType.UV);
+
+    @Schema(
+        title = "Deprecated - use the 'taskRunner' property instead.",
+        description = "Only used if the `taskRunner` property is not set",
+        deprecated = true
+    )
+    @Deprecated
+    protected DockerOptions docker;
 }

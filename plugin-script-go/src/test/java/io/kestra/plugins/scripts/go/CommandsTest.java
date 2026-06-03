@@ -17,8 +17,7 @@ import com.google.common.io.CharStreams;
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
-import io.kestra.core.queues.QueueFactoryInterface;
-import io.kestra.core.queues.QueueInterface;
+import io.kestra.core.queues.DispatchQueueInterface;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.tenant.TenantService;
@@ -26,7 +25,6 @@ import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.go.Commands;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -37,8 +35,7 @@ public class CommandsTest {
     RunContextFactory runContextFactory;
 
     @Inject
-    @Named(QueueFactoryInterface.WORKERTASKLOG_NAMED)
-    private QueueInterface<LogEntry> logQueue;
+    private DispatchQueueInterface<LogEntry> logQueue;
 
     @Inject
     StorageInterface storageInterface;
@@ -46,7 +43,7 @@ public class CommandsTest {
     @Test
     void should_print_hello_there() throws Exception {
         List<LogEntry> logs = new CopyOnWriteArrayList<>();
-        var receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
+        logQueue.addListener(logs::add);
 
         var goScript = storageInterface.put(
             TenantService.MAIN_TENANT,
@@ -91,7 +88,6 @@ public class CommandsTest {
         assertThat(run.getStdErrLineCount(), is(3)); // go logs everything to stderr
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("hello there!"));
-        receive.blockLast();
         assertThat(List.copyOf(logs).stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("hello there!")).count(), is(1L));
     }
 
