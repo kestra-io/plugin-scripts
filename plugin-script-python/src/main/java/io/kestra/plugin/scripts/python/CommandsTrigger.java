@@ -4,7 +4,6 @@ import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContext;
-import io.kestra.plugin.core.runner.Process;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -78,7 +77,6 @@ public class CommandsTrigger extends AbstractPythonTrigger {
         Commands task = Commands.builder()
             .containerImage(this.containerImage)
             .commands(this.commands)
-            .taskRunner(Process.instance())
             .build();
 
         return task.run(runContext);

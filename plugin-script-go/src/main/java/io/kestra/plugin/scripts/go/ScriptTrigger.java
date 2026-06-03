@@ -22,7 +22,6 @@ import io.kestra.core.models.triggers.TriggerContext;
 import io.kestra.core.models.triggers.TriggerOutput;
 import io.kestra.core.models.triggers.TriggerService;
 import io.kestra.core.runners.RunContext;
-import io.kestra.plugin.core.runner.Process;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -170,7 +169,6 @@ public class ScriptTrigger extends AbstractTrigger
         Script task = Script.builder()
             .containerImage(this.containerImage)
             .script(this.script)
-            .taskRunner(Process.instance())
             .build();
 
         String renderedExitCondition = runContext.render(this.exitCondition).as(String.class).orElse("");

@@ -18,7 +18,6 @@ import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
-import io.kestra.plugin.core.runner.Process;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -156,7 +155,6 @@ public class CommandsTrigger extends AbstractTrigger
         Commands task = Commands.builder()
             .containerImage(this.containerImage)
             .commands(this.commands)
-            .taskRunner(Process.instance())
             .build();
 
         String renderedCondition = runContext.render(this.exitCondition).as(String.class).orElse("");
