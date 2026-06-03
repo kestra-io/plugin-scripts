@@ -9,6 +9,7 @@ import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.core.runner.Process;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -144,6 +145,7 @@ public class ScriptTrigger extends AbstractTrigger
         Script task = Script.builder()
             .containerImage(this.containerImage)
             .script(this.script)
+            .taskRunner(Process.instance())
             .build();
 
         String renderedCondition = runContext.render(this.exitCondition)
