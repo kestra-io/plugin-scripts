@@ -359,7 +359,11 @@ public class Script extends AbstractPythonExecScript implements RunnableTask<Scr
         env.put("PIP_DISABLE_PIP_VERSION_CHECK", "1");
 
         if (pythonEnvironment.packages() != null) {
-            env.put("PYTHONPATH", pythonEnvironment.packages().path().toString());
+            // The packages path is absolute on the worker; remap it to the task runner working
+            // directory (e.g. /kestra/working-dir for the Kubernetes runner) so the script finds
+            // them, just like the script path is remapped below.
+            Path relativePackagesPath = runContext.workingDir().path().relativize(pythonEnvironment.packages().path());
+            env.put("PYTHONPATH", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativePackagesPath.toString(), os));
         }
 
         ScriptOutput output = commands

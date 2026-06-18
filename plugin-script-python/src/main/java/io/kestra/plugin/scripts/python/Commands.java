@@ -1,5 +1,6 @@
 package io.kestra.plugin.scripts.python;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,7 @@ import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 import io.kestra.plugin.scripts.python.internals.PackageManagerType;
 import io.kestra.plugin.scripts.python.internals.PythonEnvironmentManager;
 import io.kestra.plugin.scripts.python.internals.PythonEnvironmentManager.ResolvedPythonEnvironment;
@@ -323,6 +325,8 @@ public class Commands extends AbstractPythonExecScript implements RunnableTask<S
     public ScriptOutput run(RunContext runContext) throws Exception {
         TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
 
+        CommandsWrapper commandsWrapper = this.commands(runContext);
+
         PackageManagerType resolvedPackageManager = runContext.render(this.packageManager).as(PackageManagerType.class).orElse(PackageManagerType.PIP);
         PythonEnvironmentManager pythonEnvironmentManager = new PythonEnvironmentManager(runContext, this, resolvedPackageManager);
         ResolvedPythonEnvironment pythonEnvironment = pythonEnvironmentManager.setup(containerImage, taskRunner, runner);
@@ -333,10 +337,13 @@ public class Commands extends AbstractPythonExecScript implements RunnableTask<S
         env.put("PIP_DISABLE_PIP_VERSION_CHECK", "1");
 
         if (pythonEnvironment.packages() != null) {
-            env.put("PYTHONPATH", pythonEnvironment.packages().path().toString());
+            // The packages path is absolute on the worker; remap it to the task runner working
+            // directory (e.g. /kestra/working-dir for the Kubernetes runner) so the commands find them.
+            Path relativePackagesPath = runContext.workingDir().path().relativize(pythonEnvironment.packages().path());
+            env.put("PYTHONPATH", commandsWrapper.getTaskRunner().toAbsolutePath(runContext, commandsWrapper, relativePackagesPath.toString(), os));
         }
 
-        ScriptOutput output = this.commands(runContext)
+        ScriptOutput output = commandsWrapper
             .addEnv(env)
             .withInterpreter(this.interpreter)
             .withCommands(commands)
