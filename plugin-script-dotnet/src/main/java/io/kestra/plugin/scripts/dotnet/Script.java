@@ -9,6 +9,7 @@ import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.enums.MonacoLanguages;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
@@ -118,7 +119,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
             """
     )
     @NotNull
-    @PluginProperty(group = "main")
+    @PluginProperty(language = MonacoLanguages.CSHARP, group = "main")
     protected Property<String> script;
 
     @Override
