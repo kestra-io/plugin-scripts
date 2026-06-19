@@ -68,6 +68,8 @@ class ScriptTest {
         assertThat(run.getStdOutLineCount(), greaterThan(1));
         assertThat(run.getStdErrLineCount(), greaterThan(1));
 
+        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("2010-06-04"));
+        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("2011-06-04"));
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("2012-06-04"));
         receive.blockLast();
         assertThat(List.copyOf(logs).stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("2010-06-04")).count(), is(1L));
