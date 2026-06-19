@@ -1,0 +1,19 @@
+project.description = 'Execute .NET C# scripts as part of Kestra data workflows.'
+
+jar {
+    manifest {
+        attributes(
+                "X-Kestra-Name": project.name,
+                "X-Kestra-Title": ".NET (C#)",
+                "X-Kestra-Group": project.group + ".scripts.dotnet",
+                "X-Kestra-Description": project.description,
+                "X-Kestra-Version": project.version
+        )
+    }
+}
+
+dependencies {
+    implementation project(':plugin-script')
+
+    testImplementation project(path: ':plugin-script', configuration: 'testOutput')
+}
