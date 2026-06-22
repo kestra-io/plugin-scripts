@@ -19,8 +19,8 @@ This is a **multi-module** plugin with 19 submodules:
 
 - `plugin-script`
 - `plugin-script-bun`
-- `plugin-script-dotnet`
 - `plugin-script-deno`
+- `plugin-script-dotnet`
 - `plugin-script-go`
 - `plugin-script-groovy`
 - `plugin-script-jbang`
@@ -43,14 +43,14 @@ This is a **multi-module** plugin with 19 submodules:
 
 - `io.kestra.plugin.scripts.bun.Commands`
 - `io.kestra.plugin.scripts.bun.Script`
-**plugin-script-dotnet:**
-
-- `io.kestra.plugin.scripts.dotnet.Commands`
-- `io.kestra.plugin.scripts.dotnet.Script`
 **plugin-script-deno:**
 
 - `io.kestra.plugin.scripts.deno.Commands`
 - `io.kestra.plugin.scripts.deno.Script`
+**plugin-script-dotnet:**
+
+- `io.kestra.plugin.scripts.dotnet.Commands`
+- `io.kestra.plugin.scripts.dotnet.Script`
 **plugin-script-go:**
 
 - `io.kestra.plugin.scripts.go.Commands`

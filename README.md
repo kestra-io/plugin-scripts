@@ -54,6 +54,7 @@
 * The documentation for specific sub-plugins:
     * [for Bun](https://kestra.io/plugins/plugin-script-bun/)
     * [for Deno](https://kestra.io/plugins/plugin-script-deno/)
+    * [for .NET (C#)](https://kestra.io/plugins/plugin-script-dotnet/)
     * [for Go](https://kestra.io/plugins/plugin-script-go/)
     * [for Groovy](https://kestra.io/plugins/plugin-script-groovy/)
     * [for JBang](https://kestra.io/plugins/plugin-script-jbang/)

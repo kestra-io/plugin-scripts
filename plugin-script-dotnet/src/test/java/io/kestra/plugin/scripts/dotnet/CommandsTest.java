@@ -83,7 +83,6 @@ class CommandsTest {
         ScriptOutput run = dotnetCommands.run(runContext);
 
         assertThat(run.getExitCode(), is(0));
-        // dotnet nonexistent-command writes several error lines to stdout before the echo runs
         assertThat(run.getStdOutLineCount(), greaterThanOrEqualTo(1));
     }
 }

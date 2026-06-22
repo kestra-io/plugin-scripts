@@ -97,10 +97,9 @@ import lombok.experimental.SuperBuilder;
 public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
     private static final String DEFAULT_IMAGE = "mcr.microsoft.com/dotnet/sdk:10.0";
 
-    // Ensures dotnet-script is on PATH before the user's beforeCommands and the script itself.
     private static final List<String> DOTNET_SCRIPT_INSTALL = List.of(
-        "dotnet tool install -g dotnet-script --ignore-failed-sources 2>/dev/null || true",
-        "export PATH=\"$PATH:/root/.dotnet/tools\""
+        "dotnet tool install -g dotnet-script --ignore-failed-sources || true",
+        "export PATH=\"$PATH:$HOME/.dotnet/tools\""
     );
 
     @Schema(
@@ -133,9 +132,9 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
-        CommandsWrapper commands = this.commands(runContext);
+        var commands = this.commands(runContext);
 
-        Map<String, String> inputFiles = FilesService.inputFiles(runContext, commands.getTaskRunner().additionalVars(runContext, commands), this.getInputFiles());
+        var inputFiles = FilesService.inputFiles(runContext, commands.getTaskRunner().additionalVars(runContext, commands), this.getInputFiles());
         Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(".csx"));
         inputFiles.put(
             relativeScriptPath.toString(),
@@ -143,7 +142,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
         );
         commands = commands.withInputFiles(inputFiles);
 
-        TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
+        var os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
         return commands
             .withInterpreter(this.interpreter)
             .withBeforeCommands(buildBeforeCommands(runContext))

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableMap;
@@ -11,6 +12,7 @@ import com.google.common.collect.ImmutableMap;
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
+import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
@@ -24,6 +26,7 @@ import reactor.core.publisher.Flux;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.startsWith;
 
 @KestraTest
 class ScriptTest {
@@ -89,5 +92,34 @@ class ScriptTest {
                 .count(),
             is(1L)
         );
+    }
+
+    @Test
+    void scriptWithOutputFile() throws Exception {
+        Script dotnetScript = Script.builder()
+            .id("dotnet-output-" + UUID.randomUUID())
+            .type(Script.class.getName())
+            .script(Property.ofValue("File.WriteAllText(\"result.txt\", \"hello from dotnet\");"))
+            .outputFiles(Property.ofValue(List.of("result.txt")))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, dotnetScript, ImmutableMap.of());
+        ScriptOutput run = dotnetScript.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+        assertThat(run.getOutputFiles().containsKey("result.txt"), is(true));
+        assertThat(run.getOutputFiles().get("result.txt").toString(), startsWith("kestra://"));
+    }
+
+    @Test
+    void scriptFailure() {
+        Script dotnetScript = Script.builder()
+            .id("dotnet-fail-" + UUID.randomUUID())
+            .type(Script.class.getName())
+            .script(Property.ofValue("throw new Exception(\"deliberate failure\");"))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, dotnetScript, ImmutableMap.of());
+        Assertions.assertThrows(RunnableTaskException.class, () -> dotnetScript.run(runContext));
     }
 }

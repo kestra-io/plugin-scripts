@@ -51,8 +51,8 @@ import lombok.experimental.SuperBuilder;
                         Console.WriteLine("Analyzing data...");
                         Console.WriteLine($"Current time: {DateTime.UtcNow}");
                     beforeCommands:
-                      - dotnet tool install -g dotnet-script --ignore-failed-sources 2>/dev/null || true
-                      - export PATH="$PATH:/root/.dotnet/tools"
+                      - dotnet tool install -g dotnet-script --ignore-failed-sources || true
+                      - export PATH="$PATH:$HOME/.dotnet/tools"
                     commands:
                       - dotnet-script analyze.csx
                 """
@@ -110,7 +110,7 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
-        TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
+        var os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
 
         return this.commands(runContext)
             .withInterpreter(this.interpreter)

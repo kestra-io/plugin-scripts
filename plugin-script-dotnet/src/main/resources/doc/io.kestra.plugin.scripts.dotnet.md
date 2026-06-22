@@ -34,8 +34,8 @@ Runs arbitrary shell commands sequentially inside a .NET SDK container. Use this
 
 ```yaml
 beforeCommands:
-  - dotnet tool install -g dotnet-script --ignore-failed-sources 2>/dev/null || true
-  - export PATH="$PATH:/root/.dotnet/tools"
+  - dotnet tool install -g dotnet-script --ignore-failed-sources || true
+  - export PATH="$PATH:$HOME/.dotnet/tools"
 ```
 
 Required properties:
