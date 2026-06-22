@@ -54,7 +54,7 @@ public class ScriptTest {
         assertThat(run.getExitCode(), is(0));
 
         String expectedLog = "Hello from kestra!";
-        Await.await().atMost(Duration.ofSeconds(30)).until(() -> logs.stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains(expectedLog)));
+        Await.until(() -> logs.stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains(expectedLog)), Duration.ofMillis(100), Duration.ofSeconds(30));
         receive.blockLast();
         assertThat(List.copyOf(logs).stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains(expectedLog)), is(true));
     }
