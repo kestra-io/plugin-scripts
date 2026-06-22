@@ -15,12 +15,15 @@ import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
+import io.kestra.core.utils.Await;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import reactor.core.publisher.Flux;
+
+import java.time.Duration;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -68,9 +71,11 @@ class ScriptTest {
         assertThat(run.getStdOutLineCount(), greaterThan(1));
         assertThat(run.getStdErrLineCount(), greaterThan(1));
 
-        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("2010-06-04"));
-        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("2011-06-04"));
-        TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("2012-06-04"));
+        Await.await().atMost(Duration.ofSeconds(30)).until(() ->
+            logs.stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains("2010-06-04")) &&
+            logs.stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains("2011-06-04")) &&
+            logs.stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains("2012-06-04"))
+        );
         receive.blockLast();
         assertThat(List.copyOf(logs).stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("2010-06-04")).count(), is(1L));
         assertThat(List.copyOf(logs).stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("2011-06-04")).count(), is(1L));
