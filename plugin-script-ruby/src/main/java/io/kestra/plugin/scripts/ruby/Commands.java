@@ -25,7 +25,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Ruby files and commands.",
+    title = "Execute Ruby files and commands",
     description = "Executes provided Ruby commands in order using the default 'ruby' image unless overridden. Supports inputFiles and beforeCommands to stage scripts and install gems; enable namespaceFiles if pulling scripts from the Namespace — best for running existing Ruby files instead of inline scripts."
 )
 @Plugin(

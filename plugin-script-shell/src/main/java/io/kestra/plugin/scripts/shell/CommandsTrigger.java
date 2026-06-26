@@ -33,7 +33,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Trigger a flow when Shell commands match a condition.",
+    title = "Trigger a flow when Shell commands match a condition",
     description = "Polls and triggers a flow by running system commands in a shell container."
 )
 @Plugin(
@@ -69,7 +69,7 @@ public class CommandsTrigger extends AbstractTrigger
     private static final String DEFAULT_IMAGE = "ubuntu";
 
     @Schema(
-        title = "Docker image used to execute the commands.",
+        title = "Docker image used to execute the commands",
         description = """
             Container image used by the underlying Commands task to run shell commands.
             Defaults to 'ubuntu'.
@@ -80,7 +80,7 @@ public class CommandsTrigger extends AbstractTrigger
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "Shell commands to execute.",
+        title = "Shell commands to execute",
         description = "Commands executed on each poll (same semantics as the Shell Commands task)."
     )
     @NotNull
@@ -88,7 +88,7 @@ public class CommandsTrigger extends AbstractTrigger
     protected Property<List<String>> commands;
 
     @Schema(
-        title = "Condition to match.",
+        title = "Condition to match",
         description = """
             Condition evaluated after each commands execution. The trigger emits an event only when this condition matches.
 
@@ -112,7 +112,7 @@ public class CommandsTrigger extends AbstractTrigger
     private final Duration interval = Duration.ofSeconds(60);
 
     @Schema(
-        title = "Edge trigger mode.",
+        title = "Edge trigger mode",
         description = """
             If true, the trigger emits only on a transition from 'not matching' to 'matching' (anti-spam).
             If false, the trigger emits on every poll where the condition matches.
@@ -239,9 +239,13 @@ public class CommandsTrigger extends AbstractTrigger
     @Data
     @AllArgsConstructor
     public static class Output implements io.kestra.core.models.tasks.Output {
+        @Schema(title = "Timestamp of the event that fired the trigger")
         private Instant timestamp;
+        @Schema(title = "The captured rendered condition output")
         private String condition;
+        @Schema(title = "The exit code of the executed commands")
         private Integer exitCode;
+        @Schema(title = "Output variables captured from the commands")
         private Map<String, Object> vars;
     }
 }

@@ -26,7 +26,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute PowerShell files and commands.",
+    title = "Execute PowerShell files and commands",
     description = "Executes provided PowerShell commands in order using the default 'ghcr.io/kestra-io/powershell:latest' image unless overridden. Supports inputFiles and beforeCommands to stage scripts/modules; enable namespaceFiles if referencing files stored in the Namespace — best for running existing .ps1 files instead of inline scripts."
 )
 @Plugin(
@@ -71,7 +71,7 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
 
     @Builder.Default
     @Schema(
-        title = "Which interpreter to use."
+        title = "Which interpreter to use"
     )
     @PluginProperty(group = "execution")
     protected Property<List<String>> interpreter = Property.ofValue(List.of("pwsh", "-NoProfile", "-NonInteractive", "-Command"));

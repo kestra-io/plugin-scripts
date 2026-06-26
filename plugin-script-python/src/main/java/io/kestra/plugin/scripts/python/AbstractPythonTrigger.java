@@ -32,7 +32,7 @@ public abstract class AbstractPythonTrigger extends AbstractTrigger
     protected static final String DEFAULT_IMAGE = "python:3.13-slim";
 
     @Schema(
-        title = "Condition to match.",
+        title = "Condition to match",
         description = """
             Condition evaluated after each execution. The trigger emits only when it matches.
             'exit N' compares the exit code, otherwise the string is used as a regex
@@ -43,7 +43,7 @@ public abstract class AbstractPythonTrigger extends AbstractTrigger
     protected Property<String> exitCondition;
 
     @Schema(
-        title = "Check interval.",
+        title = "Check interval",
         description = "Interval between polling evaluations."
     )
     @Builder.Default
@@ -51,7 +51,7 @@ public abstract class AbstractPythonTrigger extends AbstractTrigger
     private final Duration interval = Duration.ofSeconds(60);
 
     @Schema(
-        title = "Edge trigger mode.",
+        title = "Edge trigger mode",
         description = """
             If true (default), the trigger emits only on a transition from 'not matching' to 'matching' (anti-spam).
             If false, the trigger emits on every poll where the condition matches.
@@ -187,22 +187,24 @@ public abstract class AbstractPythonTrigger extends AbstractTrigger
     @AllArgsConstructor
     public static class Output implements io.kestra.core.models.tasks.Output {
 
+        @Schema(title = "Timestamp of the event that fired the trigger")
+
         private Instant timestamp;
 
         @Schema(
-            title = "Rendered condition.",
+            title = "Rendered condition",
             description = "Rendered value of the exitCondition property for this poll."
         )
         private String condition;
 
         @Schema(
-            title = "Exit code.",
+            title = "Exit code",
             description = "Exit code returned by the Python process (may be null if not available)."
         )
         private Integer exitCode;
 
         @Schema(
-            title = "Script vars.",
+            title = "Script vars",
             description = "Vars produced by the task (e.g. via ::{\"outputs\":{...}}:: convention)."
         )
         private Map<String, Object> vars;

@@ -30,7 +30,7 @@ import static io.kestra.core.utils.Rethrow.throwSupplier;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Python script (Deprecated).",
+    title = "Execute a Python script (Deprecated)",
     description = "This task is deprecated, please use the [io.kestra.plugin.scripts.python.Script](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.python.script) or [io.kestra.plugin.scripts.python.Commands](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.python.commands) tasks instead.\n\n"
         +
         "With the Python task, you can execute a full Python script.\n" +

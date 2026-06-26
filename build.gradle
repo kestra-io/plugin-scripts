@@ -11,6 +11,7 @@ plugins {
     id 'net.researchgate.release' version '3.1.0'
     id "com.vanniktech.maven.publish" version "0.37.0"
     id "io.kestra.gradle.inject-bom-versions" version "1.2.4"
+    id "io.kestra.gradle.plugin-doc-lint" version "1.2.5" apply(false)
 }
 
 def isBuildSnapshot = version.toString().endsWith("-SNAPSHOT")
@@ -38,6 +39,7 @@ subprojects {
     group "io.kestra.plugin"
 
     apply plugin: "java-library"
+    apply plugin: "io.kestra.gradle.plugin-doc-lint"
     apply plugin: "io.kestra.gradle.spotless-conventions"
 
     java {

@@ -17,7 +17,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Groovy script.",
+    title = "Execute a Groovy script",
     description = "This task is deprecated, please use `io.kestra.plugin.graalvm.js.Eval`, `io.kestra.plugin.graalvm.python.Eval` or `io.kestra.plugin.graalvm.ruby.Eval` instead."
 )
 @Plugin(

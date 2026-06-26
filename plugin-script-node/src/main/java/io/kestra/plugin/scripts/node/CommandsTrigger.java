@@ -33,7 +33,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @NoArgsConstructor
 //  New trigger description
 @Schema(
-    title = "Trigger a flow when Node.js commands match a condition.",
+    title = "Trigger a flow when Node.js commands match a condition",
     description = "Polls and triggers a flow by running Node.js commands within a script container."
 )
 @Plugin(
@@ -67,7 +67,7 @@ public class CommandsTrigger extends AbstractTrigger
     private static final String DEFAULT_IMAGE = "node";
 
     @Schema(
-        title = "Docker image used to execute the commands.",
+        title = "Docker image used to execute the commands",
         description = """
             Container image used by the underlying Commands task to run Node.js commands.
             Defaults to 'node'.
@@ -78,7 +78,7 @@ public class CommandsTrigger extends AbstractTrigger
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "Node commands to execute.",
+        title = "Node commands to execute",
         description = "Commands executed on each poll."
     )
     @NotNull
@@ -86,7 +86,7 @@ public class CommandsTrigger extends AbstractTrigger
     protected Property<List<String>> commands;
 
     @Schema(
-        title = "Condition to match.",
+        title = "Condition to match",
         description = """
             Condition evaluated after execution.
 
@@ -100,7 +100,7 @@ public class CommandsTrigger extends AbstractTrigger
     protected Property<String> exitCondition;
 
     @Schema(
-        title = "Check interval.",
+        title = "Check interval",
         description = "Interval between polling evaluations."
     )
     @Builder.Default
@@ -108,7 +108,7 @@ public class CommandsTrigger extends AbstractTrigger
     private final Duration interval = Duration.ofSeconds(60);
 
     @Schema(
-        title = "Edge trigger mode.",
+        title = "Edge trigger mode",
         description = """
             If true, the trigger emits only on a transition from 'not matching' to 'matching' (anti-spam).
             If false, the trigger emits on every poll where the condition matches.
@@ -248,22 +248,23 @@ public class CommandsTrigger extends AbstractTrigger
     @Data
     @AllArgsConstructor
     public static class Output implements io.kestra.core.models.tasks.Output {
+        @Schema(title = "Timestamp of the event that fired the trigger")
         private Instant timestamp;
 
         @Schema(
-            title = "Rendered condition.",
+            title = "Rendered condition",
             description = "Rendered value of the exitCondition property for this poll."
         )
         private String condition;
 
         @Schema(
-            title = "Commands exit code.",
+            title = "Commands exit code",
             description = "Exit code returned by the process (may be null if not available)."
         )
         private Integer exitCode;
 
         @Schema(
-            title = "Commands vars.",
+            title = "Commands vars",
             description = "Vars produced by the task (e.g. via ::{\"outputs\":{...}}:: convention)."
         )
         private Map<String, Object> vars;

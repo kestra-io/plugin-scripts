@@ -31,7 +31,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Run an inline C# script using dotnet-script.",
+    title = "Run an inline C# script using dotnet-script",
     description = """
         Executes a multi-line C# script (`.csx` format) inside a .NET SDK container using `dotnet-script`.
         The script is written to a temporary `.csx` file and run as a shell command (`dotnet-script ./script.csx`).
@@ -103,7 +103,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     );
 
     @Schema(
-        title = "Container image for the .NET runtime.",
+        title = "Container image for the .NET runtime",
         description = "Docker image used to run the script. Defaults to `mcr.microsoft.com/dotnet/sdk:10.0`. Use a custom image pre-built with `dotnet-script` to avoid tool installation on each run."
     )
     @Builder.Default
@@ -111,7 +111,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "Inline C# script to execute.",
+        title = "Inline C# script to execute",
         description = """
             C# script body in `.csx` format. Written to a temporary `.csx` file and executed with `dotnet-script`.
             NuGet packages can be referenced with `#r "nuget:PackageName,Version"` at the top of the script.

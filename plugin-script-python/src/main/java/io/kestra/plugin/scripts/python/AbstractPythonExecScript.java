@@ -23,7 +23,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 public abstract class AbstractPythonExecScript extends AbstractExecScript implements PythonBasedPlugin {
 
     @Schema(
-        title = "The container image to use for the script.",
+        title = "The container image to use for the script",
         description = "Defaults to `" + DEFAULT_IMAGE + "`. The Python version is auto-detected from the image tag when it matches the pattern `python:<version>` (e.g. `python:3.12`, `" + DEFAULT_IMAGE + "`). Tags like `latest` or custom images will not be detected.\n" +
             "If version inference fails, Kestra uses Python " + DEFAULT_PYTHON_VERSION + " for dependency resolution and cache key computation, while the interpreter available in the container may differ. Set `pythonVersion` explicitly or use a versioned Python image tag to avoid mismatches."
     )

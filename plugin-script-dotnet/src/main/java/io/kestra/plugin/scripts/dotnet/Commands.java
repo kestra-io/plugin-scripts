@@ -26,7 +26,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Run shell commands inside a .NET SDK container.",
+    title = "Run shell commands inside a .NET SDK container",
     description = """
         Executes arbitrary shell commands sequentially inside a .NET SDK container (`mcr.microsoft.com/dotnet/sdk:10.0` by default).
         Use this task when you have existing `.csx` script files stored in namespace files or cloned from a Git repository,
@@ -77,7 +77,7 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
     private static final String DEFAULT_IMAGE = "mcr.microsoft.com/dotnet/sdk:10.0";
 
     @Schema(
-        title = "Container image for the .NET runtime.",
+        title = "Container image for the .NET runtime",
         description = "Docker image used to run the commands. Defaults to `mcr.microsoft.com/dotnet/sdk:10.0`. Use a custom image pre-installed with `dotnet-script` or other tools to skip manual setup in `beforeCommands`."
     )
     @Builder.Default
@@ -85,7 +85,7 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "Shell commands to execute.",
+        title = "Shell commands to execute",
         description = """
             List of shell commands executed in order inside the .NET SDK container.
             Combine with `beforeCommands` for environment setup (e.g., installing `dotnet-script`)

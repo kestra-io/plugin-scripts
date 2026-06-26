@@ -30,7 +30,8 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Bun script inline with your Flow Code."
+    title = "Execute a Bun script inline with your Flow Code",
+    description = "Runs an inline Bun script in a container and captures its output."
 )
 @Plugin(
     examples = {
@@ -81,7 +82,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file."
+        title = "The inline script content. This property is intended for the script file's content as a (multiline) string, not a path to a file"
     )
     @NotNull
     @PluginProperty(language = MonacoLanguages.JAVASCRIPT, group = "main")

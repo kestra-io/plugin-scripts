@@ -25,7 +25,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute PHP files and commands.",
+    title = "Execute PHP files and commands",
     description = "Executes provided PHP commands in order using the default 'php' image unless overridden. Supports inputFiles and beforeCommands to stage scripts and install extensions; enable namespaceFiles if referring to files stored in the Namespace — use this task when running existing PHP files instead of inline scripts."
 )
 @Plugin(

@@ -33,7 +33,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@Schema(title = "Trigger a flow when a Ruby script matches a condition.")
+@Schema(title = "Trigger a flow when a Ruby script matches a condition", description = "Polls by running a Ruby script and starts the flow when its output matches the condition.")
 @Plugin(
     examples = {
         @Example(
@@ -71,7 +71,7 @@ public class ScriptTrigger extends AbstractTrigger
         Pattern.compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE);
 
     @Schema(
-        title = "Container image for script execution.",
+        title = "Container image for script execution",
         description = "Image used by the Script task to run the inline Ruby script; defaults to 'ruby'."
     )
     @Builder.Default
@@ -79,7 +79,7 @@ public class ScriptTrigger extends AbstractTrigger
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "Inline Ruby script.",
+        title = "Inline Ruby script",
         description = "Multi-line script executed on each poll."
     )
     @NotNull
@@ -87,7 +87,7 @@ public class ScriptTrigger extends AbstractTrigger
     protected Property<String> script;
 
     @Schema(
-        title = "Condition to match.",
+        title = "Condition to match",
         description = """
             Condition evaluated after each execution. The trigger emits only when it matches.
             'exit N' compares the exit code, otherwise the string is used as a regex
@@ -99,7 +99,7 @@ public class ScriptTrigger extends AbstractTrigger
     protected Property<String> exitCondition;
 
     @Schema(
-        title = "Check interval.",
+        title = "Check interval",
         description = "Interval between polling evaluations."
     )
     @Builder.Default
@@ -107,7 +107,7 @@ public class ScriptTrigger extends AbstractTrigger
     private final Duration interval = Duration.ofSeconds(60);
 
     @Schema(
-        title = "Edge trigger mode.",
+        title = "Edge trigger mode",
         description = """
             If true, the trigger emits only on a transition from 'not matching' to 'matching' (anti-spam).
             If false, the trigger emits on every poll where the condition matches.
@@ -257,25 +257,25 @@ public class ScriptTrigger extends AbstractTrigger
     @AllArgsConstructor
     public static class Output implements io.kestra.core.models.tasks.Output {
         @Schema(
-            title = "Poll timestamp.",
+            title = "Poll timestamp",
             description = "Timestamp when this trigger evaluation occurred."
         )
         private Instant timestamp;
 
         @Schema(
-            title = "Rendered condition.",
+            title = "Rendered condition",
             description = "Rendered value of the exitCondition property for this poll."
         )
         private String condition;
 
         @Schema(
-            title = "Script exit code.",
+            title = "Script exit code",
             description = "Exit code returned by the Ruby process (may be null if not available)."
         )
         private Integer exitCode;
 
         @Schema(
-            title = "Script vars.",
+            title = "Script vars",
             description = "Vars produced by the task (e.g. via ::{\"outputs\":{...}}:: convention)."
         )
         private Map<String, Object> vars;
