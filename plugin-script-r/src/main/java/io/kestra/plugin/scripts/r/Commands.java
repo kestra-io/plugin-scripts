@@ -25,7 +25,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute R files and commands.",
+    title = "Execute R files and commands",
     description = "Executes provided R commands in order using the default 'r-base' image unless overridden. Supports inputFiles and beforeCommands to stage scripts and install packages; enable namespaceFiles if pointing to stored files — use this task for existing R scripts instead of inline code."
 )
 @Plugin(

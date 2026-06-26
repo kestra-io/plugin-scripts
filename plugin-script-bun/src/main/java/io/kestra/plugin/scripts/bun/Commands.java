@@ -25,7 +25,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Bun files and commands.",
+    title = "Execute Bun files and commands",
     description = "Executes provided Bun commands in order using the default 'oven/bun' image unless overridden. Supports inputFiles and beforeCommands for staging sources and installing dependencies; use this task when running existing Bun files instead of inline scripts."
 )
 @Plugin(
@@ -75,7 +75,7 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The commands to run."
+        title = "The commands to run"
     )
     @NotNull
     @PluginProperty(group = "main")

@@ -20,7 +20,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Trigger on Python commands condition.",
+    title = "Trigger on Python commands condition",
     description = """
         Polls by running Python commands (default image python:3.13-slim) and emits when exitCondition matches.
         Supports edge mode to emit only on transitions and polls every 60s by default.
@@ -57,7 +57,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 public class CommandsTrigger extends AbstractPythonTrigger {
 
     @Schema(
-        title = "Docker image used to execute the commands.",
+        title = "Docker image used to execute the commands",
         description = "Container image used by the underlying Commands task to run Python commands.\n" +
             "Defaults to '" + DEFAULT_IMAGE + "'."
     )
@@ -66,7 +66,7 @@ public class CommandsTrigger extends AbstractPythonTrigger {
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "Python commands to execute.",
+        title = "Python commands to execute",
         description = "Commands executed on each poll (same semantics as the Python Commands task)."
     )
     @NotNull

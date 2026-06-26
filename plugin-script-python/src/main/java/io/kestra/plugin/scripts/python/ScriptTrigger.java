@@ -18,7 +18,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Trigger on Python script condition.",
+    title = "Trigger on Python script condition",
     description = """
         Polls by running an inline Python script (default image python:3.13-slim) and emits when exitCondition matches.
         Supports edge mode to emit only on transitions and polls every 60s by default.
@@ -54,7 +54,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 public class ScriptTrigger extends AbstractPythonTrigger {
 
     @Schema(
-        title = "Container image for script execution.",
+        title = "Container image for script execution",
         description = "Image used by the Script task to run the inline Python script; defaults to '" + DEFAULT_IMAGE + "'."
     )
     @Builder.Default
@@ -62,7 +62,7 @@ public class ScriptTrigger extends AbstractPythonTrigger {
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "Inline Python script.",
+        title = "Inline Python script",
         description = "Multi-line script executed on each poll."
     )
     @NotNull

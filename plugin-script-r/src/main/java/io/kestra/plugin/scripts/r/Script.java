@@ -36,16 +36,23 @@ import lombok.experimental.SuperBuilder;
 @Plugin(
     examples = {
         @Example(
+            full = true,
             title = "Install a package and execute an R script",
-            code = {
-                "script: |",
-                "  library(lubridate)",
-                "  ymd(\"20100604\");",
-                "  mdy(\"06-04-2011\");",
-                "  dmy(\"04/06/2012\")",
-                "beforeCommands:",
-                "  - Rscript -e 'install.packages(\"lubridate\")'"
-            }
+            code = """
+                id: r_script
+                namespace: company.team
+
+                tasks:
+                  - id: script
+                    type: io.kestra.plugin.scripts.r.Script
+                    beforeCommands:
+                      - Rscript -e 'install.packages("lubridate")'
+                    script: |
+                      library(lubridate)
+                      ymd("20100604");
+                      mdy("06-04-2011");
+                      dmy("04/06/2012")
+                """
         ),
         @Example(
             full = true,

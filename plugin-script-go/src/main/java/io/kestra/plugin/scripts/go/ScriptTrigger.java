@@ -253,22 +253,23 @@ public class ScriptTrigger extends AbstractTrigger
     @Data
     @AllArgsConstructor
     public static class Output implements io.kestra.core.models.tasks.Output {
+        @Schema(title = "Timestamp of the event that fired the trigger")
         private Instant timestamp;
 
         @Schema(
-            title = "Rendered condition.",
+            title = "Rendered condition",
             description = "Rendered value of the exitCondition property for this poll."
         )
         private String condition;
 
         @Schema(
-            title = "Script exit code.",
+            title = "Script exit code",
             description = "Exit code returned by the Go process (may be null if not available)."
         )
         private Integer exitCode;
 
         @Schema(
-            title = "Script vars.",
+            title = "Script vars",
             description = """
                 Vars produced by the task (e.g. via ::{"outputs":{...}}:: convention). This is the main structured
                 way to evaluate non-exit conditions on successful runs.

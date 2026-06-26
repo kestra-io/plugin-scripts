@@ -25,7 +25,8 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Groovy files and commands."
+    title = "Execute Groovy files and commands",
+    description = "Runs Groovy commands or files in the JVM and captures their output."
 )
 @Plugin(
     examples = {
@@ -81,7 +82,7 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "The commands to run."
+        title = "The commands to run"
     )
     @NotNull
     @PluginProperty(group = "main")
