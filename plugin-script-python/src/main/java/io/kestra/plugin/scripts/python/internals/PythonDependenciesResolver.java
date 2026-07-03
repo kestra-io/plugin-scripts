@@ -1,6 +1,7 @@
 package io.kestra.plugin.scripts.python.internals;
 
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
@@ -10,6 +11,12 @@ import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -51,6 +58,10 @@ public class PythonDependenciesResolver {
 
     private static final int DOWNLOAD_CONNECT_TIMEOUT_MS = 10_000;
     private static final int DOWNLOAD_READ_TIMEOUT_MS = 30_000;
+    // setReadTimeout only bounds silence between individual reads, not the whole transfer, so a slow
+    // trickle could otherwise hold the worker thread well past DOWNLOAD_READ_TIMEOUT_MS. This caps the
+    // total wall-clock time of the download regardless of how the bytes trickle in.
+    private static final long DOWNLOAD_TOTAL_TIMEOUT_MS = 60_000;
     // The real 'uv' installer is ~70KB; this is a generous safety cap against a slow or malicious endpoint
     // streaming an unbounded response, not an expected size.
     private static final long MAX_INSTALLER_SIZE_BYTES = 5L * 1024 * 1024;
@@ -433,8 +444,41 @@ public class PythonDependenciesResolver {
         connection.setConnectTimeout(DOWNLOAD_CONNECT_TIMEOUT_MS);
         connection.setReadTimeout(DOWNLOAD_READ_TIMEOUT_MS);
 
-        try (InputStream in = connection.getInputStream()) {
-            return readAtMost(in, MAX_INSTALLER_SIZE_BYTES, url);
+        return downloadWithDeadline(connection, url);
+    }
+
+    /**
+     * Runs the download on a bounded executor so the total transfer time is capped by
+     * {@link #DOWNLOAD_TOTAL_TIMEOUT_MS}, on top of the per-read {@link #DOWNLOAD_READ_TIMEOUT_MS} already
+     * set on the connection. On timeout, the connection is force-closed so the stalled read unblocks.
+     */
+    private static byte[] downloadWithDeadline(URLConnection connection, String url) throws IOException {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<byte[]> future = executor.submit(() -> {
+            try (InputStream in = connection.getInputStream()) {
+                return readAtMost(in, MAX_INSTALLER_SIZE_BYTES, url);
+            }
+        });
+
+        try {
+            return future.get(DOWNLOAD_TOTAL_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            future.cancel(true);
+            if (connection instanceof HttpURLConnection http) {
+                http.disconnect();
+            }
+            throw new IOException("Download of the 'uv' installer from '" + url + "' exceeded the " + DOWNLOAD_TOTAL_TIMEOUT_MS + "ms overall timeout.");
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof IOException io) {
+                throw io;
+            }
+            throw new IOException("Failed to download the 'uv' installer from '" + url + "'.", cause);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Interrupted while downloading the 'uv' installer from '" + url + "'.", e);
+        } finally {
+            executor.shutdownNow();
         }
     }
 
