@@ -46,7 +46,7 @@ public class PythonDependenciesResolver {
      * {@code curl -sL https://astral.sh/uv/0.11.26/install.sh | sha256sum}
      * on 2026-07-03. Update alongside {@link #DEFAULT_UV_INSTALLER_VERSION} when bumping the pinned version.
      */
-    protected static final String DEFAULT_UV_INSTALLER_SHA256 = "92fa9085d24c214bb4445cc1da8c15ca9cca8cffb34726240fa08c5302e94cc";
+    protected static final String DEFAULT_UV_INSTALLER_SHA256 = "92fa9085d24c214bb4445cc1da8c15ca9cca8cffb34726240fa08c5302e94ccc";
 
     protected final Logger logger;
     protected final WorkingDir workingDir;

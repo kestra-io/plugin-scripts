@@ -60,6 +60,13 @@ class PythonDependenciesResolverTest {
     }
 
     @Test
+    void defaultUvInstallerShaShouldBeAWellFormedSha256Hex() {
+        // Regression guard: a single dropped/extra hex digit in this hand-maintained constant
+        // silently breaks every 'uv' auto-install on workers without 'uv' pre-installed.
+        assertThat(PythonDependenciesResolver.DEFAULT_UV_INSTALLER_SHA256, matchesPattern("[0-9a-f]{64}"));
+    }
+
+    @Test
     void shouldFailFastWhenAutoInstallDisabledAndUvNotFound() throws Exception {
         RunContext runContext = buildRunContext();
 
