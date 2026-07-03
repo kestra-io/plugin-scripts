@@ -5,7 +5,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -29,11 +29,33 @@ public class PythonDependenciesResolver {
     private static final String PATH_ENV = System.getenv("PATH");
     private static final String WORKING_DIR_ADDITIONAL_PYTHON_LIB = ".kestra_additional_python_lib";
 
+    /**
+     * Pinned version of the uv installer downloaded when 'uv' is not already available on the worker.
+     * The rolling URL 'https://astral.sh/uv/install.sh' always serves the latest installer, so pinning
+     * a version and verifying its checksum against a compile-time constant would be meaningless there.
+     * Instead, we use the immutable per-version URL 'https://astral.sh/uv/&lt;version&gt;/install.sh',
+     * which redirects to a stable GitHub release asset.
+     * <p>
+     * Both the version and the expected hash below can be overridden via {@link PythonBasedPlugin}
+     * properties so operators can bump 'uv' without waiting for a plugin release.
+     */
+    protected static final String DEFAULT_UV_INSTALLER_VERSION = "0.11.26";
+
+    /**
+     * SHA-256 of 'https://astral.sh/uv/0.11.26/install.sh', obtained by running:
+     * {@code curl -sL https://astral.sh/uv/0.11.26/install.sh | sha256sum}
+     * on 2026-07-03. Update alongside {@link #DEFAULT_UV_INSTALLER_VERSION} when bumping the pinned version.
+     */
+    protected static final String DEFAULT_UV_INSTALLER_SHA256 = "92fa9085d24c214bb4445cc1da8c15ca9cca8cffb34726240fa08c5302e94cc";
+
     protected final Logger logger;
     protected final WorkingDir workingDir;
     private final Path localCacheDir;
     private String uvCmd;
     private final PackageManagerType packageManagerType;
+    private final String uvInstallerVersion;
+    private final String uvInstallerSha256;
+    private final boolean uvAutoInstallEnabled;
 
     /**
      * Creates a new {@link PythonDependenciesResolver} instance.
@@ -44,10 +66,29 @@ public class PythonDependenciesResolver {
      * @param packageManagerType The package manager type to use.
      */
     public PythonDependenciesResolver(final Logger logger, final WorkingDir workingDir, final Path localCacheDir, final PackageManagerType packageManagerType) {
+        this(logger, workingDir, localCacheDir, packageManagerType, DEFAULT_UV_INSTALLER_VERSION, DEFAULT_UV_INSTALLER_SHA256, true);
+    }
+
+    /**
+     * Creates a new {@link PythonDependenciesResolver} instance.
+     *
+     * @param logger The logger instance.
+     * @param workingDir The {@link WorkingDir}.
+     * @param localCacheDir The local cache directory.
+     * @param packageManagerType The package manager type to use.
+     * @param uvInstallerVersion The pinned 'uv' version whose installer will be downloaded and verified, if needed.
+     * @param uvInstallerSha256 The expected SHA-256 of the versioned 'uv' installer script.
+     * @param uvAutoInstallEnabled Whether 'uv' may be downloaded and installed automatically when absent from the worker.
+     */
+    public PythonDependenciesResolver(final Logger logger, final WorkingDir workingDir, final Path localCacheDir, final PackageManagerType packageManagerType,
+        final String uvInstallerVersion, final String uvInstallerSha256, final boolean uvAutoInstallEnabled) {
         this.workingDir = Objects.requireNonNull(workingDir, "workingDir cannot be null");
         this.logger = Objects.requireNonNull(logger, "logger cannot be null");
         this.localCacheDir = Objects.requireNonNull(localCacheDir, "localCacheDir cannot be null");
         this.packageManagerType = Objects.requireNonNull(packageManagerType, "packageManagerType cannot be null");
+        this.uvInstallerVersion = Objects.requireNonNull(uvInstallerVersion, "uvInstallerVersion cannot be null");
+        this.uvInstallerSha256 = Objects.requireNonNull(uvInstallerSha256, "uvInstallerSha256 cannot be null").toLowerCase(Locale.ROOT);
+        this.uvAutoInstallEnabled = uvAutoInstallEnabled;
     }
 
     /**
@@ -196,6 +237,21 @@ public class PythonDependenciesResolver {
     }
 
     /**
+     * Computes the lower-case hex-encoded SHA-256 digest of the given bytes.
+     *
+     * @param bytes The bytes to hash.
+     * @return the SHA-256 hash, hex-encoded and lower-cased.
+     */
+    private static String sha256Hex(byte[] bytes) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(digest.digest(bytes)).toLowerCase(Locale.ROOT);
+        } catch (NoSuchAlgorithmException e) {
+            throw new KestraRuntimeException(e);
+        }
+    }
+
+    /**
      * Computes the SHA-256 hash for the given python version and dependencies requirements.
      * <p>
      * The returned hash key can be used as cached-key.
@@ -272,26 +328,36 @@ public class PythonDependenciesResolver {
         }
 
         logger.debug("Finding uv command");
-        String version = null;
-        try {
-            version = getUvVersion(uvCmd);
-        } catch (IOException | InterruptedException e) {
-            if (e instanceof InterruptedException) {
-                Thread.currentThread().interrupt();
-            }
-        }
+        String version = detectInstalledUvVersion(uvCmd);
         if (version == null) {
+            if (!uvAutoInstallEnabled) {
+                throw new KestraRuntimeException(
+                    "'uv' command could not be found and automatic installation is disabled. " +
+                        "Please install 'uv' on the worker (or set the 'UV_PATH' environment variable), " +
+                        "or enable automatic installation via the 'uvAutoInstallEnabled' property."
+                );
+            }
+
+            String installerUrl = "https://astral.sh/uv/" + uvInstallerVersion + "/install.sh";
             logger.warn(
                 "Unable to detect an installed version of 'uv'. " +
-                    "Attempting to install 'uv' from: https://astral.sh/uv/install.sh. " +
-                    "Please make sure 'uv' is installed and available on all Kestra workers."
+                    "Attempting to install 'uv' from: {}. " +
+                    "Please make sure 'uv' is installed and available on all Kestra workers.",
+                installerUrl
             );
             Path script = null;
             try {
                 script = workingDir.createFile("install-uv.sh");
-                try (InputStream in = URI.create("https://astral.sh/uv/install.sh").toURL().openStream()) {
-                    Files.copy(in, script, StandardCopyOption.REPLACE_EXISTING);
+                byte[] installerContent;
+                try {
+                    installerContent = downloadInstaller(installerUrl);
+                } catch (IOException e) {
+                    throw new KestraRuntimeException("Failed to download the 'uv' installer from '" + installerUrl + "'. Error: " + e.getMessage(), e);
                 }
+
+                verifyInstallerChecksum(installerContent, installerUrl);
+
+                Files.write(script, installerContent, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
                 execCommandAndGetStdOut(List.of("chmod", "+x", script.toString()));
                 execCommandAndGetStdOut(List.of("sh", script.toString()), builder ->
                 {
@@ -335,6 +401,48 @@ public class PythonDependenciesResolver {
     protected String getUvVersion(String uvCmd) throws IOException, InterruptedException {
         ExecExitStatus execStatus = execCommandAndGetStdOut(List.of(uvCmd, "--version"), null);
         return execStatus.isSuccess() ? execStatus.stdOuts.getFirst() : null;
+    }
+
+    /**
+     * Detects the version of an already available 'uv' command, if any. Extracted so tests can force
+     * a "not found" state deterministically, regardless of whether 'uv' happens to be installed on the host.
+     */
+    protected String detectInstalledUvVersion(String uvCmd) {
+        try {
+            return getUvVersion(uvCmd);
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            return null;
+        }
+    }
+
+    /**
+     * Downloads the content of the given URL. Extracted so tests can mock the download rather than hitting astral.sh.
+     */
+    protected byte[] downloadInstaller(String url) throws IOException {
+        try (InputStream in = URI.create(url).toURL().openStream()) {
+            return in.readAllBytes();
+        }
+    }
+
+    /**
+     * Verifies the SHA-256 checksum of a downloaded 'uv' installer against the configured expected value.
+     * Fails closed: throws a {@link KestraRuntimeException} on mismatch instead of falling back to execution.
+     */
+    protected void verifyInstallerChecksum(byte[] installerContent, String installerUrl) {
+        String actualSha256 = sha256Hex(installerContent);
+        if (!uvInstallerSha256.equals(actualSha256)) {
+            throw new KestraRuntimeException(
+                "Integrity check failed for the 'uv' installer downloaded from '" + installerUrl + "'. " +
+                    "Expected SHA-256 '" + uvInstallerSha256 + "' but got '" + actualSha256 + "'. " +
+                    "Refusing to execute the installer. If 'uv' " + uvInstallerVersion + " was re-released with different content, " +
+                    "update the expected hash via the plugin's 'uvInstallerSha256' property, " +
+                    "or pre-install 'uv' on the worker to bypass this download."
+            );
+        }
+        logger.debug("Verified 'uv' installer checksum for version '{}': expected='{}', actual='{}'", uvInstallerVersion, uvInstallerSha256, actualSha256);
     }
 
     protected boolean installPython(String version) {

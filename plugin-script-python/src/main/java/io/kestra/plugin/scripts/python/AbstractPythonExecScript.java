@@ -40,4 +40,11 @@ public abstract class AbstractPythonExecScript extends AbstractExecScript implem
 
     @Builder.Default
     protected Property<PackageManagerType> packageManager = Property.ofValue(PackageManagerType.UV);
+
+    @Builder.Default
+    protected Property<Boolean> uvAutoInstallEnabled = Property.ofValue(true);
+
+    protected Property<String> uvInstallerVersion;
+
+    protected Property<String> uvInstallerSha256;
 }
