@@ -49,6 +49,12 @@ public class PythonDependenciesResolver {
      */
     protected static final String DEFAULT_UV_INSTALLER_SHA256 = "92fa9085d24c214bb4445cc1da8c15ca9cca8cffb34726240fa08c5302e94ccc";
 
+    private static final int DOWNLOAD_CONNECT_TIMEOUT_MS = 10_000;
+    private static final int DOWNLOAD_READ_TIMEOUT_MS = 30_000;
+    // The real 'uv' installer is ~70KB; this is a generous safety cap against a slow or malicious endpoint
+    // streaming an unbounded response, not an expected size.
+    private static final long MAX_INSTALLER_SIZE_BYTES = 5L * 1024 * 1024;
+
     protected final Logger logger;
     protected final WorkingDir workingDir;
     private final Path localCacheDir;
@@ -419,12 +425,6 @@ public class PythonDependenciesResolver {
         }
     }
 
-    private static final int DOWNLOAD_CONNECT_TIMEOUT_MS = 10_000;
-    private static final int DOWNLOAD_READ_TIMEOUT_MS = 30_000;
-    // The real 'uv' installer is ~70KB; this is a generous safety cap against a slow or malicious endpoint
-    // streaming an unbounded response, not an expected size.
-    private static final long MAX_INSTALLER_SIZE_BYTES = 5L * 1024 * 1024;
-
     /**
      * Downloads the content of the given URL. Extracted so tests can mock the download rather than hitting astral.sh.
      */
@@ -458,7 +458,7 @@ public class PythonDependenciesResolver {
 
     /**
      * Verifies the SHA-256 checksum of a downloaded 'uv' installer against the configured expected value.
-     * Fails closed: throws a {@link KestraRuntimeException} on mismatch instead of falling back to execution.
+     * Fails closed: throws a {@link UvSecurityException} on mismatch instead of falling back to execution.
      */
     protected void verifyInstallerChecksum(byte[] installerContent, String installerUrl) {
         String actualSha256 = sha256Hex(installerContent);
