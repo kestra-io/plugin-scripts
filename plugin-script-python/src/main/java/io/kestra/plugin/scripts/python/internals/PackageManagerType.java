@@ -83,6 +83,10 @@ public enum PackageManagerType {
             try {
                 String version = resolver.getUvVersion(resolver.getUvCmd());
                 return version != null;
+            } catch (UvSecurityException e) {
+                // Fail closed: an integrity check failure or an explicit auto-install opt-out must
+                // hard-fail the task, never be silently downgraded to a PIP fallback.
+                throw e;
             } catch (Exception e) {
                 resolver.logger.debug("UV not available: {}", e.getMessage());
                 return false;

@@ -54,27 +54,35 @@ public interface PythonBasedPlugin extends Plugin {
 
     @Schema(
         title = "Whether to automatically download and install 'uv' when it is missing from the worker",
-        description = "When enabled (default), if 'uv' cannot be found on the worker, it is downloaded from a pinned, checksum-verified " +
-            "installer and installed automatically. Disable this on locked-down or air-gapped workers where remote downloads are not allowed; " +
-            "in that case, 'uv' must be pre-installed on the worker (or exposed via the 'UV_PATH' environment variable)."
+        description = """
+            When enabled (default), if 'uv' cannot be found on the worker, it is downloaded from a pinned, checksum-verified \
+            installer and installed automatically. Disable this on locked-down or air-gapped workers where remote downloads are not allowed; \
+            in that case, 'uv' must be pre-installed on the worker (or exposed via the 'UV_PATH' environment variable). When disabled and \
+            'uv' is absent, the task fails fast with an actionable error instead of silently falling back to PIP.
+            """
     )
     @PluginProperty(group = "advanced")
     Property<Boolean> getUvAutoInstallEnabled();
 
     @Schema(
         title = "The pinned version of 'uv' to download when it is missing from the worker",
-        description = "Only used when 'uvAutoInstallEnabled' is true and 'uv' cannot be found on the worker. " +
-            "Defaults to a version bundled with this plugin. Override this to bump the auto-installed 'uv' version " +
-            "without waiting for a plugin release; when doing so, also set 'uvInstallerSha256' to the matching checksum."
+        description = """
+            Only used when 'uvAutoInstallEnabled' is true and 'uv' cannot be found on the worker. \
+            Defaults to a version bundled with this plugin. Override this to bump the auto-installed 'uv' version \
+            without waiting for a plugin release; when doing so, also set 'uvInstallerSha256' to the matching checksum.
+            """
     )
     @PluginProperty(group = "advanced")
     Property<String> getUvInstallerVersion();
 
     @Schema(
         title = "The expected SHA-256 checksum of the pinned 'uv' installer script",
-        description = "Used to verify the integrity of the installer downloaded from `https://astral.sh/uv/<uvInstallerVersion>/install.sh` " +
-            "before executing it. Defaults to the checksum matching the bundled 'uvInstallerVersion'. Override this together with " +
-            "'uvInstallerVersion' when bumping the pinned 'uv' version. The download is rejected and the task fails if the checksums do not match."
+        description = """
+            Used to verify the integrity of the installer downloaded from `https://astral.sh/uv/<uvInstallerVersion>/install.sh` \
+            before executing it. Defaults to the checksum matching the bundled 'uvInstallerVersion'. Override this together with \
+            'uvInstallerVersion' when bumping the pinned 'uv' version. The download is rejected and the task fails if the checksums \
+            do not match — it never falls back to executing an unverified installer or degrades to PIP.
+            """
     )
     @PluginProperty(group = "advanced")
     Property<String> getUvInstallerSha256();

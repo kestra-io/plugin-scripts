@@ -2,6 +2,7 @@ package io.kestra.plugin.scripts.python.internals;
 
 import java.io.*;
 import java.net.URI;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -87,7 +88,7 @@ public class PythonDependenciesResolver {
         this.localCacheDir = Objects.requireNonNull(localCacheDir, "localCacheDir cannot be null");
         this.packageManagerType = Objects.requireNonNull(packageManagerType, "packageManagerType cannot be null");
         this.uvInstallerVersion = Objects.requireNonNull(uvInstallerVersion, "uvInstallerVersion cannot be null");
-        this.uvInstallerSha256 = Objects.requireNonNull(uvInstallerSha256, "uvInstallerSha256 cannot be null").toLowerCase(Locale.ROOT);
+        this.uvInstallerSha256 = Objects.requireNonNull(uvInstallerSha256, "uvInstallerSha256 cannot be null").trim().toLowerCase(Locale.ROOT);
         this.uvAutoInstallEnabled = uvAutoInstallEnabled;
     }
 
@@ -331,7 +332,7 @@ public class PythonDependenciesResolver {
         String version = detectInstalledUvVersion(uvCmd);
         if (version == null) {
             if (!uvAutoInstallEnabled) {
-                throw new KestraRuntimeException(
+                throw new UvSecurityException(
                     "'uv' command could not be found and automatic installation is disabled. " +
                         "Please install 'uv' on the worker (or set the 'UV_PATH' environment variable), " +
                         "or enable automatic installation via the 'uvAutoInstallEnabled' property."
@@ -418,13 +419,41 @@ public class PythonDependenciesResolver {
         }
     }
 
+    private static final int DOWNLOAD_CONNECT_TIMEOUT_MS = 10_000;
+    private static final int DOWNLOAD_READ_TIMEOUT_MS = 30_000;
+    // The real 'uv' installer is ~70KB; this is a generous safety cap against a slow or malicious endpoint
+    // streaming an unbounded response, not an expected size.
+    private static final long MAX_INSTALLER_SIZE_BYTES = 5L * 1024 * 1024;
+
     /**
      * Downloads the content of the given URL. Extracted so tests can mock the download rather than hitting astral.sh.
      */
     protected byte[] downloadInstaller(String url) throws IOException {
-        try (InputStream in = URI.create(url).toURL().openStream()) {
-            return in.readAllBytes();
+        URLConnection connection = URI.create(url).toURL().openConnection();
+        connection.setConnectTimeout(DOWNLOAD_CONNECT_TIMEOUT_MS);
+        connection.setReadTimeout(DOWNLOAD_READ_TIMEOUT_MS);
+
+        try (InputStream in = connection.getInputStream()) {
+            return readAtMost(in, MAX_INSTALLER_SIZE_BYTES, url);
         }
+    }
+
+    /**
+     * Reads at most {@code maxBytes} from the stream, failing rather than buffering an unbounded response into memory.
+     */
+    static byte[] readAtMost(InputStream in, long maxBytes, String url) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        byte[] chunk = new byte[8192];
+        long total = 0;
+        int read;
+        while ((read = in.read(chunk)) != -1) {
+            total += read;
+            if (total > maxBytes) {
+                throw new IOException("Refusing to read the 'uv' installer from '" + url + "': response exceeded the " + maxBytes + "-byte safety limit.");
+            }
+            buffer.write(chunk, 0, read);
+        }
+        return buffer.toByteArray();
     }
 
     /**
@@ -434,7 +463,7 @@ public class PythonDependenciesResolver {
     protected void verifyInstallerChecksum(byte[] installerContent, String installerUrl) {
         String actualSha256 = sha256Hex(installerContent);
         if (!uvInstallerSha256.equals(actualSha256)) {
-            throw new KestraRuntimeException(
+            throw new UvSecurityException(
                 "Integrity check failed for the 'uv' installer downloaded from '" + installerUrl + "'. " +
                     "Expected SHA-256 '" + uvInstallerSha256 + "' but got '" + actualSha256 + "'. " +
                     "Refusing to execute the installer. If 'uv' " + uvInstallerVersion + " was re-released with different content, " +
