@@ -14,7 +14,7 @@ import static org.hamcrest.Matchers.is;
 @KestraTest(startRunner = true)
 class RunnerTest {
     @Test
-    @ExecuteFlow("sanity-checks/all_go.yaml")
+    @ExecuteFlow(value = "sanity-checks/all_go.yaml", timeout = "PT5M")
     void all_go(Execution execution) {
         assertThat(execution.getTaskRunList(), hasSize(2));
         assertThat(execution.getState().getCurrent(), is(State.Type.SUCCESS));
