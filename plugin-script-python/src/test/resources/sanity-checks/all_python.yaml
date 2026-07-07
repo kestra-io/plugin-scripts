@@ -44,7 +44,7 @@ tasks:
       main.py: |
         print("Hello, World from the Commands Task and Process Task Runner")
     commands:
-      - python main.py
+      - python3 main.py
 
   - id: python_script_logs
     type: io.kestra.plugin.scripts.python.Script
