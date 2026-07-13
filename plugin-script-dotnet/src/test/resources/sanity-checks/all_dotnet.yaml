@@ -1,0 +1,13 @@
+id: all_dotnet
+namespace: sanitychecks.plugin-scripts
+
+tasks:
+  - id: dotnet_inline_script
+    type: io.kestra.plugin.scripts.dotnet.Script
+    script: |
+      Console.WriteLine("Hello from dotnet-script!");
+
+  - id: dotnet_commands
+    type: io.kestra.plugin.scripts.dotnet.Commands
+    commands:
+      - dotnet --version

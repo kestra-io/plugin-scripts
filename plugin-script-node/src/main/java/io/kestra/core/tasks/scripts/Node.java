@@ -28,7 +28,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a Node.js script (Deprecated).",
+    title = "Execute a Node.js script (Deprecated)",
     description = "This task is deprecated, please use the [io.kestra.plugin.scripts.node.Script](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.node.script) or [io.kestra.plugin.scripts.node.Commands](https://kestra.io/plugins/tasks/io.kestra.plugin.scripts.node.commands) tasks instead.\n\n"
         +
         "With the Node task, you can execute a full JavaScript script.\n" +
@@ -103,7 +103,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 public class Node extends AbstractBash implements RunnableTask<io.kestra.core.tasks.scripts.ScriptOutput> {
     @Builder.Default
     @Schema(
-        title = "The node interpreter to use.",
+        title = "The node interpreter to use",
         description = "Set the node interpreter path to use."
     )
     @PluginProperty(group = "advanced")
@@ -111,14 +111,14 @@ public class Node extends AbstractBash implements RunnableTask<io.kestra.core.ta
 
     @Builder.Default
     @Schema(
-        title = "The npm binary to use.",
+        title = "The npm binary to use",
         description = "Set the npm binary path for node dependencies setup."
     )
     @PluginProperty(group = "advanced")
     private final Property<String> npmPath = Property.ofValue("npm");
 
     @Schema(
-        title = "Node command args.",
+        title = "Node command args",
         description = "Arguments list to pass to main JavaScript script."
 
     )

@@ -19,7 +19,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Transform an ION file from Kestra's internal storage with a Groovy script.",
+    title = "Transform an ION file from Kestra's internal storage with a Groovy script",
     description = "This task is deprecated, please use `io.kestra.plugin.graalvm.js.FileTransform`, `io.kestra.plugin.graalvm.python.FileTransform` or `io.kestra.plugin.graalvm.ruby.FileTransform` instead."
 )
 @Plugin(

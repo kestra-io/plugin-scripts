@@ -25,7 +25,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Julia files and commands.",
+    title = "Execute Julia files and commands",
     description = "Executes provided Julia commands in order using the default 'julia' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install packages; ideal for running existing .jl files instead of inline scripts."
 )
 @Plugin(

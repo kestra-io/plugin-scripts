@@ -1,15 +1,17 @@
 plugins {
-    id 'io.kestra.gradle.spotless-conventions' version '1.1.0' apply false
+    id 'io.kestra.gradle.repository-conventions' version '1.2.5'
+    id 'io.kestra.gradle.spotless-conventions' version '1.2.5' apply false
     id 'java-library'
     id "idea"
     id 'jacoco-report-aggregation'
     id "com.adarshr.test-logger" version "4.0.0" apply(false)
-    id "com.gradleup.shadow" version "9.4.1" apply(false)
+    id "com.gradleup.shadow" version "9.4.3" apply(false)
     id 'signing'
     id "com.github.ben-manes.versions" version "0.54.0"
     id 'net.researchgate.release' version '3.1.0'
-    id "com.vanniktech.maven.publish" version "0.36.0"
-    id "io.kestra.gradle.inject-bom-versions" version "1.1.0"
+    id "com.vanniktech.maven.publish" version "0.37.0"
+    id "io.kestra.gradle.inject-bom-versions" version "1.2.5"
+    id "io.kestra.gradle.plugin-doc-lint" version "1.2.5" apply(false)
 }
 
 def isBuildSnapshot = version.toString().endsWith("-SNAPSHOT")
@@ -37,6 +39,7 @@ subprojects {
     group "io.kestra.plugin"
 
     apply plugin: "java-library"
+    apply plugin: "io.kestra.gradle.plugin-doc-lint"
     apply plugin: "io.kestra.gradle.spotless-conventions"
 
     java {
@@ -82,6 +85,7 @@ subprojects {
 
     test {
         useJUnitPlatform()
+        maxParallelForks = Math.max(1, Runtime.runtime.availableProcessors().intdiv(2))
     }
 
     testlogger {

@@ -25,7 +25,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute JBang files and commands.",
+    title = "Execute JBang files and commands",
     description = "Executes provided JBang commands (e.g., scripts, JARs) in order using the default 'jbangdev/jbang-action' image unless overridden. Supports beforeCommands for setup and uses inputFiles for staging sources; choose this task to run existing JBang files instead of inline scripts."
 )
 @Plugin(

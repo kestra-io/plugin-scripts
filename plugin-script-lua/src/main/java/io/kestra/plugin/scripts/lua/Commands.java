@@ -22,7 +22,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Lua files and commands.",
+    title = "Execute Lua files and commands",
     description = "Executes provided Lua commands in order using the default 'nickblah/lua' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install modules; choose this task when running existing Lua files instead of inline scripts."
 )
 @Plugin(

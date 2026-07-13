@@ -4,53 +4,45 @@ namespace: sanitychecks.plugin-scripts
 tasks:
   - id: script
     type: io.kestra.plugin.scripts.go.Script
-    allowWarning: true # cause golang redirect ALL to stderr even false positives
+    allowWarning: true # golang redirects all output to stderr even for non-errors
+    outputFiles:
+      - output.csv
     script: |
       package main
       import (
+          "encoding/csv"
           "os"
-          "github.com/go-gota/gota/dataframe"
-          "github.com/go-gota/gota/series"
       )
       func main() {
-          names := series.New([]string{"Alice", "Bob", "Charlie"}, series.String, "Name")
-          ages := series.New([]int{25, 30, 35}, series.Int, "Age")
-          df := dataframe.New(names, ages)
           file, _ := os.Create("output.csv")
-          df.WriteCSV(file)
           defer file.Close()
+          w := csv.NewWriter(file)
+          _ = w.Write([]string{"Name", "Age"})
+          _ = w.Write([]string{"Alice", "25"})
+          _ = w.Write([]string{"Bob", "30"})
+          w.Flush()
       }
-    outputFiles:
-      - output.csv
-    beforeCommands:
-      - go mod init go_script
-      - go get github.com/go-gota/gota/dataframe
-      - go mod tidy
 
   - id: commands
     type: io.kestra.plugin.scripts.go.Commands
-    allowWarning: true # cause golang redirect ALL to stderr even false positives
+    allowWarning: true # golang redirects all output to stderr even for non-errors
     inputFiles:
       go_script.go: |
         package main
         import (
+            "encoding/csv"
             "os"
-            "github.com/go-gota/gota/dataframe"
-            "github.com/go-gota/gota/series"
         )
         func main() {
-            names := series.New([]string{"Alice", "Bob", "Charlie"}, series.String, "Name")
-            ages := series.New([]int{25, 30, 35}, series.Int, "Age")
-            df := dataframe.New(names, ages)
             file, _ := os.Create("output.csv")
-            df.WriteCSV(file)
             defer file.Close()
+            w := csv.NewWriter(file)
+            _ = w.Write([]string{"Name", "Age"})
+            _ = w.Write([]string{"Alice", "25"})
+            _ = w.Write([]string{"Bob", "30"})
+            w.Flush()
         }
     outputFiles:
       - output.csv
-    beforeCommands:
-      - go mod init go_commands
-      - go get github.com/go-gota/gota/dataframe
-      - go mod tidy
     commands:
       - go run go_script.go

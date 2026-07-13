@@ -4,7 +4,7 @@ import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContext;
-import io.kestra.plugin.core.runner.Process;
+import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -20,7 +20,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Trigger on Python commands condition.",
+    title = "Trigger on Python commands condition",
     description = """
         Polls by running Python commands (default image python:3.13-slim) and emits when exitCondition matches.
         Supports edge mode to emit only on transitions and polls every 60s by default.
@@ -57,7 +57,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 public class CommandsTrigger extends AbstractPythonTrigger {
 
     @Schema(
-        title = "Docker image used to execute the commands.",
+        title = "Docker image used to execute the commands",
         description = "Container image used by the underlying Commands task to run Python commands.\n" +
             "Defaults to '" + DEFAULT_IMAGE + "'."
     )
@@ -66,7 +66,7 @@ public class CommandsTrigger extends AbstractPythonTrigger {
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "Python commands to execute.",
+        title = "Python commands to execute",
         description = "Commands executed on each poll (same semantics as the Python Commands task)."
     )
     @NotNull
@@ -76,11 +76,12 @@ public class CommandsTrigger extends AbstractPythonTrigger {
     @Override
     protected ScriptOutput executeTask(RunContext runContext) throws Exception {
         Commands task = Commands.builder()
-            .taskRunner(Process.instance())
+            .id(this.getId())
+            .type(Commands.class.getName())
             .containerImage(this.containerImage)
             .commands(this.commands)
             .build();
 
-        return task.run(runContext);
+        return task.run(TriggerRunContext.forEmbeddedTask(runContext, task));
     }
 }

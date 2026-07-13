@@ -88,7 +88,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
 
     @Builder.Default
     @Schema(
-        title = "Which interpreter to use."
+        title = "Which interpreter to use"
     )
     @PluginProperty(group = "execution")
     protected Property<List<String>> interpreter = Property.ofValue(List.of("pwsh", "-NoProfile", "-NonInteractive", "-Command"));

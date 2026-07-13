@@ -21,7 +21,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @Deprecated
 public abstract class AbstractJvmScript extends Task {
     @Schema(
-        title = "A full script."
+        title = "A full script"
     )
     @PluginProperty(group = "processing")
     protected Property<String> script;

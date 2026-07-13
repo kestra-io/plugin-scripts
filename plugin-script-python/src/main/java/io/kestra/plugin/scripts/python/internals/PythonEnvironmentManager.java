@@ -33,6 +33,9 @@ public class PythonEnvironmentManager {
     private final boolean isDependencyCacheEnabled;
     private final String pythonVersion;
     private final PackageManagerType packageManager;
+    private final boolean uvAutoInstallEnabled;
+    private final String uvInstallerVersion;
+    private final String uvInstallerSha256;
 
     public PythonEnvironmentManager(final RunContext runContext,
         final PythonBasedPlugin plugin) throws IllegalVariableEvaluationException {
@@ -51,6 +54,9 @@ public class PythonEnvironmentManager {
         this.isDependencyCacheEnabled = runContext.render(this.plugin.getDependencyCacheEnabled()).as(Boolean.class).orElse(true);
         this.pythonVersion = runContext.render(this.plugin.getPythonVersion()).as(String.class).orElse(null);
         this.packageManager = packageManager != null ? packageManager : PackageManagerType.PIP;
+        this.uvAutoInstallEnabled = runContext.render(this.plugin.getUvAutoInstallEnabled()).as(Boolean.class).orElse(true);
+        this.uvInstallerVersion = runContext.render(this.plugin.getUvInstallerVersion()).as(String.class).orElse(PythonDependenciesResolver.DEFAULT_UV_INSTALLER_VERSION);
+        this.uvInstallerSha256 = runContext.render(this.plugin.getUvInstallerSha256()).as(String.class).orElse(PythonDependenciesResolver.DEFAULT_UV_INSTALLER_SHA256);
     }
 
     public ResolvedPythonEnvironment setup(final Property<String> containerImage, final TaskRunner<?> taskRunner, final RunnerType runnerType)
@@ -63,7 +69,10 @@ public class PythonEnvironmentManager {
             runContext.logger(),
             runContext.workingDir(),
             localCacheDir,
-            packageManager
+            packageManager,
+            uvInstallerVersion,
+            uvInstallerSha256,
+            uvAutoInstallEnabled
         );
 
         final String targetPythonVersion = getTargetPythonVersion(containerImage, taskRunner, runnerType)
@@ -95,8 +104,16 @@ public class PythonEnvironmentManager {
         }
 
         String pythonInterpreter = "python";
-        if (pythonVersion != null && (taskRunner instanceof Process || RunnerType.PROCESS.equals(runnerType))) {
-            pythonInterpreter = resolver.getPythonPath(targetPythonVersion);
+        if (taskRunner instanceof Process || RunnerType.PROCESS.equals(runnerType)) {
+            // The Process runner executes commands directly on the worker host, which may only ship
+            // 'python3' (Debian/Ubuntu, the standard Kestra worker image) and not the bare 'python'
+            // literal. When an explicit pythonVersion is set, resolve it through the configured package
+            // manager (may provision a managed Python via 'uv'). Otherwise, probe for an interpreter
+            // that is already installed (python3, then python) rather than forcing a managed-Python
+            // download just to run a script with no dependencies.
+            pythonInterpreter = pythonVersion != null
+                ? resolver.getPythonPath(targetPythonVersion)
+                : PackageManagerType.PIP.getPythonPath(resolver, targetPythonVersion);
         }
 
         return new ResolvedPythonEnvironment(cached, resolvedPythonPackages, pythonInterpreter);

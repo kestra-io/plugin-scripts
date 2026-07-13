@@ -25,7 +25,8 @@ import io.kestra.core.models.annotations.PluginProperty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Shell commands and files."
+    title = "Execute Shell commands and files",
+    description = "Runs Shell commands or files in a container and captures their output."
 )
 @Plugin(
     examples = {
@@ -127,13 +128,13 @@ import io.kestra.core.models.annotations.PluginProperty;
 
                 tasks:
                   - id: http_download
-                   type: io.kestra.plugin.core.http.Download
-                   uri: https://huggingface.co/datasets/kestra/datasets/raw/main/csv/products.csv
+                    type: io.kestra.plugin.core.http.Download
+                    uri: https://huggingface.co/datasets/kestra/datasets/raw/main/csv/products.csv
 
-                 - id: commands
-                   type: io.kestra.plugin.scripts.shell.Commands
-                   commands:
-                     - cat {{ outputs.http_download.uri }}
+                  - id: commands
+                    type: io.kestra.plugin.scripts.shell.Commands
+                    commands:
+                      - cat {{ outputs.http_download.uri }}
                 """
         ),
         @Example(
@@ -303,7 +304,7 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "Shell commands to run."
+        title = "Shell commands to run"
     )
     @NotNull
     @PluginProperty(group = "main")

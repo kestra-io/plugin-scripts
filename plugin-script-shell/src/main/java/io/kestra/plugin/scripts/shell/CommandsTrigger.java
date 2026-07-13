@@ -18,7 +18,7 @@ import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
-import io.kestra.plugin.core.runner.Process;
+import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -33,7 +33,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Trigger a flow when Shell commands match a condition.",
+    title = "Trigger a flow when Shell commands match a condition",
     description = "Polls and triggers a flow by running system commands in a shell container."
 )
 @Plugin(
@@ -69,7 +69,7 @@ public class CommandsTrigger extends AbstractTrigger
     private static final String DEFAULT_IMAGE = "ubuntu";
 
     @Schema(
-        title = "Docker image used to execute the commands.",
+        title = "Docker image used to execute the commands",
         description = """
             Container image used by the underlying Commands task to run shell commands.
             Defaults to 'ubuntu'.
@@ -80,7 +80,7 @@ public class CommandsTrigger extends AbstractTrigger
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "Shell commands to execute.",
+        title = "Shell commands to execute",
         description = "Commands executed on each poll (same semantics as the Shell Commands task)."
     )
     @NotNull
@@ -88,7 +88,7 @@ public class CommandsTrigger extends AbstractTrigger
     protected Property<List<String>> commands;
 
     @Schema(
-        title = "Condition to match.",
+        title = "Condition to match",
         description = """
             Condition evaluated after each commands execution. The trigger emits an event only when this condition matches.
 
@@ -112,7 +112,7 @@ public class CommandsTrigger extends AbstractTrigger
     private final Duration interval = Duration.ofSeconds(60);
 
     @Schema(
-        title = "Edge trigger mode.",
+        title = "Edge trigger mode",
         description = """
             If true, the trigger emits only on a transition from 'not matching' to 'matching' (anti-spam).
             If false, the trigger emits on every poll where the condition matches.
@@ -131,7 +131,14 @@ public class CommandsTrigger extends AbstractTrigger
         RunContext runContext = conditionContext.getRunContext();
         boolean rEdge = runContext.render(this.edge).as(Boolean.class).orElse(true);
 
-        Output out = runOnce(runContext);
+        Output out;
+        try {
+            out = runOnce(runContext);
+        } catch (Exception e) {
+            runContext.logger().warn("Trigger evaluation failed, returning empty result to avoid blocking the scheduler", e);
+            return Optional.empty();
+        }
+
         boolean matched = matchesCondition(out);
 
         boolean emit = rEdge
@@ -147,7 +154,8 @@ public class CommandsTrigger extends AbstractTrigger
 
     private Output runOnce(RunContext runContext) throws Exception {
         Commands task = Commands.builder()
-            .taskRunner(Process.instance())
+            .id(this.getId())
+            .type(Commands.class.getName())
             .containerImage(this.containerImage)
             .commands(this.commands)
             .build();
@@ -155,14 +163,14 @@ public class CommandsTrigger extends AbstractTrigger
         String renderedCondition = runContext.render(this.exitCondition).as(String.class).orElse("");
 
         try {
-            ScriptOutput taskOutput = task.run(runContext);
+            ScriptOutput taskOutput = task.run(TriggerRunContext.forEmbeddedTask(runContext, task));
             Integer exitCode = safeExitCode(taskOutput);
             Map<String, Object> vars = safeVars(taskOutput);
 
-            return new Output(Instant.now(), renderedCondition, exitCode, vars, null);
+            return new Output(Instant.now(), renderedCondition, exitCode, vars);
         } catch (RunnableTaskException e) {
             ExtractedFailure failure = extractFailure(e);
-            return new Output(Instant.now(), renderedCondition, failure.exitCode, null, failure.logs);
+            return new Output(Instant.now(), renderedCondition, failure.exitCode, null);
         }
     }
 
@@ -188,16 +196,10 @@ public class CommandsTrigger extends AbstractTrigger
     }
 
     private String buildHaystack(Output out) {
-        StringBuilder sb = new StringBuilder();
-
-        if (out.getVars() != null && !out.getVars().isEmpty()) {
-            sb.append(out.getVars()).append("\n");
+        if (out.getVars() == null || out.getVars().isEmpty()) {
+            return "";
         }
-        if (out.getLogs() != null && !out.getLogs().isBlank()) {
-            sb.append(out.getLogs()).append("\n");
-        }
-
-        return sb.toString();
+        return out.getVars().toString();
     }
 
     private Integer safeExitCode(ScriptOutput taskOutput) {
@@ -216,36 +218,34 @@ public class CommandsTrigger extends AbstractTrigger
         }
     }
 
-    private record ExtractedFailure(Integer exitCode, String logs) {
+    private record ExtractedFailure(Integer exitCode) {
     }
 
     private ExtractedFailure extractFailure(RunnableTaskException e) {
         Integer exitCode = null;
-        String logs = null;
 
         Throwable cur = e.getCause();
         while (cur != null) {
             if (cur instanceof TaskException te) {
                 exitCode = te.getExitCode();
-                try {
-                    logs = te.getLogConsumer() != null ? te.getLogConsumer().toString() : null;
-                } catch (Exception ignored) {
-                }
                 break;
             }
             cur = cur.getCause();
         }
 
-        return new ExtractedFailure(exitCode, logs);
+        return new ExtractedFailure(exitCode);
     }
 
     @Data
     @AllArgsConstructor
     public static class Output implements io.kestra.core.models.tasks.Output {
+        @Schema(title = "Timestamp of the event that fired the trigger")
         private Instant timestamp;
+        @Schema(title = "The captured rendered condition output")
         private String condition;
+        @Schema(title = "The exit code of the executed commands")
         private Integer exitCode;
+        @Schema(title = "Output variables captured from the commands")
         private Map<String, Object> vars;
-        private String logs;
     }
 }

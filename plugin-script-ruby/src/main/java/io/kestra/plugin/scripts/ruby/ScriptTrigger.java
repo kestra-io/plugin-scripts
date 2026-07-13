@@ -9,7 +9,7 @@ import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
-import io.kestra.plugin.core.runner.Process;
+import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -33,7 +33,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@Schema(title = "Trigger a flow when a Ruby script matches a condition.")
+@Schema(title = "Trigger a flow when a Ruby script matches a condition", description = "Polls by running a Ruby script and starts the flow when its output matches the condition.")
 @Plugin(
     examples = {
         @Example(
@@ -71,7 +71,7 @@ public class ScriptTrigger extends AbstractTrigger
         Pattern.compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE);
 
     @Schema(
-        title = "Container image for script execution.",
+        title = "Container image for script execution",
         description = "Image used by the Script task to run the inline Ruby script; defaults to 'ruby'."
     )
     @Builder.Default
@@ -79,7 +79,7 @@ public class ScriptTrigger extends AbstractTrigger
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "Inline Ruby script.",
+        title = "Inline Ruby script",
         description = "Multi-line script executed on each poll."
     )
     @NotNull
@@ -87,7 +87,7 @@ public class ScriptTrigger extends AbstractTrigger
     protected Property<String> script;
 
     @Schema(
-        title = "Condition to match.",
+        title = "Condition to match",
         description = """
             Condition evaluated after each execution. The trigger emits only when it matches.
             'exit N' compares the exit code, otherwise the string is used as a regex
@@ -99,7 +99,7 @@ public class ScriptTrigger extends AbstractTrigger
     protected Property<String> exitCondition;
 
     @Schema(
-        title = "Check interval.",
+        title = "Check interval",
         description = "Interval between polling evaluations."
     )
     @Builder.Default
@@ -107,7 +107,7 @@ public class ScriptTrigger extends AbstractTrigger
     private final Duration interval = Duration.ofSeconds(60);
 
     @Schema(
-        title = "Edge trigger mode.",
+        title = "Edge trigger mode",
         description = """
             If true, the trigger emits only on a transition from 'not matching' to 'matching' (anti-spam).
             If false, the trigger emits on every poll where the condition matches.
@@ -128,7 +128,14 @@ public class ScriptTrigger extends AbstractTrigger
         RunContext runContext = conditionContext.getRunContext();
         boolean edgeEnabled = runContext.render(this.edge).as(Boolean.class).orElse(true);
 
-        Output output = runOnce(runContext);
+        Output output;
+        try {
+            output = runOnce(runContext);
+        } catch (Exception e) {
+            runContext.logger().warn("Trigger evaluation failed, returning empty result to avoid blocking the scheduler", e);
+            return Optional.empty();
+        }
+
         boolean matched = matchesCondition(output);
 
         boolean emit = edgeEnabled
@@ -146,7 +153,8 @@ public class ScriptTrigger extends AbstractTrigger
 
     private Output runOnce(RunContext runContext) throws Exception {
         Script task = Script.builder()
-            .taskRunner(Process.instance())
+            .id(this.getId())
+            .type(Script.class.getName())
             .containerImage(this.containerImage)
             .script(this.script)
             .build();
@@ -156,14 +164,13 @@ public class ScriptTrigger extends AbstractTrigger
             .orElse("");
 
         try {
-            ScriptOutput taskOutput = task.run(runContext);
+            ScriptOutput taskOutput = task.run(TriggerRunContext.forEmbeddedTask(runContext, task));
 
             return new Output(
                 Instant.now(),
                 renderedCondition,
                 safeExitCode(taskOutput),
-                safeVars(taskOutput),
-                null
+                safeVars(taskOutput)
             );
         } catch (RunnableTaskException e) {
             ExtractedFailure failure = extractFailure(e);
@@ -171,8 +178,7 @@ public class ScriptTrigger extends AbstractTrigger
                 Instant.now(),
                 renderedCondition,
                 failure.exitCode,
-                null,
-                failure.logs
+                null
             );
         }
     }
@@ -207,19 +213,11 @@ public class ScriptTrigger extends AbstractTrigger
     }
 
     private String buildHaystack(Output out) {
-        StringBuilder sb = new StringBuilder();
-
-        // Note: uses Map.toString() which produces {key=value, ...} format.
-        // This is intentional for simple substring/regex matching against output vars,
-        // but the exact format depends on the Map implementation.
-        if (out.getVars() != null && !out.getVars().isEmpty()) {
-            sb.append(out.getVars()).append("\n");
+        if (out.getVars() == null || out.getVars().isEmpty()) {
+            return "";
         }
-        if (out.getLogs() != null && !out.getLogs().isBlank()) {
-            sb.append(out.getLogs()).append("\n");
-        }
-
-        return sb.toString();
+        // Map.toString() produces {key=value, ...} — intentional for substring/regex matching.
+        return out.getVars().toString();
     }
 
     private Integer safeExitCode(ScriptOutput output) {
@@ -238,60 +236,48 @@ public class ScriptTrigger extends AbstractTrigger
         }
     }
 
-    private record ExtractedFailure(Integer exitCode, String logs) {}
+    private record ExtractedFailure(Integer exitCode) {}
 
     private ExtractedFailure extractFailure(RunnableTaskException e) {
         Integer exitCode = null;
-        String logs = null;
 
         Throwable cur = e.getCause();
         while (cur != null) {
             if (cur instanceof TaskException te) {
                 exitCode = te.getExitCode();
-                try {
-                    logs = te.getLogConsumer() != null
-                        ? te.getLogConsumer().toString()
-                        : null;
-                } catch (Exception ignored) {}
                 break;
             }
             cur = cur.getCause();
         }
 
-        return new ExtractedFailure(exitCode, logs);
+        return new ExtractedFailure(exitCode);
     }
 
     @Data
     @AllArgsConstructor
     public static class Output implements io.kestra.core.models.tasks.Output {
         @Schema(
-            title = "Poll timestamp.",
+            title = "Poll timestamp",
             description = "Timestamp when this trigger evaluation occurred."
         )
         private Instant timestamp;
 
         @Schema(
-            title = "Rendered condition.",
+            title = "Rendered condition",
             description = "Rendered value of the exitCondition property for this poll."
         )
         private String condition;
 
         @Schema(
-            title = "Script exit code.",
+            title = "Script exit code",
             description = "Exit code returned by the Ruby process (may be null if not available)."
         )
         private Integer exitCode;
 
         @Schema(
-            title = "Script vars.",
+            title = "Script vars",
             description = "Vars produced by the task (e.g. via ::{\"outputs\":{...}}:: convention)."
         )
         private Map<String, Object> vars;
-
-        @Schema(
-            title = "Captured logs (best effort).",
-            description = "Captured error logs when the script fails (best effort, depends on the runner)."
-        )
-        private String logs;
     }
 }

@@ -25,7 +25,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute Go files and commands.",
+    title = "Execute Go files and commands",
     description = "Executes provided Go commands in order using the default 'golang' image unless overridden. Supports inputFiles and beforeCommands to stage sources and install modules; use this task when running existing Go files with 'go run'."
 )
 @Plugin(

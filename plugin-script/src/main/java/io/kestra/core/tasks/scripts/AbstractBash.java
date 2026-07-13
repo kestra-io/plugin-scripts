@@ -41,21 +41,21 @@ import static io.kestra.core.utils.Rethrow.throwConsumer;
 public abstract class AbstractBash extends Task implements OutputFilesInterface {
     @Builder.Default
     @Schema(
-        title = "The task runner."
+        title = "The task runner"
     )
     @NotNull
     @PluginProperty(group = "main")
     protected Property<RunnerType> runner = Property.ofValue(RunnerType.PROCESS);
 
     @Schema(
-        title = "Docker options when using the `DOCKER` runner."
+        title = "Docker options when using the `DOCKER` runner"
     )
     @PluginProperty(group = "advanced")
     protected DockerOptions dockerOptions;
 
     @Builder.Default
     @Schema(
-        title = "Interpreter to use when launching the process."
+        title = "Interpreter to use when launching the process"
     )
     @NotNull
     @PluginProperty(group = "main")
@@ -63,14 +63,14 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
 
     @Builder.Default
     @Schema(
-        title = "Interpreter arguments to be used."
+        title = "Interpreter arguments to be used"
     )
     @PluginProperty(group = "execution")
     protected String[] interpreterArgs = { "-c" };
 
     @Builder.Default
     @Schema(
-        title = "Exit if any non-true value is returned.",
+        title = "Exit if any non-true value is returned",
         description = "This tells bash that it should exit the script if any statement returns a non-true return value. \n" +
             "Setting this to `true` helps catch cases where a command fails and the script continues to run anyway."
     )
@@ -79,7 +79,7 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
     protected Property<Boolean> exitOnFailed = Property.ofValue(true);
 
     @Schema(
-        title = "[Deprecated] The list of files that will be uploaded to Kestra's internal storage.",
+        title = "[Deprecated] The list of files that will be uploaded to Kestra's internal storage",
         description = "Use `outputFiles` instead.",
         deprecated = true
     )
@@ -88,7 +88,7 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
     protected Property<List<String>> files;
 
     @Schema(
-        title = "[Deprecated] Output files.",
+        title = "[Deprecated] Output files",
         description = "Use `outputFiles` instead.",
         deprecated = true
     )
@@ -97,7 +97,7 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
     protected Property<List<String>> outputsFiles;
 
     @Schema(
-        title = "Output file list that will be uploaded to Kestra's internal storage.",
+        title = "Output file list that will be uploaded to Kestra's internal storage",
         description = "List of keys that will generate temporary files.\n" +
             "This property can be used with a special variable named `outputFiles.key`.\n" +
             "If you add a file with `[\"first\"]`, you can use the special var `echo 1 >> {[ outputFiles.first }}`," +
@@ -107,7 +107,7 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
     protected Property<List<String>> outputFiles;
 
     @Schema(
-        title = "[Deprecated] List of output directories that will be uploaded to Kestra's internal storage.",
+        title = "[Deprecated] List of output directories that will be uploaded to Kestra's internal storage",
         description = "Use `outputFiles` instead. List of keys that will generate temporary directories.\n" +
             "This property can be used with a special variable named `outputDirs.key`.\n" +
             "If you add a file with `[\"myDir\"]`, you can use the special var `echo 1 >> {[ outputDirs.myDir }}/file1.txt` " +
@@ -119,7 +119,7 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
     protected Property<List<String>> outputDirs;
 
     @Schema(
-        title = "Input files are extra files that will be available in the script's working directory.",
+        title = "Input files are extra files that will be available in the script's working directory",
         description = "Define the files **as a map** of a file name being the key, and the value being the file's content.\n" +
             "Alternatively, configure the files **as a JSON string** with the same key/value structure as the map.\n" +
             "In both cases, you can either specify the file's content inline, or reference a file from Kestra's internal " +
@@ -132,7 +132,7 @@ public abstract class AbstractBash extends Task implements OutputFilesInterface 
     protected Object inputFiles;
 
     @Schema(
-        title = "One or more additional environment variable(s) to add to the task run."
+        title = "One or more additional environment variable(s) to add to the task run"
     )
     @PluginProperty(group = "execution")
     protected Property<Map<String, String>> env;

@@ -17,7 +17,7 @@ import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
-import io.kestra.plugin.core.runner.Process;
+import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -129,9 +129,14 @@ public class ScriptTrigger extends AbstractTrigger
         RunContext runContext = conditionContext.getRunContext();
         boolean rEdge = runContext.render(this.edge).as(Boolean.class).orElse(true);
 
-        Output out = runOnce(runContext);
+        Output out;
+        try {
+            out = runOnce(runContext);
+        } catch (Exception e) {
+            runContext.logger().warn("Trigger evaluation failed, returning empty result to avoid blocking the scheduler", e);
+            return Optional.empty();
+        }
 
-        // USE exitCondition to decide whether to emit
         boolean matched = matchesCondition(out);
 
         boolean emit = rEdge
@@ -147,7 +152,8 @@ public class ScriptTrigger extends AbstractTrigger
 
     private Output runOnce(RunContext runContext) throws Exception {
         Script task = Script.builder()
-            .taskRunner(Process.instance())
+            .id(this.getId())
+            .type(Script.class.getName())
             .containerImage(this.containerImage)
             .script(this.script)
             .build();
@@ -155,16 +161,16 @@ public class ScriptTrigger extends AbstractTrigger
         String rExitCondition = runContext.render(this.exitCondition).as(String.class).orElse("");
 
         try {
-            ScriptOutput taskOutput = task.run(runContext);
+            ScriptOutput taskOutput = task.run(TriggerRunContext.forEmbeddedTask(runContext, task));
             Integer exitCode = safeExitCode(taskOutput);
 
             // vars are the only reliable structured "result" we can read on success
             Map<String, Object> vars = safeVars(taskOutput);
 
-            return new Output(Instant.now(), rExitCondition, exitCode, vars, null);
+            return new Output(Instant.now(), rExitCondition, exitCode, vars);
         } catch (RunnableTaskException e) {
             ExtractedFailure failure = extractFailure(e);
-            return new Output(Instant.now(), rExitCondition, failure.exitCode, null, failure.logs);
+            return new Output(Instant.now(), rExitCondition, failure.exitCode, null);
         }
     }
 
@@ -192,16 +198,10 @@ public class ScriptTrigger extends AbstractTrigger
     }
 
     private String buildHaystack(Output out) {
-        StringBuilder sb = new StringBuilder();
-
-        if (out.getVars() != null && !out.getVars().isEmpty()) {
-            sb.append(out.getVars()).append("\n");
+        if (out.getVars() == null || out.getVars().isEmpty()) {
+            return "";
         }
-        if (out.getLogs() != null && !out.getLogs().isBlank()) {
-            sb.append(out.getLogs()).append("\n");
-        }
-
-        return sb.toString();
+        return out.getVars().toString();
     }
 
     private Integer safeExitCode(ScriptOutput taskOutput) {
@@ -220,60 +220,49 @@ public class ScriptTrigger extends AbstractTrigger
         }
     }
 
-    private record ExtractedFailure(Integer exitCode, String logs) {
+    private record ExtractedFailure(Integer exitCode) {
     }
 
     private ExtractedFailure extractFailure(RunnableTaskException e) {
         Integer exitCode = null;
-        String logs = null;
 
         Throwable cur = e.getCause();
         while (cur != null) {
             if (cur instanceof TaskException te) {
                 exitCode = te.getExitCode();
-                // Best-effort: TaskException carries a log consumer; toString() usually contains aggregated logs.
-                try {
-                    logs = te.getLogConsumer() != null ? te.getLogConsumer().toString() : null;
-                } catch (Exception ignored) {
-                }
                 break;
             }
             cur = cur.getCause();
         }
 
-        return new ExtractedFailure(exitCode, logs);
+        return new ExtractedFailure(exitCode);
     }
 
     @Data
     @AllArgsConstructor
     public static class Output implements io.kestra.core.models.tasks.Output {
+        @Schema(title = "Timestamp of the event that fired the trigger")
         private Instant timestamp;
 
         @Schema(
-            title = "Rendered condition.",
+            title = "Rendered condition",
             description = "Rendered value of the exitCondition property for this poll."
         )
         private String condition;
 
         @Schema(
-            title = "Script exit code.",
+            title = "Script exit code",
             description = "Exit code returned by the shell process (may be null if not available)."
         )
         private Integer exitCode;
 
         @Schema(
-            title = "Script vars.",
+            title = "Script vars",
             description = """
                 Vars produced by the task (e.g. via ::{"outputs":{...}}:: convention). This is the main structured
                 way to evaluate non-exit conditions on successful runs.
                 """
         )
         private Map<String, Object> vars;
-
-        @Schema(
-            title = "Captured logs (best effort).",
-            description = "Captured error logs when the script fails (best effort, depends on the runner)."
-        )
-        private String logs;
     }
 }

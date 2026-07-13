@@ -32,7 +32,7 @@ public abstract class AbstractPythonTrigger extends AbstractTrigger
     protected static final String DEFAULT_IMAGE = "python:3.13-slim";
 
     @Schema(
-        title = "Condition to match.",
+        title = "Condition to match",
         description = """
             Condition evaluated after each execution. The trigger emits only when it matches.
             'exit N' compares the exit code, otherwise the string is used as a regex
@@ -43,7 +43,7 @@ public abstract class AbstractPythonTrigger extends AbstractTrigger
     protected Property<String> exitCondition;
 
     @Schema(
-        title = "Check interval.",
+        title = "Check interval",
         description = "Interval between polling evaluations."
     )
     @Builder.Default
@@ -51,7 +51,7 @@ public abstract class AbstractPythonTrigger extends AbstractTrigger
     private final Duration interval = Duration.ofSeconds(60);
 
     @Schema(
-        title = "Edge trigger mode.",
+        title = "Edge trigger mode",
         description = """
             If true (default), the trigger emits only on a transition from 'not matching' to 'matching' (anti-spam).
             If false, the trigger emits on every poll where the condition matches.
@@ -72,7 +72,14 @@ public abstract class AbstractPythonTrigger extends AbstractTrigger
         RunContext runContext = conditionContext.getRunContext();
         boolean edgeEnabled = runContext.render(this.edge).as(Boolean.class).orElse(true);
 
-        Output output = runOnce(runContext);
+        Output output;
+        try {
+            output = runOnce(runContext);
+        } catch (Exception e) {
+            runContext.logger().warn("Trigger evaluation failed, returning empty result to avoid blocking the scheduler", e);
+            return Optional.empty();
+        }
+
         boolean matched = matchesCondition(output);
 
         boolean emit = edgeEnabled
@@ -98,8 +105,7 @@ public abstract class AbstractPythonTrigger extends AbstractTrigger
                 Instant.now(),
                 renderedCondition,
                 safeExitCode(taskOutput),
-                safeVars(taskOutput),
-                null
+                safeVars(taskOutput)
             );
         } catch (RunnableTaskException e) {
             ExtractedFailure failure = extractFailure(e);
@@ -108,8 +114,7 @@ public abstract class AbstractPythonTrigger extends AbstractTrigger
                 Instant.now(),
                 renderedCondition,
                 failure.exitCode,
-                null,
-                failure.logs
+                null
             );
         }
     }
@@ -139,16 +144,10 @@ public abstract class AbstractPythonTrigger extends AbstractTrigger
     }
 
     private String buildHaystack(Output out) {
-        StringBuilder sb = new StringBuilder();
-
-        if (out.getVars() != null && !out.getVars().isEmpty()) {
-            sb.append(out.getVars()).append("\n");
+        if (out.getVars() == null || out.getVars().isEmpty()) {
+            return "";
         }
-        if (out.getLogs() != null && !out.getLogs().isBlank()) {
-            sb.append(out.getLogs()).append("\n");
-        }
-
-        return sb.toString();
+        return out.getVars().toString();
     }
 
     private Integer safeExitCode(ScriptOutput output) {
@@ -167,57 +166,47 @@ public abstract class AbstractPythonTrigger extends AbstractTrigger
         }
     }
 
-    private record ExtractedFailure(Integer exitCode, String logs) {}
+    private record ExtractedFailure(Integer exitCode) {}
 
     private ExtractedFailure extractFailure(RunnableTaskException e) {
         Integer exitCode = null;
-        String logs = null;
 
         Throwable cur = e.getCause();
         while (cur != null) {
             if (cur instanceof TaskException te) {
                 exitCode = te.getExitCode();
-                try {
-                    logs = te.getLogConsumer() != null
-                        ? te.getLogConsumer().toString()
-                        : null;
-                } catch (Exception ignored) {}
                 break;
             }
             cur = cur.getCause();
         }
 
-        return new ExtractedFailure(exitCode, logs);
+        return new ExtractedFailure(exitCode);
     }
 
     @Data
     @AllArgsConstructor
     public static class Output implements io.kestra.core.models.tasks.Output {
 
+        @Schema(title = "Timestamp of the event that fired the trigger")
+
         private Instant timestamp;
 
         @Schema(
-            title = "Rendered condition.",
+            title = "Rendered condition",
             description = "Rendered value of the exitCondition property for this poll."
         )
         private String condition;
 
         @Schema(
-            title = "Exit code.",
+            title = "Exit code",
             description = "Exit code returned by the Python process (may be null if not available)."
         )
         private Integer exitCode;
 
         @Schema(
-            title = "Script vars.",
+            title = "Script vars",
             description = "Vars produced by the task (e.g. via ::{\"outputs\":{...}}:: convention)."
         )
         private Map<String, Object> vars;
-
-        @Schema(
-            title = "Captured logs (best effort).",
-            description = "Captured error logs when the task fails (best effort, depends on the runner)."
-        )
-        private String logs;
     }
 }
