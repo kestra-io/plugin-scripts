@@ -96,7 +96,11 @@ public class PythonEnvironmentManager {
         }
 
         String pythonInterpreter = "python";
-        if (pythonVersion != null && (taskRunner instanceof Process || RunnerType.PROCESS.equals(runnerType))) {
+        if ((pythonVersion != null || !requirements.isEmpty()) && (taskRunner instanceof Process || RunnerType.PROCESS.equals(runnerType))) {
+            // Key this on whether dependencies were actually installed, not just on whether pythonVersion
+            // was explicitly set: dependencies may have just been installed against a managed interpreter
+            // (e.g. uv-managed) that has no relation to whatever 'python'/'python3' is on the local PATH,
+            // so the script must run with that same interpreter. Backported from 7aca3442 (#399).
             pythonInterpreter = resolver.getPythonPath(targetPythonVersion);
         }
 
