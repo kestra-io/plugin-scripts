@@ -107,11 +107,14 @@ public class PythonEnvironmentManager {
         if (taskRunner instanceof Process || RunnerType.PROCESS.equals(runnerType)) {
             // The Process runner executes commands directly on the worker host, which may only ship
             // 'python3' (Debian/Ubuntu, the standard Kestra worker image) and not the bare 'python'
-            // literal. When an explicit pythonVersion is set, resolve it through the configured package
-            // manager (may provision a managed Python via 'uv'). Otherwise, probe for an interpreter
-            // that is already installed (python3, then python) rather than forcing a managed-Python
-            // download just to run a script with no dependencies.
-            pythonInterpreter = pythonVersion != null
+            // literal. Key this on whether dependencies were actually installed, not just on whether
+            // pythonVersion was explicitly set: dependencies may have just been installed against a
+            // managed interpreter (e.g. uv-managed) that has no relation to whatever 'python'/'python3'
+            // is on the local PATH, so the script must run with that same interpreter. Only fall back to
+            // probing for an already-installed local interpreter when there is truly nothing else to go
+            // on (no explicit version and no dependencies), to avoid forcing a managed-Python download
+            // just to run a dependency-free script.
+            pythonInterpreter = (pythonVersion != null || !requirements.isEmpty())
                 ? resolver.getPythonPath(targetPythonVersion)
                 : PackageManagerType.PIP.getPythonPath(resolver, targetPythonVersion);
         }
