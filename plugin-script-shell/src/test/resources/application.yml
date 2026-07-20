@@ -7,3 +7,21 @@ kestra:
     type: memory
   repository:
     type: memory
+  controller:
+    port: ${random.port}
+  worker:
+    controllers:
+      type: STATIC
+      static:
+        endpoints:
+          - host: localhost
+            port: ${kestra.controller.port}
+  plugins:
+    configurations:
+      - type: io.kestra.plugin.scripts.runner.docker.Docker
+        values:
+          volume-enabled: true
+
+grpc:
+  server:
+    enabled: false

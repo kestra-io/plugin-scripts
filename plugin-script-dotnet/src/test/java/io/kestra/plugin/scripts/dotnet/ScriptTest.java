@@ -13,16 +13,13 @@ import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
-import io.kestra.core.queues.QueueFactoryInterface;
-import io.kestra.core.queues.QueueInterface;
+import io.kestra.core.queues.DispatchQueueInterface;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import reactor.core.publisher.Flux;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -34,13 +31,12 @@ class ScriptTest {
     RunContextFactory runContextFactory;
 
     @Inject
-    @Named(QueueFactoryInterface.WORKERTASKLOG_NAMED)
-    private QueueInterface<LogEntry> logQueue;
+    private DispatchQueueInterface<LogEntry> logQueue;
 
     @Test
     void script() throws Exception {
         List<LogEntry> logs = new CopyOnWriteArrayList<>();
-        Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
+        logQueue.addListener(logs::add);
 
         Script dotnetScript = Script.builder()
             .id("dotnet-script-" + UUID.randomUUID())
@@ -54,7 +50,6 @@ class ScriptTest {
         assertThat(run.getExitCode(), is(0));
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("Hello from Kestra!"));
-        receive.blockLast();
         assertThat(
             List.copyOf(logs).stream()
                 .filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("Hello from Kestra!"))
@@ -66,7 +61,7 @@ class ScriptTest {
     @Test
     void scriptWithNugetDependency() throws Exception {
         List<LogEntry> logs = new CopyOnWriteArrayList<>();
-        Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
+        logQueue.addListener(logs::add);
 
         Script dotnetScript = Script.builder()
             .id("dotnet-nuget-" + UUID.randomUUID())
@@ -85,7 +80,6 @@ class ScriptTest {
         assertThat(run.getExitCode(), is(0));
 
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains("Hello from NuGet"));
-        receive.blockLast();
         assertThat(
             List.copyOf(logs).stream()
                 .filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("Hello from NuGet"))

@@ -1,7 +1,9 @@
 package io.kestra.plugin.scripts.jvm;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.junit.jupiter.api.Test;
 import org.slf4j.event.Level;
@@ -11,15 +13,12 @@ import com.google.common.collect.ImmutableMap;
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.AbstractMetricEntry;
 import io.kestra.core.models.executions.LogEntry;
-import io.kestra.core.queues.QueueFactoryInterface;
-import io.kestra.core.queues.QueueInterface;
+import io.kestra.core.queues.DispatchQueueInterface;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.utils.TestsUtils;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import reactor.core.publisher.Flux;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -31,15 +30,15 @@ abstract public class EvalTest {
     private RunContextFactory runContextFactory;
 
     @Inject
-    @Named(QueueFactoryInterface.WORKERTASKLOG_NAMED)
-    private QueueInterface<LogEntry> workerTaskLogQueue;
+    private DispatchQueueInterface<LogEntry> workerTaskLogQueue;
 
     abstract protected Eval task();
 
     @SuppressWarnings("unchecked")
     @Test
     void run() throws Exception {
-        Flux<LogEntry> receive = TestsUtils.receive(workerTaskLogQueue);
+        List<LogEntry> logs = new CopyOnWriteArrayList<>();
+        workerTaskLogQueue.addListener(logs::add);
 
         Eval task = this.task();
 
@@ -48,7 +47,7 @@ abstract public class EvalTest {
         Eval.Output runOutput = task.run(runContext);
         Thread.sleep(500);
 
-        LogEntry firstLog = receive.blockFirst();
+        LogEntry firstLog = logs.get(0);
         assertThat(firstLog.getLevel(), is(Level.INFO));
         assertThat(firstLog.getMessage(), is("executionId: " + ((Map<String, String>) runContext.getVariables().get("execution")).get("id")));
 
