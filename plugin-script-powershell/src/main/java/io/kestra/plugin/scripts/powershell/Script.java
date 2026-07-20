@@ -94,7 +94,7 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     protected Property<List<String>> interpreter = Property.ofValue(List.of("pwsh", "-NoProfile", "-NonInteractive", "-Command"));
 
     @io.swagger.v3.oas.annotations.media.Schema(
-        title = "Deprecated - use the 'taskRunner' property instead.",
+        title = "Deprecated - use the 'taskRunner' property instead",
         description = "Only used if the `taskRunner` property is not set",
         deprecated = true
     )

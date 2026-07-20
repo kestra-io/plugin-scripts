@@ -43,7 +43,7 @@ public abstract class AbstractPythonExecScript extends AbstractExecScript implem
     protected Property<PackageManagerType> packageManager = Property.ofValue(PackageManagerType.UV);
 
     @Schema(
-        title = "Deprecated - use the 'taskRunner' property instead.",
+        title = "Deprecated - use the 'taskRunner' property instead",
         description = "Only used if the `taskRunner` property is not set",
         deprecated = true
     )
