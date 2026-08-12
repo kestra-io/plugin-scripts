@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.SystemUtils;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Metric;
@@ -15,8 +17,10 @@ import io.kestra.core.models.executions.metrics.Counter;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
+import io.kestra.core.models.tasks.runners.TaskRunner;
 import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.core.runner.Process;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
@@ -38,7 +42,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Schema(
     title = "Run inline Python script",
-    description = "Executes a multi-line Python script inside the default 'python:3.13-slim' image unless overridden. Handles dependency install via UV (default) or pip with optional cache; script is saved to a temp .py file and run with the resolved interpreter. Use Commands task to run existing files."
+    description = "Executes a multi-line Python script inside the default 'python:3.13-slim' image unless overridden. Handles dependency install via UV (default) or pip with optional cache; script is saved to a temp .py file and run with the resolved interpreter, or an activated virtualenv when one is set up in beforeCommands. Use Commands task to run existing files."
 )
 @Plugin(
     examples = {
@@ -311,7 +315,7 @@ public class Script extends AbstractPythonExecScript implements RunnableTask<Scr
 
     @Schema(
         title = "Inline Python script",
-        description = "Python source as a multi-line string; written to a temporary .py file and executed with the resolved interpreter. For existing files, use the Commands task."
+        description = "Python source as a multi-line string; written to a temporary .py file and executed with the resolved interpreter, or an activated virtualenv when one is set up in beforeCommands. For existing files, use the Commands task."
     )
     @NotNull
     @PluginProperty(language = MonacoLanguages.PYTHON, group = "main")
@@ -366,8 +370,8 @@ public class Script extends AbstractPythonExecScript implements RunnableTask<Scr
             env.put("PYTHONPATH", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativePackagesPath.toString(), os));
         }
 
-        String scriptPath = commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os);
-        String runCommand = buildRunCommand(pythonEnvironment, scriptPath);
+        var scriptPath = commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os);
+        var runCommand = buildRunCommand(os, commands.getTaskRunner(), pythonEnvironment, scriptPath);
 
         ScriptOutput output = commands
             .addEnv(env)
@@ -389,18 +393,30 @@ public class Script extends AbstractPythonExecScript implements RunnableTask<Scr
      * Builds the shell command that invokes the script.
      * <p>
      * When the plugin installed dependencies itself ({@code packages() != null}), those packages were
-     * installed against the resolved interpreter, which is authoritative: kept as the historical
-     * single-token invocation, unchanged.
+     * installed against the resolved interpreter, which is authoritative. Windows also keeps this form,
+     * since there is no reliable PowerShell equivalent of the POSIX venv-detection below.
      * <p>
-     * Otherwise, the user manages their own environment (e.g. a venv activated in {@code beforeCommands}),
-     * so run bare {@code python} exactly like the Commands task, which resolves through the shell's PATH
-     * and therefore honors that activated venv.
+     * Otherwise, on POSIX, the user manages their own environment (e.g. a venv activated in
+     * {@code beforeCommands}, where {@code . .venv/bin/activate} only mutates PATH/VIRTUAL_ENV in the
+     * shared shell). Prefer that activated venv's python; fall back to the resolved interpreter, which
+     * already probes python3/python and honors a pinned or managed pythonVersion, so python3-only
+     * workers still work when no venv is active.
      * <p>
      * Package-private so the branching can be asserted directly without executing a process.
      */
-    static String buildRunCommand(ResolvedPythonEnvironment pythonEnvironment, String scriptPath) {
-        return pythonEnvironment.packages() != null
-            ? String.join(" ", pythonEnvironment.interpreter(), scriptPath)
-            : String.join(" ", "python", scriptPath);
+    static String buildRunCommand(TargetOS os, TaskRunner<?> taskRunner, ResolvedPythonEnvironment pythonEnvironment, String scriptPath) {
+        String resolvedInterpreter = pythonEnvironment.interpreter();
+
+        if (pythonEnvironment.packages() != null || isWindowsTarget(os, taskRunner)) {
+            return String.join(" ", resolvedInterpreter, scriptPath);
+        }
+
+        return "if [ -n \"$VIRTUAL_ENV\" ]; then \"$VIRTUAL_ENV/bin/python\" \"" + scriptPath + "\"; else \"" + resolvedInterpreter + "\" \"" + scriptPath + "\"; fi";
+    }
+
+    // Mirrors CommandsWrapper#getExitOnErrorCommands: targetOS is authoritative, AUTO only resolves to
+    // Windows when the worker itself runs Windows and the script executes directly on it (Process runner).
+    private static boolean isWindowsTarget(TargetOS os, TaskRunner<?> taskRunner) {
+        return os == TargetOS.WINDOWS || (os == TargetOS.AUTO && SystemUtils.IS_OS_WINDOWS && taskRunner instanceof Process);
     }
 }

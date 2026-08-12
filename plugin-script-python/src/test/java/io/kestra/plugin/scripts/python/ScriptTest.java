@@ -20,11 +20,13 @@ import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.AbstractMetricEntry;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
+import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.tenant.TenantService;
 import io.kestra.core.utils.TestsUtils;
+import io.kestra.plugin.core.runner.Process;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
@@ -349,8 +351,7 @@ class ScriptTest {
         // resolves an absolute managed interpreter (e.g. uv-installed). Before the fix, that absolute
         // path was invoked directly, ignoring a venv activated in beforeCommands (`. .venv/bin/activate`
         // only mutates PATH/VIRTUAL_ENV in the shell), so imports of venv-installed packages failed with
-        // ModuleNotFoundError. Since no dependencies are installed here, the script now runs via bare
-        // `python` (like the Commands task), which resolves through the activated venv's PATH.
+        // ModuleNotFoundError. The fix prefers the activated venv's python at shell runtime.
         Script python = Script.builder()
             .id("python-script-venv-" + UUID.randomUUID())
             .type(Script.class.getName())
@@ -381,11 +382,30 @@ class ScriptTest {
     }
 
     @Test
-    void buildRunCommandUsesBarePythonWhenNoManagedPackages() {
-        ResolvedPythonEnvironment noPackages = new ResolvedPythonEnvironment(false, null, "/root/.local/share/uv/python/cpython-3.13/bin/python3");
+    void buildRunCommandPrefersActivatedVenvButFallsBackToResolvedInterpreterOnPosix() {
+        String resolvedInterpreter = "/root/.local/share/uv/python/cpython-3.13/bin/python3.13";
+        ResolvedPythonEnvironment noPackages = new ResolvedPythonEnvironment(false, null, resolvedInterpreter);
 
-        String command = Script.buildRunCommand(noPackages, "/working/dir/script.py");
-        assertThat(command, is("python /working/dir/script.py"));
+        String command = Script.buildRunCommand(TargetOS.LINUX, new Process(), noPackages, "/working/dir/script.py");
+
+        assertThat(command, containsString("if [ -n \"$VIRTUAL_ENV\" ]"));
+        assertThat(command, containsString("$VIRTUAL_ENV/bin/python"));
+        // The missing-package fallback branch must invoke the resolved interpreter, not a bare
+        // 'python': the standard Kestra worker only ships 'python3', and a pinned/managed pythonVersion
+        // must still be honored when no venv is active.
+        assertThat(command, containsString(resolvedInterpreter));
+        assertThat(command, not(containsString(" python ")));
+    }
+
+    @Test
+    void buildRunCommandKeepsSingleTokenInvocationOnWindowsEvenWithoutManagedPackages() {
+        String resolvedInterpreter = "/root/.local/share/uv/python/cpython-3.13/bin/python3.13";
+        ResolvedPythonEnvironment noPackages = new ResolvedPythonEnvironment(false, null, resolvedInterpreter);
+
+        String command = Script.buildRunCommand(TargetOS.WINDOWS, new Process(), noPackages, "C:\\working\\dir\\script.py");
+
+        assertThat(command, is(resolvedInterpreter + " C:\\working\\dir\\script.py"));
+        assertThat(command, not(containsString("VIRTUAL_ENV")));
     }
 
     @Test
@@ -393,8 +413,10 @@ class ScriptTest {
         ResolvedPythonPackages packages = new ResolvedPythonPackages(Path.of("/tmp/packages"), Path.of("/tmp/requirements.txt"), "hash", "3.13");
         ResolvedPythonEnvironment withPackages = new ResolvedPythonEnvironment(false, packages, "/managed/python3");
 
-        String command = Script.buildRunCommand(withPackages, "/working/dir/script.py");
+        String command = Script.buildRunCommand(TargetOS.LINUX, new Process(), withPackages, "/working/dir/script.py");
+
         assertThat(command, is("/managed/python3 /working/dir/script.py"));
+        assertThat(command, not(containsString("VIRTUAL_ENV")));
     }
 
     @SuppressWarnings("unchecked")
