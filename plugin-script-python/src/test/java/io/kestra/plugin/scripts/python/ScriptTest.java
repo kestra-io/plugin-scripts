@@ -2,6 +2,7 @@ package io.kestra.plugin.scripts.python;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
@@ -19,14 +20,18 @@ import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.AbstractMetricEntry;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
+import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.tenant.TenantService;
 import io.kestra.core.utils.TestsUtils;
+import io.kestra.plugin.core.runner.Process;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+import io.kestra.plugin.scripts.python.internals.PythonEnvironmentManager.ResolvedPythonEnvironment;
+import io.kestra.plugin.scripts.python.internals.ResolvedPythonPackages;
 
 import jakarta.inject.Inject;
 import jakarta.validation.ConstraintViolationException;
@@ -343,11 +348,10 @@ class ScriptTest {
     @Test
     void shouldUseActivatedVenvOverManagedInterpreterOnProcessRunner() throws Exception {
         // Regression for #404: on the Process runner, setting pythonVersion without `dependencies`
-        // used to force resolution of a managed (e.g. uv-installed) interpreter, ignoring any venv
-        // activated in beforeCommands (`. .venv/bin/activate` only mutates PATH/VIRTUAL_ENV) and, on a
-        // network-restricted worker, timing out entirely trying to download that managed interpreter.
-        // Since no dependencies are installed here, the interpreter must now be probed via PATH so the
-        // activated venv's python (with the venv-installed package) is what actually runs the script.
+        // resolves an absolute managed interpreter (e.g. uv-installed). Before the fix, that absolute
+        // path was invoked directly, ignoring a venv activated in beforeCommands (`. .venv/bin/activate`
+        // only mutates PATH/VIRTUAL_ENV in the shell), so imports of venv-installed packages failed with
+        // ModuleNotFoundError. The fix prefers the activated venv's python at shell runtime.
         Script python = Script.builder()
             .id("python-script-venv-" + UUID.randomUUID())
             .type(Script.class.getName())
@@ -356,10 +360,7 @@ class ScriptTest {
             .beforeCommands(
                 Property.ofValue(
                     List.of(
-                        // Mirrors PackageManagerType.PIP#getPythonPath's own candidate order
-                        // ("python3.13" then "python3") so the venv is created with whichever
-                        // interpreter binary name will also be resolved and invoked at runtime.
-                        "python3.13 -m venv .venv 2>/dev/null || python3 -m venv .venv",
+                        "python3 -m venv .venv",
                         ". .venv/bin/activate",
                         "pip install six > /dev/null"
                     )
@@ -378,6 +379,28 @@ class ScriptTest {
 
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getVars().get("extract"), is("six"));
+    }
+
+    @Test
+    void buildRunCommandPrefersActivatedVenvWhenNoManagedPackages() {
+        ResolvedPythonEnvironment noPackages = new ResolvedPythonEnvironment(false, null, "/root/.local/share/uv/python/cpython-3.13/bin/python3");
+
+        String posixCommand = Script.buildRunCommand(TargetOS.LINUX, new Process(), noPackages, "/working/dir/script.py");
+        assertThat(posixCommand, containsString("$VIRTUAL_ENV"));
+        assertThat(posixCommand, containsString("/root/.local/share/uv/python/cpython-3.13/bin/python3"));
+
+        String windowsCommand = Script.buildRunCommand(TargetOS.WINDOWS, new Process(), noPackages, "C:\\working\\dir\\script.py");
+        assertThat(windowsCommand, containsString("$env:VIRTUAL_ENV"));
+    }
+
+    @Test
+    void buildRunCommandKeepsSingleTokenInvocationWhenPackagesManaged() {
+        ResolvedPythonPackages packages = new ResolvedPythonPackages(Path.of("/tmp/packages"), Path.of("/tmp/requirements.txt"), "hash", "3.13");
+        ResolvedPythonEnvironment withPackages = new ResolvedPythonEnvironment(false, packages, "/managed/python3");
+
+        String command = Script.buildRunCommand(TargetOS.LINUX, new Process(), withPackages, "/working/dir/script.py");
+        assertThat(command, is("/managed/python3 /working/dir/script.py"));
+        assertThat(command, not(containsString("VIRTUAL_ENV")));
     }
 
     @SuppressWarnings("unchecked")

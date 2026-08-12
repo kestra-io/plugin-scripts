@@ -107,16 +107,14 @@ public class PythonEnvironmentManager {
         if (taskRunner instanceof Process || RunnerType.PROCESS.equals(runnerType)) {
             // The Process runner executes commands directly on the worker host, which may only ship
             // 'python3' (Debian/Ubuntu, the standard Kestra worker image) and not the bare 'python'
-            // literal. Key this on whether dependencies were actually installed, not on whether
-            // pythonVersion was explicitly set: dependencies were just installed against a managed
-            // interpreter (e.g. uv-managed) that has no relation to whatever 'python'/'python3' is on
-            // the local PATH, so the script must run with that same interpreter. Otherwise (no
-            // dependencies), the user manages their own environment — e.g. a venv activated in
-            // beforeCommands — so probe the local interpreter via PATH instead of forcing the resolved
-            // interpreter: forcing it would both ignore that activated venv and force a managed-Python
-            // download (e.g. via uv) just to run a dependency-free script, which fails outright on a
-            // network-restricted worker.
-            pythonInterpreter = !requirements.isEmpty()
+            // literal. Key this on whether dependencies were actually installed, not just on whether
+            // pythonVersion was explicitly set: dependencies may have just been installed against a
+            // managed interpreter (e.g. uv-managed) that has no relation to whatever 'python'/'python3'
+            // is on the local PATH, so the script must run with that same interpreter. Only fall back to
+            // probing for an already-installed local interpreter when there is truly nothing else to go
+            // on (no explicit version and no dependencies), to avoid forcing a managed-Python download
+            // just to run a dependency-free script.
+            pythonInterpreter = (pythonVersion != null || !requirements.isEmpty())
                 ? resolver.getPythonPath(targetPythonVersion)
                 : PackageManagerType.PIP.getPythonPath(resolver, targetPythonVersion);
         }
