@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.SystemUtils;
-
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Metric;
@@ -17,10 +15,8 @@ import io.kestra.core.models.executions.metrics.Counter;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
-import io.kestra.core.models.tasks.runners.TaskRunner;
 import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.RunContext;
-import io.kestra.plugin.core.runner.Process;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
@@ -371,7 +367,7 @@ public class Script extends AbstractPythonExecScript implements RunnableTask<Scr
         }
 
         String scriptPath = commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os);
-        String runCommand = buildRunCommand(os, commands.getTaskRunner(), pythonEnvironment, scriptPath);
+        String runCommand = buildRunCommand(pythonEnvironment, scriptPath);
 
         ScriptOutput output = commands
             .addEnv(env)
@@ -392,32 +388,19 @@ public class Script extends AbstractPythonExecScript implements RunnableTask<Scr
     /**
      * Builds the shell command that invokes the script.
      * <p>
-     * When the plugin installed dependencies itself ({@code packages() != null}), PYTHONPATH already
-     * points to them and the resolved interpreter is authoritative: kept as the historical single-token
-     * invocation, unchanged.
+     * When the plugin installed dependencies itself ({@code packages() != null}), those packages were
+     * installed against the resolved interpreter, which is authoritative: kept as the historical
+     * single-token invocation, unchanged.
      * <p>
-     * Otherwise, a venv activated via {@code beforeCommands} (e.g. {@code . .venv/bin/activate}) only
-     * mutates the shell's PATH/VIRTUAL_ENV — it never changes which interpreter Kestra invokes. Since
-     * beforeCommands and this command run in the same shell, prefer that activated venv's python at
-     * runtime, falling back to the resolved interpreter (managed or bare) when no venv is active.
+     * Otherwise, the user manages their own environment (e.g. a venv activated in {@code beforeCommands}),
+     * so run bare {@code python} exactly like the Commands task, which resolves through the shell's PATH
+     * and therefore honors that activated venv.
      * <p>
      * Package-private so the branching can be asserted directly without executing a process.
      */
-    static String buildRunCommand(TargetOS os, TaskRunner<?> taskRunner, ResolvedPythonEnvironment pythonEnvironment, String scriptPath) {
-        String resolvedInterpreter = pythonEnvironment.interpreter();
-
-        if (pythonEnvironment.packages() != null) {
-            return String.join(" ", resolvedInterpreter, scriptPath);
-        }
-
-        return isWindowsTarget(os, taskRunner)
-            ? "if ($env:VIRTUAL_ENV) { & \"$env:VIRTUAL_ENV\\Scripts\\python.exe\" \"" + scriptPath + "\" } else { & \"" + resolvedInterpreter + "\" \"" + scriptPath + "\" }"
-            : "if [ -n \"$VIRTUAL_ENV\" ]; then \"$VIRTUAL_ENV/bin/python\" \"" + scriptPath + "\"; else \"" + resolvedInterpreter + "\" \"" + scriptPath + "\"; fi";
-    }
-
-    // Mirrors CommandsWrapper#getExitOnErrorCommands: targetOS is authoritative, AUTO only resolves to
-    // Windows when the worker itself runs Windows and the script executes directly on it (Process runner).
-    private static boolean isWindowsTarget(TargetOS os, TaskRunner<?> taskRunner) {
-        return os == TargetOS.WINDOWS || (os == TargetOS.AUTO && SystemUtils.IS_OS_WINDOWS && taskRunner instanceof Process);
+    static String buildRunCommand(ResolvedPythonEnvironment pythonEnvironment, String scriptPath) {
+        return pythonEnvironment.packages() != null
+            ? String.join(" ", pythonEnvironment.interpreter(), scriptPath)
+            : String.join(" ", "python", scriptPath);
     }
 }
