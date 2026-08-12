@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -337,6 +338,46 @@ class ScriptTest {
         assertThat(run.getVars().get("t"), is(true));
         assertThat(run.getVars().get("f"), is(false));
         assertThat(run.getVars().get("n"), nullValue());
+    }
+
+    @Test
+    void shouldUseActivatedVenvOverManagedInterpreterOnProcessRunner() throws Exception {
+        // Regression for #404: on the Process runner, setting pythonVersion without `dependencies`
+        // used to force resolution of a managed (e.g. uv-installed) interpreter, ignoring any venv
+        // activated in beforeCommands (`. .venv/bin/activate` only mutates PATH/VIRTUAL_ENV) and, on a
+        // network-restricted worker, timing out entirely trying to download that managed interpreter.
+        // Since no dependencies are installed here, the interpreter must now be probed via PATH so the
+        // activated venv's python (with the venv-installed package) is what actually runs the script.
+        Script python = Script.builder()
+            .id("python-script-venv-" + UUID.randomUUID())
+            .type(Script.class.getName())
+            .runner(RunnerType.PROCESS)
+            .pythonVersion(Property.ofValue("3.13"))
+            .beforeCommands(
+                Property.ofValue(
+                    List.of(
+                        // Mirrors PackageManagerType.PIP#getPythonPath's own candidate order
+                        // ("python3.13" then "python3") so the venv is created with whichever
+                        // interpreter binary name will also be resolved and invoked at runtime.
+                        "python3.13 -m venv .venv 2>/dev/null || python3 -m venv .venv",
+                        ". .venv/bin/activate",
+                        "pip install six > /dev/null"
+                    )
+                )
+            )
+            .script(
+                Property.ofValue(
+                    "import six\n" +
+                        "print('::{\"outputs\": {\"extract\":\"' + six.__name__ + '\"}}::')"
+                )
+            )
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, python, ImmutableMap.of());
+        ScriptOutput run = python.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+        assertThat(run.getVars().get("extract"), is("six"));
     }
 
     @SuppressWarnings("unchecked")
