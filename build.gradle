@@ -4,7 +4,6 @@ plugins {
     id 'java-library'
     id "idea"
     id 'jacoco-report-aggregation'
-    id "com.adarshr.test-logger" version "4.0.0" apply(false)
     id "com.gradleup.shadow" version "9.6.1" apply(false)
     id 'signing'
     id "com.github.ben-manes.versions" version "0.61.0"
@@ -81,20 +80,10 @@ subprojects {
  * Test
  **********************************************************************************************************************/
 subprojects {
-    apply plugin: "com.adarshr.test-logger"
 
     test {
         useJUnitPlatform()
         maxParallelForks = Math.max(1, Runtime.runtime.availableProcessors().intdiv(2))
-    }
-
-    testlogger {
-        theme "mocha-parallel"
-        showExceptions true
-        showFullStackTraces true
-        showStandardStreams true
-        showPassedStandardStreams false
-        showSkippedStandardStreams true
     }
 
     dependencies {
@@ -187,7 +176,6 @@ tasks.named('check') {
  **********************************************************************************************************************/
 
 subprojects { Project subproject ->
-    apply plugin: "com.adarshr.test-logger"
     apply plugin: "signing"
     apply plugin: "com.vanniktech.maven.publish"
     apply plugin: "io.kestra.gradle.inject-bom-versions"
