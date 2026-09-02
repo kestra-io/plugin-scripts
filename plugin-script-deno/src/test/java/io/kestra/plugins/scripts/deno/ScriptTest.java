@@ -1,6 +1,7 @@
 package io.kestra.plugins.scripts.deno;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -56,5 +57,33 @@ public class ScriptTest {
         TestsUtils.awaitLog(logs, log -> log.getMessage() != null && log.getMessage().contains(expectedLog));
         receive.blockLast();
         assertThat(List.copyOf(logs).stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains(expectedLog)), is(true));
+    }
+
+    @Test
+    void envInputAndOutputFiles() throws Exception {
+        List<LogEntry> logs = new CopyOnWriteArrayList<>();
+        Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
+
+        Script script = Script.builder()
+            .id("deno-script-" + UUID.randomUUID())
+            .type(Script.class.getName())
+            .env(Property.ofValue(Map.of("MY_VAR", "hello")))
+            .inputFiles(Map.of("in.txt", "world"))
+            .outputFiles(Property.ofValue(List.of("out.txt")))
+            .script(Property.ofValue("""
+                console.log("ENV=" + Deno.env.get("MY_VAR"));
+                console.log("INPUT=" + Deno.readTextFileSync("in.txt").trim());
+                Deno.writeTextFileSync("out.txt", "output content");
+                """))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, script, ImmutableMap.of());
+        ScriptOutput run = script.run(runContext);
+
+        assertThat(run.getExitCode(), is(0));
+        receive.blockLast();
+        assertThat(List.copyOf(logs).stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains("ENV=hello")), is(true));
+        assertThat(List.copyOf(logs).stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains("INPUT=world")), is(true));
+        assertThat(run.getOutputFiles().get("out.txt").toString(), org.hamcrest.Matchers.startsWith("kestra://"));
     }
 }
