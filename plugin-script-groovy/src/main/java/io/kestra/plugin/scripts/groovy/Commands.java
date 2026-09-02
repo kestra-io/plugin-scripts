@@ -29,7 +29,10 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Schema(
     title = "Execute Groovy files and commands",
-    description = "Runs Groovy commands or files in the JVM and captures their output."
+    description = """
+        Runs Groovy commands or files in the JVM and captures their output.
+
+        On the Docker task runner, the container runs as `root` unless `taskRunner.user` is set explicitly, so the task can always write into its working directory (which `outputFiles` requires). Set `taskRunner.user` to keep the image's own default user instead."""
 )
 @Plugin(
     examples = {
@@ -97,7 +100,7 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
         if (original.getImage() == null) {
             builder.image(runContext.render(this.getContainerImage()).as(String.class).orElse(null));
         }
-        // mirrors the taskRunner-based default below, for the deprecated `docker` property path.
+        // Same root default as run(), for the deprecated `docker` property path - see #411.
         if (original.getUser() == null) {
             builder.user("root");
         }
@@ -115,7 +118,7 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
             .withCommands(commands)
             .withTargetOS(os);
 
-        // Docker can create the working directory owned by a user other than the non-root image user (e.g. `groovy` on `groovy:jdk21`), breaking outputFiles - see #411.
+        // A non-root image user may not own the working directory, breaking outputFiles - see #411.
         TaskRunner<?> taskRunner = commandsWrapper.getTaskRunner();
         if (taskRunner instanceof Docker docker && docker.getUser() == null) {
             commandsWrapper = commandsWrapper.withTaskRunner(docker.toBuilder().user("root").build());

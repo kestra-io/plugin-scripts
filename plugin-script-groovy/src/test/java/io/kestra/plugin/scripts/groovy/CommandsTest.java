@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
@@ -39,6 +40,7 @@ import static org.hamcrest.Matchers.is;
 
 @KestraTest
 public class CommandsTest {
+    private static final long IMAGE_BUILD_TIMEOUT_MINUTES = 5;
 
     @Inject
     RunContextFactory runContextFactory;
@@ -72,11 +74,7 @@ public class CommandsTest {
         assertThat(List.copyOf(logs).stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains("I love Kestra!")), is(true));
     }
 
-    // The Docker runner can create the working directory owned by a user other than the container's
-    // default image user, so a `Commands` task running as that non-root user can't write its own
-    // outputFiles there (e.g. `groovy` on `groovy:jdk21`, see https://github.com/kestra-io/plugin-scripts/issues/411).
-    // The test image forces a non-root user whose uid never matches the current host user, so the
-    // reproduction doesn't depend on the host uid coincidentally matching the container's default user.
+    // A non-root image user may not own the working directory, breaking outputFiles - see https://github.com/kestra-io/plugin-scripts/issues/411.
     @Test
     void outputFilesOnNonRootImage() throws Exception {
         String nonRootImage = "kestra-test/groovy-non-root:" + UUID.randomUUID();
@@ -111,9 +109,7 @@ public class CommandsTest {
         }
     }
 
-    // Regression test for the deprecated `docker` property path: `CommandsWrapper.getTaskRunner()` rebuilds
-    // the runner from `DockerOptions` on every call (via `Docker.from(...)`), so the root default must be
-    // applied in `injectDefaults`, not only on the `taskRunner` used by the modern `taskRunner` property.
+    // Same regression on the deprecated `docker` property path, which rebuilds the runner from `DockerOptions`.
     @Test
     void outputFilesOnNonRootImageLegacyDockerProperty() throws Exception {
         String nonRootImage = "kestra-test/groovy-non-root-legacy:" + UUID.randomUUID();
@@ -161,7 +157,7 @@ public class CommandsTest {
             dockerClient.buildImageCmd(buildContext.resolve("Dockerfile").toFile())
                 .withTags(Set.of(tag))
                 .start()
-                .awaitImageId();
+                .awaitImageId(IMAGE_BUILD_TIMEOUT_MINUTES, TimeUnit.MINUTES);
         } finally {
             Files.deleteIfExists(buildContext.resolve("Dockerfile"));
             Files.deleteIfExists(buildContext);
