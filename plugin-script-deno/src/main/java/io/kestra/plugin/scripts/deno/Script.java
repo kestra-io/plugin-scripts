@@ -1,6 +1,7 @@
 package io.kestra.plugin.scripts.deno;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +32,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Schema(
     title = "Run inline Deno script",
-    description = "Executes a multi-line Deno script inside the default 'denoland/deno' image unless overridden. Script is written to a temp .ts file and run with 'deno run'; add required --allow-* flags in beforeCommands or interpreter options."
+    description = "Executes a multi-line Deno script inside the default 'denoland/deno' image unless overridden. Script is written to a temp .ts file and run with 'deno run'; the `permissions` property controls which --allow-* flags are granted."
 )
 @Plugin(
     examples = {
@@ -46,6 +47,25 @@ import lombok.experimental.SuperBuilder;
                     type: io.kestra.plugin.scripts.deno.Script
                     script: |
                       console.log("Hello from kestra!");
+                """
+        ),
+        @Example(
+            title = "Read an environment variable and write an output file from an inline Deno script.",
+            full = true,
+            code = """
+                id: deno_env_and_output_file
+                namespace: company.team
+                tasks:
+                  - id: deno_script
+                    type: io.kestra.plugin.scripts.deno.Script
+                    env:
+                      MY_VAR: hello
+                    outputFiles:
+                      - out.txt
+                    script: |
+                      const value = Deno.env.get("MY_VAR");
+                      console.log("ENV=" + value);
+                      Deno.writeTextFileSync("out.txt", value ?? "");
                 """
         ),
     }
@@ -68,6 +88,18 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     @NotNull
     @PluginProperty(language = MonacoLanguages.TYPESCRIPT, group = "main")
     protected Property<String> script;
+
+    @Schema(
+        title = "Deno permission flags",
+        description = """
+            Flags passed to `deno run` to grant the script access to the outside world, e.g. `--allow-net`, `--allow-all`.
+            Defaults to `--allow-env`, `--allow-read` and `--allow-write` so that the `env`, `inputFiles` and `outputFiles` \
+            properties work the same way as on every other script task. Set to an empty list to run under Deno's \
+            secure-by-default sandbox with no permissions at all."""
+    )
+    @Builder.Default
+    @PluginProperty(group = "execution")
+    protected Property<List<String>> permissions = Property.ofValue(List.of("--allow-env", "--allow-read", "--allow-write"));
 
     @Override
     protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
@@ -92,15 +124,18 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
 
         TargetOS os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
 
+        List<String> rPermissions = runContext.render(this.permissions).asList(String.class);
+        List<String> denoCommand = new ArrayList<>(List.of("deno", "run"));
+        denoCommand.addAll(rPermissions);
+        denoCommand.add(commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os));
+
         return commands
             .withInterpreter(this.interpreter)
             .withBeforeCommands(beforeCommands)
             .withBeforeCommandsWithOptions(true)
             .withCommands(
                 Property.ofValue(
-                    List.of(
-                        String.join(" ", "deno", "run", commands.getTaskRunner().toAbsolutePath(runContext, commands, relativeScriptPath.toString(), os))
-                    )
+                    List.of(String.join(" ", denoCommand))
                 )
             )
             .withTargetOS(os)
