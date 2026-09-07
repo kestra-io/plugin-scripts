@@ -33,17 +33,20 @@ class ScriptTest {
 
     @Test
     void script() throws Exception {
-        // The dates are written to an output file rather than asserted on the task run logs: log
-        // emission is asynchronous, and the `install.packages("lubridate")` before-command builds
-        // lubridate and its dependencies from source, flooding the log queue with thousands of
-        // lines. The script's own output lands behind that backlog and made this test flaky.
+        // lubridate is installed from Debian's prebuilt `r-cran-lubridate` package rather than with
+        // `install.packages()`: the `r-base` image has no CRAN binary for its R version, so
+        // install.packages() builds lubridate and its dependencies from source (~90s and thousands
+        // of log lines). The dates are also written to an output file rather than asserted on the
+        // task run logs, as log emission is asynchronous and the script's own output could land
+        // behind that backlog, which made this test flaky.
         Script rScript = Script.builder()
             .id("r-script-" + UUID.randomUUID())
             .type(Script.class.getName())
             .beforeCommands(
                 Property.ofValue(
                     List.of(
-                        "Rscript -e 'install.packages(\"lubridate\")'"
+                        "apt-get update -qq",
+                        "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq r-cran-lubridate"
                     )
                 )
             )
@@ -52,14 +55,13 @@ class ScriptTest {
                 Property.ofValue(
                     """
                         library(lubridate)
-                        writeLines(
-                            c(
-                                as.character(ymd("20100604")),
-                                as.character(mdy("06-04-2011")),
-                                as.character(dmy("04/06/2012"))
-                            ),
-                            "dates.txt"
-                        )"""
+                        dates <- c(
+                            as.character(ymd("20100604")),
+                            as.character(mdy("06-04-2011")),
+                            as.character(dmy("04/06/2012"))
+                        )
+                        writeLines(dates)
+                        writeLines(dates, "dates.txt")"""
                 )
             )
             .build();
