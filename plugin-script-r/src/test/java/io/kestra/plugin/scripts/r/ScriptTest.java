@@ -33,12 +33,9 @@ class ScriptTest {
 
     @Test
     void script() throws Exception {
-        // lubridate is installed from Debian's prebuilt `r-cran-lubridate` package rather than with
-        // `install.packages()`: the `r-base` image has no CRAN binary for its R version, so
-        // install.packages() builds lubridate and its dependencies from source (~90s and thousands
-        // of log lines). The dates are also written to an output file rather than asserted on the
-        // task run logs, as log emission is asynchronous and the script's own output could land
-        // behind that backlog, which made this test flaky.
+        // lubridate comes from Debian's prebuilt package (no CRAN binary for this R version, so
+        // install.packages() would build from source) and the dates are asserted on an output file
+        // rather than on the asynchronously-emitted task run logs.
         Script rScript = Script.builder()
             .id("r-script-" + UUID.randomUUID())
             .type(Script.class.getName())
@@ -74,7 +71,7 @@ class ScriptTest {
         assertThat(run.getStdErrLineCount(), greaterThan(1));
 
         assertThat(run.getOutputFiles().get("dates.txt").toString(), startsWith("kestra://"));
-        String dates = new String(
+        var dates = new String(
             storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("dates.txt")).readAllBytes()
         );
         assertThat(dates.lines().toList(), is(List.of("2010-06-04", "2011-06-04", "2012-06-04")));
