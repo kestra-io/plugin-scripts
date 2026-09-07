@@ -2,32 +2,26 @@ package io.kestra.plugin.scripts.r;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableMap;
 
 import io.kestra.core.junit.annotations.KestraTest;
-import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
-import io.kestra.core.queues.QueueFactoryInterface;
-import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
-import io.kestra.core.utils.Await;
+import io.kestra.core.storages.StorageInterface;
+import io.kestra.core.tenant.TenantService;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import reactor.core.publisher.Flux;
-
-import java.time.Duration;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.startsWith;
 
 @KestraTest
 class ScriptTest {
@@ -35,31 +29,36 @@ class ScriptTest {
     RunContextFactory runContextFactory;
 
     @Inject
-    @Named(QueueFactoryInterface.WORKERTASKLOG_NAMED)
-    private QueueInterface<LogEntry> logQueue;
+    StorageInterface storageInterface;
 
     @Test
     void script() throws Exception {
-        List<LogEntry> logs = new CopyOnWriteArrayList<>();
-        Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
-
+        // lubridate comes from Debian's prebuilt package (no CRAN binary for this R version, so
+        // install.packages() would build from source) and the dates are asserted on an output file
+        // rather than on the asynchronously-emitted task run logs.
         Script rScript = Script.builder()
             .id("r-script-" + UUID.randomUUID())
             .type(Script.class.getName())
             .beforeCommands(
                 Property.ofValue(
                     List.of(
-                        "Rscript -e 'install.packages(\"lubridate\")'"
+                        "apt-get update -qq",
+                        "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq r-cran-lubridate"
                     )
                 )
             )
+            .outputFiles(Property.ofValue(List.of("dates.txt")))
             .script(
                 Property.ofValue(
                     """
                         library(lubridate)
-                        ymd("20100604");
-                        mdy("06-04-2011");
-                        dmy("04/06/2012")"""
+                        dates <- c(
+                            as.character(ymd("20100604")),
+                            as.character(mdy("06-04-2011")),
+                            as.character(dmy("04/06/2012"))
+                        )
+                        writeLines(dates)
+                        writeLines(dates, "dates.txt")"""
                 )
             )
             .build();
@@ -71,14 +70,10 @@ class ScriptTest {
         assertThat(run.getStdOutLineCount(), greaterThan(1));
         assertThat(run.getStdErrLineCount(), greaterThan(1));
 
-        Await.until(() ->
-            logs.stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains("2010-06-04")) &&
-            logs.stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains("2011-06-04")) &&
-            logs.stream().anyMatch(log -> log.getMessage() != null && log.getMessage().contains("2012-06-04")),
-            Duration.ofMillis(100), Duration.ofSeconds(30)
+        assertThat(run.getOutputFiles().get("dates.txt").toString(), startsWith("kestra://"));
+        var dates = new String(
+            storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("dates.txt")).readAllBytes()
         );
-        receive.blockLast();
-        assertThat(List.copyOf(logs).stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("2010-06-04")).count(), is(1L));
-        assertThat(List.copyOf(logs).stream().filter(logEntry -> logEntry.getMessage() != null && logEntry.getMessage().contains("2011-06-04")).count(), is(1L));
+        assertThat(dates.lines().toList(), is(List.of("2010-06-04", "2011-06-04", "2012-06-04")));
     }
 }
