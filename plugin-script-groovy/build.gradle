@@ -15,7 +15,7 @@ jar {
 dependencies {
     implementation project(':plugin-script')
 
-    api group: 'org.apache.groovy', name: 'groovy-jsr223', version: '5.1.1'
+    api group: 'org.apache.groovy', name: 'groovy-jsr223', version: '5.1.2'
 
     testImplementation project(path: ':plugin-script', configuration: 'testOutput')
     testImplementation group: 'com.github.docker-java', name: 'docker-java-api', version: '3.6.0'
