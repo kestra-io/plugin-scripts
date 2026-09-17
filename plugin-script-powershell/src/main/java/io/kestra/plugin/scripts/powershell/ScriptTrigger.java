@@ -58,7 +58,7 @@ import lombok.experimental.SuperBuilder;
                 triggers:
                   - id: script_failure
                     type: io.kestra.plugin.scripts.powershell.ScriptTrigger
-                    interval: PT10S
+                    interval: PT60S
                     exitCondition: "exit 1"
                     edge: true
                     containerImage: ghcr.io/kestra-io/powershell:latest
@@ -104,7 +104,9 @@ public class ScriptTrigger extends AbstractTrigger
         title = "Condition to match",
         description = """
             Rendered condition evaluated after each execution; the trigger emits only when it matches.
-            'exit N' compares the exit code, otherwise the string is used as a regex (or substring fallback) against emitted vars (from ::{"outputs":...}::) and failure logs.
+            'exit N' compares the exit code, otherwise the string is used as a regex (or substring fallback) \
+            against emitted vars (from ::{"outputs":...}::). On a failed run no vars are available to match \
+            against, so only an 'exit N' condition can match a failure.
             """
     )
     @NotNull
@@ -124,15 +126,26 @@ public class ScriptTrigger extends AbstractTrigger
     @Schema(
         title = "Edge trigger mode",
         description = """
-            When true (default), emit only on a transition from not matching to matching. When false, emit on every poll that matches.
+            When true (default), intended to emit only on a transition from not matching to matching; when \
+            false, emit on every poll that matches. Currently only dedupes within a single held-in-memory \
+            trigger instance and does not survive the worker's serialize/deserialize round trip between \
+            polls, so a real distributed deployment will still emit on every matching poll regardless of \
+            this setting.
             """
     )
     @Builder.Default
     @PluginProperty(group = "advanced")
     protected Property<Boolean> edge = Property.ofValue(true);
 
+    // Known limitation: this only dedupes within a single held-in-memory trigger instance.
+    // Polling triggers are dispatched to a worker as a serialized payload with no getter
+    // exposed for this field, so it never survives that round trip - in a real distributed
+    // deployment, edge mode degenerates to "matched", firing on every poll rather than only
+    // on a not-matching-to-matching transition. Excluded from equals/hashCode so two
+    // identically built triggers still compare equal.
     @Builder.Default
     @Getter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     private final AtomicBoolean lastMatched = new AtomicBoolean(false);
 
     @Override
@@ -183,7 +196,7 @@ public class ScriptTrigger extends AbstractTrigger
         }
     }
 
-    private boolean matchesCondition(Output out) {
+    boolean matchesCondition(Output out) {
         String cond = out.getCondition() == null ? "" : out.getCondition().trim();
 
         Matcher exitMatcher = EXIT_CONDITION_PATTERN.matcher(cond);
