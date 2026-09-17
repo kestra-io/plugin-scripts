@@ -44,7 +44,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Schema(
     title = "Trigger on PowerShell script condition",
-    description = "Polls by running an inline PowerShell script in a container (default image ghcr.io/kestra-io/powershell:latest) and emits when exitCondition matches. Supports edge mode to emit only on transitions and polls every 60s by default. Accepts 'exit N' or a regex (fallback substring) matched against emitted vars and failure logs."
+    description = "Polls by running an inline PowerShell script in a container (default image ghcr.io/kestra-io/powershell:latest) and emits when exitCondition matches. Edge mode is intended to emit only on transitions but currently does not survive a poll-to-poll worker dispatch (see the edge property). Polls every 60s by default. Accepts 'exit N' or a regex (fallback substring) matched against emitted vars; a failed run has no vars, so only 'exit N' can match a failure."
 )
 @Plugin(
     examples = {
@@ -141,8 +141,12 @@ public class ScriptTrigger extends AbstractTrigger
     // Polling triggers are dispatched to a worker as a serialized payload with no getter
     // exposed for this field, so it never survives that round trip - in a real distributed
     // deployment, edge mode degenerates to "matched", firing on every poll rather than only
-    // on a not-matching-to-matching transition. Excluded from equals/hashCode so two
-    // identically built triggers still compare equal.
+    // on a not-matching-to-matching transition. Excluded from equals/hashCode so this
+    // mutable field itself never affects equality (equals/hashCode also always fall
+    // through to Object's reference identity via AbstractTrigger and this project's
+    // lombok.equalsAndHashCode.callSuper=call, so two identically built triggers are
+    // still unequal regardless - that part is a pre-existing, kestra-wide behavior,
+    // not something this exclusion changes).
     @Builder.Default
     @Getter(AccessLevel.NONE)
     @EqualsAndHashCode.Exclude

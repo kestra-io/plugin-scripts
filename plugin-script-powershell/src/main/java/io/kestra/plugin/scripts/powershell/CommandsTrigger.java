@@ -141,8 +141,12 @@ public class CommandsTrigger extends AbstractTrigger
     // Polling triggers are dispatched to a worker as a serialized payload with no getter
     // exposed for this field, so it never survives that round trip - in a real distributed
     // deployment, edge mode degenerates to "matched", firing on every poll rather than only
-    // on a not-matching-to-matching transition. Excluded from equals/hashCode so two
-    // identically built triggers still compare equal.
+    // on a not-matching-to-matching transition. Excluded from equals/hashCode so this
+    // mutable field itself never affects equality (equals/hashCode also always fall
+    // through to Object's reference identity via AbstractTrigger and this project's
+    // lombok.equalsAndHashCode.callSuper=call, so two identically built triggers are
+    // still unequal regardless - that part is a pre-existing, kestra-wide behavior,
+    // not something this exclusion changes).
     @Builder.Default
     @Getter(AccessLevel.NONE)
     @EqualsAndHashCode.Exclude
