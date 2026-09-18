@@ -59,7 +59,7 @@ import lombok.experimental.SuperBuilder;
                 triggers:
                   - id: commands_failure
                     type: io.kestra.plugin.scripts.bun.CommandsTrigger
-                    interval: PT10S
+                    interval: PT60S
                     exitCondition: "exit 1"
                     edge: true
                     containerImage: oven/bun
@@ -106,9 +106,9 @@ public class CommandsTrigger extends AbstractTrigger
 
             Supported forms:
             - 'exit N' (example: 'exit 1'): matches when the process exit code equals N.
-            - Any other string: treated as a regex (or substring if regex is invalid) matched against:
-              - the task 'vars' (when commands emit ::{"outputs":...}::),
-              - and error logs when the task fails (TaskException).
+            - Any other string: treated as a regex (or substring if regex is invalid) matched against the
+              task's 'vars' (when commands emit ::{"outputs":...}::). On a failed run no vars are available
+              to match against, so only an 'exit N' condition can match a failure.
             """
     )
     @NotNull
@@ -126,16 +126,30 @@ public class CommandsTrigger extends AbstractTrigger
     @Schema(
         title = "Edge trigger mode",
         description = """
-            If true, the trigger emits only on a transition from 'not matching' to 'matching' (anti-spam).
-            If false, the trigger emits on every poll where the condition matches.
+            If true (default), intended to emit only on a transition from 'not matching' to 'matching' \
+            (anti-spam). If false, the trigger emits on every poll where the condition matches. Currently \
+            only dedupes within a single held-in-memory trigger instance and does not survive the worker's \
+            serialize/deserialize round trip between polls, so a real distributed deployment will still emit \
+            on every matching poll regardless of this setting.
             """
     )
     @Builder.Default
     @PluginProperty(group = "advanced")
     protected Property<Boolean> edge = Property.ofValue(true);
 
+    // Known limitation: this only dedupes within a single held-in-memory trigger instance.
+    // Polling triggers are dispatched to a worker as a serialized payload with no getter
+    // exposed for this field, so it never survives that round trip - in a real distributed
+    // deployment, edge mode degenerates to "matched", firing on every poll rather than only
+    // on a not-matching-to-matching transition. Excluded from equals/hashCode so this
+    // mutable field itself never affects equality (equals/hashCode also always fall
+    // through to Object's reference identity via AbstractTrigger and this project's
+    // lombok.equalsAndHashCode.callSuper=call, so two identically built triggers are
+    // still unequal regardless - that part is a pre-existing, kestra-wide behavior,
+    // not something this exclusion changes).
     @Builder.Default
     @Getter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     private final AtomicBoolean lastMatched = new AtomicBoolean(false);
 
     @Override
@@ -186,7 +200,7 @@ public class CommandsTrigger extends AbstractTrigger
         }
     }
 
-    private boolean matchesCondition(Output out) {
+    boolean matchesCondition(Output out) {
         String cond = out.getCondition() == null ? "" : out.getCondition().trim();
 
         Matcher exitMatcher = EXIT_CONDITION_PATTERN.matcher(cond);
