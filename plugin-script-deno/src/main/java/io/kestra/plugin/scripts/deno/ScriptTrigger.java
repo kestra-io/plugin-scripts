@@ -2,6 +2,7 @@ package io.kestra.plugin.scripts.deno;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -44,7 +45,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Schema(
     title = "Trigger on Deno script condition",
-    description = "Polls by running an inline Deno script in a container (default image denoland/deno) and emits when exitCondition matches. Supports edge mode to emit only on transitions and polls every 60s by default. Accepts 'exit N' or a regex (fallback substring) matched against emitted vars and failure logs."
+    description = "Polls by running an inline Deno script in a container (default image denoland/deno) and emits when exitCondition matches. Edge mode is intended to emit only on transitions but currently does not survive a poll-to-poll worker dispatch (see the edge property). Polls every 60s by default. Accepts 'exit N' or a regex (fallback substring) matched against emitted vars; a failed run has no vars, so only 'exit N' can match a failure."
 )
 @Plugin(
     examples = {
@@ -58,7 +59,7 @@ import lombok.experimental.SuperBuilder;
                 triggers:
                   - id: script_failure
                     type: io.kestra.plugin.scripts.deno.ScriptTrigger
-                    interval: PT10S
+                    interval: PT60S
                     exitCondition: "exit 1"
                     edge: true
                     containerImage: denoland/deno
@@ -70,6 +71,30 @@ import lombok.experimental.SuperBuilder;
                     type: io.kestra.plugin.core.log.Log
                     message: "Triggered with exitCode={{ trigger.exitCode }} (condition={{ trigger.condition }})"
                 """
+        ),
+        @Example(
+            title = "Poll an HTTP endpoint, which needs the --allow-net permission.",
+            full = true,
+            code = """
+                id: script_trigger_http
+                namespace: company.team
+
+                triggers:
+                  - id: endpoint_down
+                    type: io.kestra.plugin.scripts.deno.ScriptTrigger
+                    interval: PT60S
+                    exitCondition: "exit 1"
+                    permissions:
+                      - --allow-net
+                    script: |
+                      const res = await fetch("https://example.com/health");
+                      Deno.exit(res.ok ? 0 : 1);
+
+                tasks:
+                  - id: log
+                    type: io.kestra.plugin.core.log.Log
+                    message: "Endpoint check failed with exitCode={{ trigger.exitCode }}"
+                """
         )
     }
 )
@@ -77,6 +102,8 @@ public class ScriptTrigger extends AbstractTrigger
     implements PollingTriggerInterface, TriggerOutput<ScriptTrigger.Output> {
 
     private static final String DEFAULT_IMAGE = "denoland/deno";
+    // Same default as the Script task's own `permissions` property.
+    private static final List<String> DEFAULT_PERMISSIONS = List.of("--allow-env", "--allow-read", "--allow-write");
     private static final Pattern EXIT_CONDITION_PATTERN = Pattern.compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE);
 
     @Schema(
@@ -101,10 +128,25 @@ public class ScriptTrigger extends AbstractTrigger
     protected Property<String> script;
 
     @Schema(
+        title = "Deno permission flags",
+        description = """
+            Flags passed to `deno run` for the polled script, e.g. `--allow-net` to let it reach an HTTP endpoint.
+            Same property and default as the Script task: `--allow-env`, `--allow-read` and `--allow-write`. \
+            Deno's sandbox denies network access unless `--allow-net` is granted, so a polling script that calls \
+            `fetch` needs it here. Set to an empty list to run with no permissions at all.
+            """
+    )
+    @Builder.Default
+    @PluginProperty(group = "execution")
+    protected Property<List<String>> permissions = Property.ofValue(DEFAULT_PERMISSIONS);
+
+    @Schema(
         title = "Condition to match",
         description = """
             Rendered condition evaluated after each execution; the trigger emits only when it matches.
-            'exit N' compares the exit code, otherwise the string is used as a regex (or substring fallback) against emitted vars (from ::{"outputs":...}::) and failure logs.
+            'exit N' compares the exit code, otherwise the string is used as a regex (or substring fallback) \
+            against emitted vars (from ::{"outputs":...}::). On a failed run no vars are available to match \
+            against, so only an 'exit N' condition can match a failure.
             """
     )
     @NotNull
@@ -124,15 +166,30 @@ public class ScriptTrigger extends AbstractTrigger
     @Schema(
         title = "Edge trigger mode",
         description = """
-            When true (default), emit only on a transition from not matching to matching. When false, emit on every poll that matches.
+            When true (default), intended to emit only on a transition from not matching to matching; when \
+            false, emit on every poll that matches. Currently only dedupes within a single held-in-memory \
+            trigger instance and does not survive the worker's serialize/deserialize round trip between \
+            polls, so a real distributed deployment will still emit on every matching poll regardless of \
+            this setting.
             """
     )
     @Builder.Default
     @PluginProperty(group = "advanced")
     protected Property<Boolean> edge = Property.ofValue(true);
 
+    // Known limitation: this only dedupes within a single held-in-memory trigger instance.
+    // Polling triggers are dispatched to a worker as a serialized payload with no getter
+    // exposed for this field, so it never survives that round trip - in a real distributed
+    // deployment, edge mode degenerates to "matched", firing on every poll rather than only
+    // on a not-matching-to-matching transition. Excluded from equals/hashCode so this
+    // mutable field itself never affects equality (equals/hashCode also always fall
+    // through to Object's reference identity via AbstractTrigger and this project's
+    // lombok.equalsAndHashCode.callSuper=call, so two identically built triggers are
+    // still unequal regardless - that part is a pre-existing, kestra-wide behavior,
+    // not something this exclusion changes).
     @Builder.Default
     @Getter(AccessLevel.NONE)
+    @EqualsAndHashCode.Exclude
     private final AtomicBoolean lastMatched = new AtomicBoolean(false);
 
     @Override
@@ -161,13 +218,18 @@ public class ScriptTrigger extends AbstractTrigger
         return Optional.of(TriggerService.generateExecution(this, conditionContext, context, out));
     }
 
-    private Output runOnce(RunContext runContext) throws Exception {
-        Script task = Script.builder()
+    Script buildTask() {
+        return Script.builder()
             .id(this.getId())
             .type(Script.class.getName())
             .containerImage(this.containerImage)
             .script(this.script)
+            .permissions(this.permissions)
             .build();
+    }
+
+    private Output runOnce(RunContext runContext) throws Exception {
+        Script task = buildTask();
 
         String renderedExitCondition = runContext.render(this.exitCondition).as(String.class).orElse("");
 
@@ -183,7 +245,7 @@ public class ScriptTrigger extends AbstractTrigger
         }
     }
 
-    private boolean matchesCondition(Output out) {
+    boolean matchesCondition(Output out) {
         String cond = out.getCondition() == null ? "" : out.getCondition().trim();
 
         Matcher exitMatcher = EXIT_CONDITION_PATTERN.matcher(cond);
