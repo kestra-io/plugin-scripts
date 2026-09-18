@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -11,89 +13,65 @@ import static org.hamcrest.Matchers.is;
 /**
  * Unit tests for ScriptTrigger's condition-matching logic.
  *
- * These tests exercise matchesCondition / buildHaystack via the Output model
- * without requiring the scheduler infrastructure or a .NET runtime.
+ * Calls the real, package-private ScriptTrigger#matchesCondition directly (same pattern as
+ * plugin-script-ruby's ScriptTriggerConditionTest), so a change to the production method is
+ * what these tests actually exercise, not a separately maintained copy of its logic.
  */
 class ScriptTriggerTest {
 
-    @Test
-    void matchesCondition_exitCodeCondition_shouldMatchWhenExitCodeEquals() {
-        var output = new ScriptTrigger.Output(Instant.now(), "exit 1", 1, null);
-        assertThat(exitConditionMatches(output), is(true));
+    private final ScriptTrigger trigger = ScriptTrigger.builder().build();
+
+    private ScriptTrigger.Output output(String condition, Integer exitCode, Map<String, Object> vars) {
+        return new ScriptTrigger.Output(Instant.now(), condition, exitCode, vars);
     }
 
-    @Test
-    void matchesCondition_exitCodeCondition_shouldNotMatchWhenExitCodeDiffers() {
-        var output = new ScriptTrigger.Output(Instant.now(), "exit 1", 127, null);
-        assertThat("exit 1 condition with exitCode=127 should not match", exitConditionMatches(output), is(false));
-    }
-
-    @Test
-    void matchesCondition_exitCodeCondition_shouldNotMatchWhenExitCodeIsNull() {
-        var output = new ScriptTrigger.Output(Instant.now(), "exit 1", null, null);
-        assertThat(exitConditionMatches(output), is(false));
-    }
-
-    @Test
-    void matchesCondition_substringCondition_shouldMatchAgainstVars() {
-        var output = new ScriptTrigger.Output(Instant.now(), "toto", 0, Map.of("listing", "toto"));
-        assertThat(exitConditionMatches(output), is(true));
-    }
-
-    @Test
-    void matchesCondition_substringCondition_shouldNotMatchWhenAbsent() {
-        var output = new ScriptTrigger.Output(Instant.now(), "toto", 0, Map.of("listing", "something_else"));
-        assertThat(exitConditionMatches(output), is(false));
-    }
-
-    @Test
-    void matchesCondition_regexCondition_shouldMatchAgainstVars() {
-        var output = new ScriptTrigger.Output(Instant.now(), "status=\\w+", 0, Map.of("status", "status=ready"));
-        assertThat(exitConditionMatches(output), is(true));
-    }
-
-    @Test
-    void matchesCondition_emptyCondition_shouldNotMatch() {
-        var output = new ScriptTrigger.Output(Instant.now(), "", 0, null);
-        assertThat(exitConditionMatches(output), is(false));
-    }
-
-    @Test
-    void matchesCondition_nullCondition_shouldNotMatch() {
-        var output = new ScriptTrigger.Output(Instant.now(), null, 0, null);
-        assertThat(exitConditionMatches(output), is(false));
-    }
-
-    @Test
-    void matchesCondition_exitZero_shouldMatchSuccessfulExecution() {
-        var output = new ScriptTrigger.Output(Instant.now(), "exit 0", 0, null);
-        assertThat(exitConditionMatches(output), is(true));
-    }
-
-    private boolean exitConditionMatches(ScriptTrigger.Output out) {
-        var cond = out.getCondition() == null ? "" : out.getCondition().trim();
-
-        var exitMatcher = java.util.regex.Pattern
-            .compile("^\\s*exit\\s+(\\d+)\\s*$", java.util.regex.Pattern.CASE_INSENSITIVE)
-            .matcher(cond);
-
-        if (exitMatcher.matches()) {
-            var expected = Integer.parseInt(exitMatcher.group(1));
-            return out.getExitCode() != null && out.getExitCode() == expected;
+    @ParameterizedTest
+    @CsvSource(
+        {
+            "exit 0, 0, true",
+            "exit 1, 1, true",
+            "EXIT 1, 1, true",
+            "exit 0, 1, false",
+            "exit 1, 127, false",
+            "exit 42, 42, true",
         }
+    )
+    void exitCodeCondition(String condition, int exitCode, boolean expected) {
+        assertThat(trigger.matchesCondition(output(condition, exitCode, null)), is(expected));
+    }
 
-        var haystack = out.getVars() != null && !out.getVars().isEmpty()
-            ? out.getVars().toString()
-            : "";
+    @Test
+    void exitCondition_nullExitCode_doesNotMatch() {
+        assertThat(trigger.matchesCondition(output("exit 1", null, null)), is(false));
+    }
 
-        if (haystack.isEmpty() || cond.isEmpty()) {
-            return false;
-        }
+    @Test
+    void substringMatch_inVars() {
+        assertThat(trigger.matchesCondition(output("toto", 0, Map.of("listing", "toto"))), is(true));
+    }
 
-        try {
-            return java.util.regex.Pattern.compile(cond).matcher(haystack).find();
-        } catch (Exception e) {
-            return haystack.contains(cond);
-        }
+    @Test
+    void noMatch_whenSubstringAbsentFromVars() {
+        assertThat(trigger.matchesCondition(output("toto", 0, Map.of("listing", "something_else"))), is(false));
+    }
+
+    @Test
+    void regexMatch_inVars() {
+        assertThat(trigger.matchesCondition(output("status=\\w+", 0, Map.of("status", "status=ready"))), is(true));
+    }
+
+    @Test
+    void noMatch_emptyHaystack() {
+        assertThat(trigger.matchesCondition(output("something", 0, null)), is(false));
+    }
+
+    @Test
+    void noMatch_emptyCondition() {
+        assertThat(trigger.matchesCondition(output("", 0, Map.of("k", "v"))), is(false));
+    }
+
+    @Test
+    void nullCondition_doesNotMatch() {
+        assertThat(trigger.matchesCondition(output(null, 0, Map.of("k", "v"))), is(false));
     }
 }

@@ -70,6 +70,9 @@ class CommandsTriggerTest {
         assertThat("vars should be present", triggerVars.get("vars"), notNullValue());
     }
 
+    // Only proves in-process dedup: both evaluations run against the same trigger instance,
+    // never through the serialize/deserialize round trip a real worker performs between polls.
+    // See the known-limitation note on CommandsTrigger#lastMatched.
     @Test
     void commandsTrigger_edgeModeShouldSuppressSecondEmission() throws Exception {
         CommandsTrigger trigger = CommandsTrigger.builder()
