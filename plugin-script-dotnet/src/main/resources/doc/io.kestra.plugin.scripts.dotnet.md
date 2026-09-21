@@ -44,3 +44,24 @@ Required properties:
 Optional:
 - `containerImage` — defaults to `mcr.microsoft.com/dotnet/sdk:10.0`
 - `beforeCommands`, `inputFiles`, `namespaceFiles`, `outputFiles`, `taskRunner` — same as `Script`
+
+## Triggers
+
+### ScriptTrigger
+
+Polls on an interval by running an inline .NET script the same way the `Script` task does, and starts an execution when `exitCondition` matches. The script runs in a fresh container on every poll, so keep it quick.
+
+Required properties:
+- `script`: inline .NET script body
+- `exitCondition`: either `exit N`, which matches when the script exits with code N, or a regex (with substring fallback) matched against the vars the script emits with `::{"outputs":{...}}::`
+
+Optional:
+- `interval`: time between polls, defaults to `PT60S`
+- `edge`: defaults to `true`, so the trigger fires only when the condition changes from not matching to matching. The previous result is kept in the namespace KV store under a key starting with `trigger-edge-`. Set to `false` to fire on every matching poll
+- `containerImage`: defaults to `mcr.microsoft.com/dotnet/sdk:10.0`
+
+The trigger outputs are available as `{{ trigger.timestamp }}`, `{{ trigger.condition }}`, `{{ trigger.exitCode }}` and `{{ trigger.vars }}`. A failed run has no vars, so only an `exit N` condition can match a failure.
+
+### CommandsTrigger
+
+Same behavior as `ScriptTrigger`, but runs a list of shell commands the way the `Commands` task does. Required properties are `commands` and `exitCondition`; `interval`, `edge` and `containerImage` work as above.
