@@ -10,6 +10,8 @@ import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContextFactory;
+import io.kestra.core.serializers.JacksonMapper;
+import io.kestra.core.utils.IdUtils;
 import io.kestra.core.utils.TestsUtils;
 
 import jakarta.inject.Inject;
@@ -26,7 +28,7 @@ class CommandsTriggerTest {
     @Test
     void commandsTrigger_shouldTriggerOnImplicitFailureExit1() throws Exception {
         CommandsTrigger trigger = CommandsTrigger.builder()
-            .id("commands-trigger")
+            .id("commands-trigger-" + IdUtils.create())
             .type(CommandsTrigger.class.getName())
             .exitCondition(Property.ofValue("exit 1"))
             .edge(Property.ofValue(true))
@@ -49,7 +51,7 @@ class CommandsTriggerTest {
     @Test
     void commandsTrigger_shouldTriggerOnStdoutMatchUsingStructuredOutputs() throws Exception {
         CommandsTrigger trigger = CommandsTrigger.builder()
-            .id("commands-stdout-match-trigger")
+            .id("commands-stdout-match-trigger-" + IdUtils.create())
             .type(CommandsTrigger.class.getName())
             .exitCondition(Property.ofValue("toto"))
             .edge(Property.ofValue(true))
@@ -70,13 +72,10 @@ class CommandsTriggerTest {
         assertThat("vars should be present", triggerVars.get("vars"), notNullValue());
     }
 
-    // Only proves in-process dedup: both evaluations run against the same trigger instance,
-    // never through the serialize/deserialize round trip a real worker performs between polls.
-    // See the known-limitation note on CommandsTrigger#lastMatched.
     @Test
     void commandsTrigger_edgeModeShouldSuppressSecondEmission() throws Exception {
         CommandsTrigger trigger = CommandsTrigger.builder()
-            .id("commands-edge-trigger")
+            .id("commands-edge-trigger-" + IdUtils.create())
             .type(CommandsTrigger.class.getName())
             .exitCondition(Property.ofValue("exit 1"))
             .edge(Property.ofValue(true))
@@ -88,16 +87,17 @@ class CommandsTriggerTest {
         Optional<Execution> first = trigger.evaluate(context.getKey(), context.getValue());
         assertThat("First evaluation should fire", first.isPresent(), is(true));
 
-        // Second evaluation with edge=true should suppress
-        context = TestsUtils.mockTrigger(runContextFactory, trigger);
-        Optional<Execution> second = trigger.evaluate(context.getKey(), context.getValue());
+        // The second poll runs on a copy that went through the worker's serialize/deserialize round trip.
+        CommandsTrigger nextPoll = JacksonMapper.ofJson().readValue(JacksonMapper.ofJson().writeValueAsString(trigger), CommandsTrigger.class);
+        context = TestsUtils.mockTrigger(runContextFactory, nextPoll);
+        Optional<Execution> second = nextPoll.evaluate(context.getKey(), context.getValue());
         assertThat("Edge mode should suppress repeated emission", second.isPresent(), is(false));
     }
 
     @Test
     void commandsTrigger_shouldMatchRegexAgainstStructuredOutputs() throws Exception {
         CommandsTrigger trigger = CommandsTrigger.builder()
-            .id("commands-regex-trigger")
+            .id("commands-regex-trigger-" + IdUtils.create())
             .type(CommandsTrigger.class.getName())
             .exitCondition(Property.ofValue("status=\\w+"))
             .edge(Property.ofValue(true))
