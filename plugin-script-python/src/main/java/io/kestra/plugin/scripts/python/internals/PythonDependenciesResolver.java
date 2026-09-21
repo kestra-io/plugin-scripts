@@ -33,9 +33,30 @@ import io.kestra.core.runners.WorkingDir;
  */
 public class PythonDependenciesResolver {
 
-    private static final String HOME_ENV = System.getenv("HOME");
+    private static final String HOME_ENV = resolveHomeDirectory(System::getenv);
     private static final String PATH_ENV = System.getenv("PATH");
     private static final String WORKING_DIR_ADDITIONAL_PYTHON_LIB = ".kestra_additional_python_lib";
+
+    /**
+     * Resolves the user home directory in an OS-independent way.
+     * <p>
+     * Windows does not define {@code HOME} — it uses {@code USERPROFILE} — so reading {@code HOME}
+     * alone yields {@code null} there, which then fails as a {@link NullPointerException} both when
+     * building the default uv path and when passing the value to a {@link ProcessBuilder}
+     * environment, which rejects null values.
+     *
+     * @param env the environment lookup, {@code System::getenv} in production.
+     * @return the home directory; never {@code null}, as {@code user.home} is always set by the JVM.
+     */
+    static String resolveHomeDirectory(final Function<String, String> env) {
+        return firstNonBlank(env.apply("HOME"))
+            .or(() -> firstNonBlank(env.apply("USERPROFILE")))
+            .orElseGet(() -> System.getProperty("user.home"));
+    }
+
+    private static Optional<String> firstNonBlank(final String value) {
+        return Optional.ofNullable(value).filter(candidate -> !candidate.isBlank());
+    }
 
     /**
      * Pinned version of the uv installer downloaded when 'uv' is not already available on the worker.
@@ -336,7 +357,8 @@ public class PythonDependenciesResolver {
 
         this.uvCmd = "uv";
         try {
-            String uvPath = Optional.ofNullable(System.getenv("UV_PATH")).orElse("$HOME/.local/bin/uv".replace("$HOME", HOME_ENV));
+            String uvPath = Optional.ofNullable(System.getenv("UV_PATH"))
+                .orElseGet(() -> "$HOME/.local/bin/uv".replace("$HOME", HOME_ENV));
             if (Files.exists(Path.of(uvPath))) {
                 this.uvCmd = uvPath;
             }
