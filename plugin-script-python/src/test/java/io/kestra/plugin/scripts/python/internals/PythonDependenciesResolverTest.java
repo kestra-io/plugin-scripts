@@ -10,6 +10,7 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,43 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class PythonDependenciesResolverTest {
 
     private static final String FAKE_INSTALLER_URL = "https://astral.sh/uv/1.2.3/install.sh";
+
+    @Test
+    void shouldResolveHomeFromHomeEnvWhenSet() {
+        Function<String, String> env = Map.of(
+            "HOME", "/home/kestra",
+            "USERPROFILE", "C:\\Users\\kestra"
+        )::get;
+
+        assertThat(PythonDependenciesResolver.resolveHomeDirectory(env), is("/home/kestra"));
+    }
+
+    @Test
+    void shouldResolveHomeFromUserProfileOnWindowsWhereHomeIsNotDefined() {
+        // Windows does not define HOME; reading it alone yields null, which then fails as an NPE
+        // both in getUvCmd() and when passed to a ProcessBuilder environment.
+        Function<String, String> env = Map.of("USERPROFILE", "C:\\Users\\kestra")::get;
+
+        assertThat(PythonDependenciesResolver.resolveHomeDirectory(env), is("C:\\Users\\kestra"));
+    }
+
+    @Test
+    void shouldFallBackToUserHomePropertyWhenNoEnvIsSet() {
+        Function<String, String> env = name -> null;
+
+        assertThat(
+            PythonDependenciesResolver.resolveHomeDirectory(env),
+            is(System.getProperty("user.home"))
+        );
+    }
+
+    @Test
+    void shouldIgnoreBlankHomeAndNeverReturnNull() {
+        Function<String, String> env = Map.of("HOME", "  ")::get;
+
+        assertThat(PythonDependenciesResolver.resolveHomeDirectory(env), is(notNullValue()));
+        assertThat(PythonDependenciesResolver.resolveHomeDirectory(env), is(not("  ")));
+    }
 
     @Inject
     RunContextFactory runContextFactory;
