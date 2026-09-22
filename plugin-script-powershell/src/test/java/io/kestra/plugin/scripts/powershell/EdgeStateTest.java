@@ -12,6 +12,7 @@ import io.kestra.core.models.triggers.TriggerContext;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.serializers.JacksonMapper;
+import io.kestra.core.storages.kv.KVStore;
 import io.kestra.core.utils.IdUtils;
 import io.kestra.core.utils.TestsUtils;
 
@@ -190,5 +191,45 @@ class EdgeStateTest {
         String key = ScriptTrigger.edgeStateKey(contextFor("my_flow-1", "my_trigger-2", "company.team"));
 
         assertThat(key.matches("[a-zA-Z0-9][a-zA-Z0-9._-]*"), is(true));
+    }
+
+    @Test
+    void scriptTrigger_doesNotRewriteTheEntryWhenThePollRepeatsTheSameResult() throws Exception {
+        ScriptTrigger trigger = scriptTrigger("script-nowrite-" + IdUtils.create());
+        var mock = TestsUtils.mockTrigger(runContextFactory, trigger);
+        RunContext runContext = mock.getKey().getRunContext();
+        TriggerContext context = mock.getValue();
+        KVStore kvStore = runContext.namespaceKv(context.getNamespace());
+        String key = ScriptTrigger.edgeStateKey(context);
+
+        trigger.shouldEmit(runContext, context, true, true);
+        int versionAfterFirstWrite = kvStore.get(key).orElseThrow().version();
+
+        trigger.shouldEmit(runContext, context, true, true);
+        trigger.shouldEmit(runContext, context, true, true);
+        assertThat("repeating the same result should not rewrite the entry", kvStore.get(key).orElseThrow().version(), is(versionAfterFirstWrite));
+
+        trigger.shouldEmit(runContext, context, true, false);
+        assertThat("an actual transition should still write", kvStore.get(key).orElseThrow().version(), is(versionAfterFirstWrite + 1));
+    }
+
+    @Test
+    void commandsTrigger_doesNotRewriteTheEntryWhenThePollRepeatsTheSameResult() throws Exception {
+        CommandsTrigger trigger = commandsTrigger("commands-nowrite-" + IdUtils.create());
+        var mock = TestsUtils.mockTrigger(runContextFactory, trigger);
+        RunContext runContext = mock.getKey().getRunContext();
+        TriggerContext context = mock.getValue();
+        KVStore kvStore = runContext.namespaceKv(context.getNamespace());
+        String key = CommandsTrigger.edgeStateKey(context);
+
+        trigger.shouldEmit(runContext, context, true, true);
+        int versionAfterFirstWrite = kvStore.get(key).orElseThrow().version();
+
+        trigger.shouldEmit(runContext, context, true, true);
+        trigger.shouldEmit(runContext, context, true, true);
+        assertThat("repeating the same result should not rewrite the entry", kvStore.get(key).orElseThrow().version(), is(versionAfterFirstWrite));
+
+        trigger.shouldEmit(runContext, context, true, false);
+        assertThat("an actual transition should still write", kvStore.get(key).orElseThrow().version(), is(versionAfterFirstWrite + 1));
     }
 }
