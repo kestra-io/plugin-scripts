@@ -110,9 +110,7 @@ This is a **multi-module** plugin with 19 submodules:
 **plugin-script-r:**
 
 - `io.kestra.plugin.scripts.r.Commands`
-- `io.kestra.plugin.scripts.r.CommandsTrigger`
 - `io.kestra.plugin.scripts.r.Script`
-- `io.kestra.plugin.scripts.r.ScriptTrigger`
 **plugin-script-ruby:**
 
 - `io.kestra.plugin.scripts.ruby.Commands`
