@@ -42,7 +42,9 @@ This is a **multi-module** plugin with 19 submodules:
 **plugin-script-bun:**
 
 - `io.kestra.plugin.scripts.bun.Commands`
+- `io.kestra.plugin.scripts.bun.CommandsTrigger`
 - `io.kestra.plugin.scripts.bun.Script`
+- `io.kestra.plugin.scripts.bun.ScriptTrigger`
 **plugin-script-deno:**
 
 - `io.kestra.plugin.scripts.deno.Commands`
