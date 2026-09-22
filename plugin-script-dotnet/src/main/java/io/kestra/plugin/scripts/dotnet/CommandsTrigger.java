@@ -177,7 +177,12 @@ public class CommandsTrigger extends AbstractTrigger
         boolean previouslyMatched = kvStore.getValue(key)
             .map(value -> Boolean.parseBoolean(String.valueOf(value.value())))
             .orElse(false);
-        kvStore.put(key, new KVValueAndMetadata(null, matched));
+
+        // Skip the write on a poll that repeats the same result, so a condition that stays true
+        // for hours does not rewrite the same value every interval.
+        if (matched != previouslyMatched) {
+            kvStore.put(key, new KVValueAndMetadata(null, matched));
+        }
 
         return matched && !previouslyMatched;
     }
