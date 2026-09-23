@@ -103,7 +103,9 @@ This is a **multi-module** plugin with 19 submodules:
 **plugin-script-powershell:**
 
 - `io.kestra.plugin.scripts.powershell.Commands`
+- `io.kestra.plugin.scripts.powershell.CommandsTrigger`
 - `io.kestra.plugin.scripts.powershell.Script`
+- `io.kestra.plugin.scripts.powershell.ScriptTrigger`
 **plugin-script-python:**
 
 - `io.kestra.core.tasks.scripts.Python`
