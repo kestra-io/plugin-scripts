@@ -4,11 +4,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 class CommandsTriggerConditionTest {
 
@@ -61,5 +63,21 @@ class CommandsTriggerConditionTest {
     @Test
     void nullCondition_doesNotMatch() {
         assertThat(trigger.matchesCondition(output(null, 0, Map.of("k", "v"))), is(false));
+    }
+
+    @Test
+    void catastrophicBacktrackingRegex_fallsBackToSubstring_withoutHanging() {
+        String condition = "(a+)+$";
+        String value = "a".repeat(40) + "!";
+
+        assertTimeoutPreemptively(Duration.ofSeconds(15), () ->
+            assertThat(trigger.matchesCondition(output(condition, 0, Map.of("k", value))), is(false))
+        );
+    }
+
+    @Test
+    void invalidRegex_fallsBackToSubstring() {
+        assertThat(trigger.matchesCondition(
+            output("[unclosed", 0, Map.of("k", "value with [unclosed inside"))), is(true));
     }
 }

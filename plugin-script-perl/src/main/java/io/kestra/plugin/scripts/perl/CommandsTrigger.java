@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,6 +77,8 @@ import io.kestra.core.models.annotations.PluginProperty;
         )
     }
 )
+// TODO: extract shared trigger logic (evaluate, matchesCondition, extractFailure, Output)
+//  into an AbstractScriptTrigger in plugin-script to reduce duplication across Shell, Node, Ruby, etc.
 public class CommandsTrigger extends AbstractTrigger
     implements PollingTriggerInterface, TriggerOutput<CommandsTrigger.Output> {
 
@@ -134,6 +139,8 @@ public class CommandsTrigger extends AbstractTrigger
     @PluginProperty(group = "advanced")
     protected Property<Boolean> edge = Property.ofValue(true);
 
+    // Known limitation: in-memory only — resets when the trigger is rehydrated (e.g. after restart),
+    // so edge mode may re-fire once after a scheduler restart.
     @Builder.Default
     @Getter(AccessLevel.NONE)
     private final AtomicBoolean lastMatched = new AtomicBoolean(false);
@@ -201,8 +208,15 @@ public class CommandsTrigger extends AbstractTrigger
         }
 
         try {
-            return Pattern.compile(cond).matcher(haystack).find();
-        } catch (Exception invalidRegex) {
+            // Guard against catastrophic backtracking (ReDoS) from user-supplied patterns
+            var pattern = Pattern.compile(cond);
+            var future = CompletableFuture.supplyAsync(
+                () -> pattern.matcher(haystack).find()
+            );
+            return future.get(5, TimeUnit.SECONDS);
+        } catch (TimeoutException te) {
+            return haystack.contains(cond);
+        } catch (Exception e) {
             return haystack.contains(cond);
         }
     }
@@ -211,6 +225,7 @@ public class CommandsTrigger extends AbstractTrigger
         if (out.getVars() == null || out.getVars().isEmpty()) {
             return "";
         }
+        // Map.toString() produces {key=value, ...} — intentional for substring/regex matching.
         return out.getVars().toString();
     }
 
