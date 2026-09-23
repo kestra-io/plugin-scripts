@@ -95,7 +95,9 @@ This is a **multi-module** plugin with 19 submodules:
 **plugin-script-perl:**
 
 - `io.kestra.plugin.scripts.perl.Commands`
+- `io.kestra.plugin.scripts.perl.CommandsTrigger`
 - `io.kestra.plugin.scripts.perl.Script`
+- `io.kestra.plugin.scripts.perl.ScriptTrigger`
 **plugin-script-php:**
 
 - `io.kestra.plugin.scripts.php.Commands`
