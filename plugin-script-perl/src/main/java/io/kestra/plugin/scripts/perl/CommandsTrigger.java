@@ -53,7 +53,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 @Plugin(
     examples = {
         @Example(
-            title = "Trigger when commands fail with an implicit error (exit 1).",
+            title = "Trigger when the command explicitly exits with code 1.",
             full = true,
             code = """
                 id: commands_trigger
@@ -67,7 +67,7 @@ import io.kestra.core.models.annotations.PluginProperty;
                     edge: true
                     containerImage: perl
                     commands:
-                      - perl missing.pl
+                      - perl -e 'exit 1'
 
                 tasks:
                   - id: log

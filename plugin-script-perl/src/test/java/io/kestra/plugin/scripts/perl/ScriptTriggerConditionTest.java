@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
@@ -67,12 +68,19 @@ class ScriptTriggerConditionTest {
 
     @Test
     void catastrophicBacktrackingRegex_fallsBackToSubstring_withoutHanging() {
-        String condition = "(a+)+$";
+        // (a+)+$ is memoized by the JDK 25 regex engine and returns near-instantly, so it no longer
+        // exercises the 5s timeout guard; (.*a){20}$ still triggers catastrophic backtracking there.
+        String condition = "(.*a){20}$";
         String value = "a".repeat(40) + "!";
 
+        long start = System.nanoTime();
         assertTimeoutPreemptively(Duration.ofSeconds(15), () ->
             assertThat(trigger.matchesCondition(output(condition, 0, Map.of("k", value))), is(false))
         );
+        long elapsedMs = Duration.ofNanos(System.nanoTime() - start).toMillis();
+
+        // Confirms the 5s timeout guard actually tripped rather than a fast regex miss.
+        assertThat(elapsedMs, greaterThanOrEqualTo(4000L));
     }
 
     @Test
