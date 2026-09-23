@@ -52,7 +52,9 @@ This is a **multi-module** plugin with 19 submodules:
 **plugin-script-dotnet:**
 
 - `io.kestra.plugin.scripts.dotnet.Commands`
+- `io.kestra.plugin.scripts.dotnet.CommandsTrigger`
 - `io.kestra.plugin.scripts.dotnet.Script`
+- `io.kestra.plugin.scripts.dotnet.ScriptTrigger`
 **plugin-script-go:**
 
 - `io.kestra.plugin.scripts.go.Commands`
