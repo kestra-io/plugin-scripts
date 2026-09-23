@@ -4,13 +4,12 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 /**
- * Unit tests for ScriptTrigger's condition-matching logic and edge mode.
+ * Unit tests for ScriptTrigger's condition-matching logic. Edge mode is covered by EdgeStateTest.
  *
  * These tests exercise matchesCondition via the Output model without requiring a Perl
  * runtime, which may not be available on all CI machines.
@@ -67,29 +66,5 @@ class ScriptTriggerTest {
     @Test
     void exitZeroCondition_shouldMatchSuccessfulExecution() {
         assertThat(trigger.matchesCondition(output("exit 0", 0, null)), is(true));
-    }
-
-    @Test
-    void edgeMode_shouldEmitOnFirstMatch() {
-        var lastMatched = new AtomicBoolean(false);
-        boolean matched = true;
-        boolean emit = !lastMatched.getAndSet(matched) && matched;
-        assertThat("first match should emit", emit, is(true));
-    }
-
-    @Test
-    void edgeMode_shouldSuppressConsecutiveMatches() {
-        var lastMatched = new AtomicBoolean(true);
-        boolean matched = true;
-        boolean emit = !lastMatched.getAndSet(matched) && matched;
-        assertThat("consecutive match should not emit in edge mode", emit, is(false));
-    }
-
-    @Test
-    void edgeMode_shouldEmitAgainAfterNonMatch() {
-        var lastMatched = new AtomicBoolean(false);
-        boolean matched = true;
-        boolean emit = !lastMatched.getAndSet(matched) && matched;
-        assertThat("match after non-match should emit", emit, is(true));
     }
 }

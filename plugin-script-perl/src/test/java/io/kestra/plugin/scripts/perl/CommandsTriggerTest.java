@@ -3,7 +3,6 @@ package io.kestra.plugin.scripts.perl;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +10,8 @@ import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContextFactory;
+import io.kestra.core.serializers.JacksonMapper;
+import io.kestra.core.utils.IdUtils;
 import io.kestra.core.utils.TestsUtils;
 
 import jakarta.inject.Inject;
@@ -27,7 +28,7 @@ class CommandsTriggerTest {
     @Test
     void commandsTrigger_shouldTriggerOnImplicitFailureExit1() throws Exception {
         CommandsTrigger trigger = CommandsTrigger.builder()
-            .id("commands-trigger")
+            .id("commands-trigger-" + IdUtils.create())
             .type(CommandsTrigger.class.getName())
             .exitCondition(Property.ofValue("exit 1"))
             .edge(Property.ofValue(true))
@@ -50,7 +51,7 @@ class CommandsTriggerTest {
     @Test
     void commandsTrigger_shouldTriggerOnStdoutMatchUsingStructuredOutputs() throws Exception {
         CommandsTrigger trigger = CommandsTrigger.builder()
-            .id("commands-stdout-match-trigger")
+            .id("commands-stdout-match-trigger-" + IdUtils.create())
             .type(CommandsTrigger.class.getName())
             .exitCondition(Property.ofValue("toto"))
             .edge(Property.ofValue(true))
@@ -74,7 +75,7 @@ class CommandsTriggerTest {
     @Test
     void commandsTrigger_shouldNotEmitWhenConditionDoesNotMatch() throws Exception {
         CommandsTrigger trigger = CommandsTrigger.builder()
-            .id("commands-no-match-trigger")
+            .id("commands-no-match-trigger-" + IdUtils.create())
             .type(CommandsTrigger.class.getName())
             .exitCondition(Property.ofValue("exit 1"))
             .edge(Property.ofValue(true))
@@ -91,7 +92,7 @@ class CommandsTriggerTest {
     @Test
     void commandsTrigger_shouldMatchRegexAgainstStructuredOutputs() throws Exception {
         CommandsTrigger trigger = CommandsTrigger.builder()
-            .id("commands-regex-trigger")
+            .id("commands-regex-trigger-" + IdUtils.create())
             .type(CommandsTrigger.class.getName())
             .exitCondition(Property.ofValue("status=\\w+"))
             .edge(Property.ofValue(true))
@@ -110,27 +111,24 @@ class CommandsTriggerTest {
     }
 
     @Test
-    void edgeMode_preventsConsecutiveEmit() {
-        AtomicBoolean lastMatched = new AtomicBoolean(false);
+    void commandsTrigger_edgeModeShouldSuppressSecondEmission() throws Exception {
+        CommandsTrigger trigger = CommandsTrigger.builder()
+            .id("commands-edge-trigger-" + IdUtils.create())
+            .type(CommandsTrigger.class.getName())
+            .exitCondition(Property.ofValue("exit 1"))
+            .edge(Property.ofValue(true))
+            .containerImage(Property.ofValue("perl:latest"))
+            .commands(Property.ofValue(List.of("perl -e 'exit 1;'")))
+            .build();
 
-        // First match: transition false->true => should emit
-        boolean matched1 = true;
-        boolean emit1 = !lastMatched.getAndSet(matched1) && matched1;
-        assertThat("first match should emit", emit1, is(true));
+        var context = TestsUtils.mockTrigger(runContextFactory, trigger);
+        Optional<Execution> first = trigger.evaluate(context.getKey(), context.getValue());
+        assertThat("First evaluation should fire", first.isPresent(), is(true));
 
-        // Second consecutive match: true->true => should NOT emit
-        boolean matched2 = true;
-        boolean emit2 = !lastMatched.getAndSet(matched2) && matched2;
-        assertThat("consecutive match should NOT emit in edge mode", emit2, is(false));
-
-        // Non-match: true->false => should not emit
-        boolean matched3 = false;
-        boolean emit3 = !lastMatched.getAndSet(matched3) && matched3;
-        assertThat("non-match should not emit", emit3, is(false));
-
-        // Match again after non-match: false->true => should emit
-        boolean matched4 = true;
-        boolean emit4 = !lastMatched.getAndSet(matched4) && matched4;
-        assertThat("match after non-match should emit", emit4, is(true));
+        // The second poll runs on a copy that went through the worker's serialize/deserialize round trip.
+        CommandsTrigger nextPoll = JacksonMapper.ofJson().readValue(JacksonMapper.ofJson().writeValueAsString(trigger), CommandsTrigger.class);
+        context = TestsUtils.mockTrigger(runContextFactory, nextPoll);
+        Optional<Execution> second = nextPoll.evaluate(context.getKey(), context.getValue());
+        assertThat("Edge mode should suppress repeated emission", second.isPresent(), is(false));
     }
 }
