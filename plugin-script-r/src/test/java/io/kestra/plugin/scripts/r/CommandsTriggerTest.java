@@ -3,7 +3,6 @@ package io.kestra.plugin.scripts.r;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +10,7 @@ import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContextFactory;
+import io.kestra.core.utils.IdUtils;
 import io.kestra.core.utils.TestsUtils;
 
 import jakarta.inject.Inject;
@@ -27,7 +27,7 @@ class CommandsTriggerTest {
     @Test
     void commandsTrigger_shouldTriggerOnImplicitFailureExit1() throws Exception {
         CommandsTrigger trigger = CommandsTrigger.builder()
-            .id("commands-trigger")
+            .id("commands-trigger-" + IdUtils.create())
             .type(CommandsTrigger.class.getName())
             .exitCondition(Property.ofValue("exit 1"))
             .edge(Property.ofValue(true))
@@ -50,7 +50,7 @@ class CommandsTriggerTest {
     @Test
     void commandsTrigger_shouldTriggerOnStdoutMatchUsingStructuredOutputs() throws Exception {
         CommandsTrigger trigger = CommandsTrigger.builder()
-            .id("commands-stdout-match-trigger")
+            .id("commands-stdout-match-" + IdUtils.create())
             .type(CommandsTrigger.class.getName())
             .exitCondition(Property.ofValue("toto"))
             .edge(Property.ofValue(true))
@@ -74,7 +74,7 @@ class CommandsTriggerTest {
     @Test
     void commandsTrigger_shouldNotEmitWhenConditionDoesNotMatch() throws Exception {
         CommandsTrigger trigger = CommandsTrigger.builder()
-            .id("commands-no-match-trigger")
+            .id("commands-no-match-" + IdUtils.create())
             .type(CommandsTrigger.class.getName())
             .exitCondition(Property.ofValue("exit 1"))
             .edge(Property.ofValue(true))
@@ -88,28 +88,51 @@ class CommandsTriggerTest {
         assertThat("successful run should not match 'exit 1'", execution.isPresent(), is(false));
     }
 
+    // Drives the real evaluate() wiring rather than the edge arithmetic on its own, so a
+    // regression in how evaluate() consults the stored state is caught here.
     @Test
-    void edgeMode_preventsConsecutiveEmit() {
-        AtomicBoolean lastMatched = new AtomicBoolean(false);
+    void edgeMode_preventsConsecutiveEmit() throws Exception {
+        CommandsTrigger trigger = CommandsTrigger.builder()
+            .id("commands-edge-" + IdUtils.create())
+            .type(CommandsTrigger.class.getName())
+            .exitCondition(Property.ofValue("exit 1"))
+            .edge(Property.ofValue(true))
+            .containerImage(Property.ofValue("r-base"))
+            .commands(Property.ofValue(List.of("Rscript -e 'quit(status = 1)'")))
+            .build();
 
-        // First match: transition false->true => should emit
-        boolean matched1 = true;
-        boolean emit1 = !lastMatched.getAndSet(matched1) && matched1;
-        assertThat("first match should emit", emit1, is(true));
+        var context = TestsUtils.mockTrigger(runContextFactory, trigger);
 
-        // Second consecutive match: true->true => should NOT emit
-        boolean matched2 = true;
-        boolean emit2 = !lastMatched.getAndSet(matched2) && matched2;
-        assertThat("consecutive match should NOT emit in edge mode", emit2, is(false));
+        assertThat(
+            "first matching poll should emit",
+            trigger.evaluate(context.getKey(), context.getValue()).isPresent(),
+            is(true)
+        );
+        assertThat(
+            "a condition that stays matched should not emit again in edge mode",
+            trigger.evaluate(context.getKey(), context.getValue()).isPresent(),
+            is(false)
+        );
+    }
 
-        // Non-match: true->false => should not emit
-        boolean matched3 = false;
-        boolean emit3 = !lastMatched.getAndSet(matched3) && matched3;
-        assertThat("non-match should not emit", emit3, is(false));
+    @Test
+    void edgeDisabled_emitsOnEveryMatchingPoll() throws Exception {
+        CommandsTrigger trigger = CommandsTrigger.builder()
+            .id("commands-noedge-" + IdUtils.create())
+            .type(CommandsTrigger.class.getName())
+            .exitCondition(Property.ofValue("exit 1"))
+            .edge(Property.ofValue(false))
+            .containerImage(Property.ofValue("r-base"))
+            .commands(Property.ofValue(List.of("Rscript -e 'quit(status = 1)'")))
+            .build();
 
-        // Match again after non-match: false->true => should emit
-        boolean matched4 = true;
-        boolean emit4 = !lastMatched.getAndSet(matched4) && matched4;
-        assertThat("match after non-match should emit", emit4, is(true));
+        var context = TestsUtils.mockTrigger(runContextFactory, trigger);
+
+        assertThat(trigger.evaluate(context.getKey(), context.getValue()).isPresent(), is(true));
+        assertThat(
+            "edge=false should emit on every matching poll",
+            trigger.evaluate(context.getKey(), context.getValue()).isPresent(),
+            is(true)
+        );
     }
 }

@@ -4,17 +4,17 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 /**
- * Unit tests for ScriptTrigger's condition-matching logic and edge mode.
+ * Unit tests for ScriptTrigger's condition-matching logic.
  *
  * These tests exercise matchesCondition via the Output model without requiring an R
- * runtime, which may not be available on all CI machines.
- * Integration coverage against an actual R runtime lives in CommandsTriggerTest.
+ * runtime, which may not be available on all CI machines. Edge mode is covered in
+ * EdgeStateTest, and integration coverage against an actual R runtime lives in
+ * CommandsTriggerTest.
  */
 class ScriptTriggerTest {
 
@@ -70,26 +70,8 @@ class ScriptTriggerTest {
     }
 
     @Test
-    void edgeMode_shouldEmitOnFirstMatch() {
-        var lastMatched = new AtomicBoolean(false);
-        boolean matched = true;
-        boolean emit = !lastMatched.getAndSet(matched) && matched;
-        assertThat("first match should emit", emit, is(true));
-    }
-
-    @Test
-    void edgeMode_shouldSuppressConsecutiveMatches() {
-        var lastMatched = new AtomicBoolean(true);
-        boolean matched = true;
-        boolean emit = !lastMatched.getAndSet(matched) && matched;
-        assertThat("consecutive match should not emit in edge mode", emit, is(false));
-    }
-
-    @Test
-    void edgeMode_shouldEmitAgainAfterNonMatch() {
-        var lastMatched = new AtomicBoolean(false);
-        boolean matched = true;
-        boolean emit = !lastMatched.getAndSet(matched) && matched;
-        assertThat("match after non-match should emit", emit, is(true));
+    void invalidRegex_shouldFallBackToSubstringMatch() {
+        assertThat(trigger.matchesCondition(output("a[b", 0, Map.of("k", "xa[by"))), is(true));
+        assertThat(trigger.matchesCondition(output("a[b", 0, Map.of("k", "nothing"))), is(false));
     }
 }

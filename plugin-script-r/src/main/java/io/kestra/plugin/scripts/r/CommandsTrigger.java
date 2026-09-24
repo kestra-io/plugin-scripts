@@ -10,6 +10,8 @@ import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
+import io.kestra.core.storages.kv.KVStore;
+import io.kestra.core.storages.kv.KVValueAndMetadata;
 import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,13 +21,11 @@ import lombok.experimental.SuperBuilder;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,8 +63,6 @@ import java.util.regex.Pattern;
         )
     }
 )
-// TODO: extract shared trigger logic (evaluate, matchesCondition, extractFailure, Output)
-//  into an AbstractScriptTrigger in plugin-script to reduce duplication across Shell, Node, Ruby, R, etc.
 public class CommandsTrigger extends AbstractTrigger
     implements PollingTriggerInterface, TriggerOutput<CommandsTrigger.Output> {
 
@@ -72,6 +70,18 @@ public class CommandsTrigger extends AbstractTrigger
 
     private static final Pattern EXIT_CONDITION_PATTERN =
         Pattern.compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE);
+
+    // The trigger is rebuilt on every poll, so the compiled condition has to live in a static.
+    // Conditions can be templated, so keep it bounded and drop the least recently used entry.
+    private static final int MAX_CACHED_CONDITIONS = 64;
+    private static final Map<String, Pattern> CONDITION_PATTERNS = Collections.synchronizedMap(
+        new LinkedHashMap<>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Pattern> eldest) {
+                return size() > MAX_CACHED_CONDITIONS;
+            }
+        }
+    );
 
     @Schema(
         title = "Docker image used to execute the commands",
@@ -117,19 +127,14 @@ public class CommandsTrigger extends AbstractTrigger
     @Schema(
         title = "Edge trigger mode",
         description = """
-            If true, the trigger emits only on a transition from 'not matching' to 'matching' (anti-spam).
-            If false, the trigger emits on every poll where the condition matches.
+            When true (default), emit only on a transition from not matching to matching, so a condition that \
+            stays true does not fire on every poll. The previous result is kept in the namespace KV store, keyed \
+            by flow and trigger id. When false, emit on every poll that matches.
             """
     )
     @Builder.Default
     @PluginProperty(group = "advanced")
     protected Property<Boolean> edge = Property.ofValue(true);
-
-    // Known limitation: in-memory only — resets when the trigger is rehydrated (e.g. after restart),
-    // so edge mode may re-fire once after a scheduler restart.
-    @Builder.Default
-    @Getter(AccessLevel.NONE)
-    private final AtomicBoolean lastMatched = new AtomicBoolean(false);
 
     @Override
     public Optional<Execution> evaluate(ConditionContext conditionContext, TriggerContext context) throws Exception {
@@ -146,9 +151,7 @@ public class CommandsTrigger extends AbstractTrigger
 
         boolean matched = matchesCondition(out);
 
-        boolean emit = edgeEnabled
-            ? (!lastMatched.getAndSet(matched) && matched)
-            : matched;
+        boolean emit = shouldEmit(runContext, context, edgeEnabled, matched);
 
         if (!emit) {
             return Optional.empty();
@@ -157,6 +160,31 @@ public class CommandsTrigger extends AbstractTrigger
         return Optional.of(
             TriggerService.generateExecution(this, conditionContext, context, out)
         );
+    }
+
+    boolean shouldEmit(RunContext runContext, TriggerContext context, boolean edge, boolean matched) throws Exception {
+        if (!edge) {
+            return matched;
+        }
+
+        // A polling trigger is rebuilt from the flow definition (and serialized to a worker) on
+        // every poll, so the previous result cannot live in a field. It is kept in the namespace
+        // KV store instead and advanced on every poll.
+        KVStore kvStore = runContext.namespaceKv(context.getNamespace());
+        String key = edgeStateKey(context);
+
+        boolean previouslyMatched = kvStore.getValue(key)
+            .map(value -> Boolean.parseBoolean(String.valueOf(value.value())))
+            .orElse(false);
+        kvStore.put(key, new KVValueAndMetadata(null, matched));
+
+        return matched && !previouslyMatched;
+    }
+
+    // Length prefixed so that the pairs ("a-b", "c") and ("a", "b-c") can never share a key.
+    // Flow and trigger ids only use characters that are valid in a KV key.
+    static String edgeStateKey(TriggerContext context) {
+        return "trigger-edge-" + context.getFlowId().length() + "-" + context.getFlowId() + "-" + context.getTriggerId();
     }
 
     private Output runOnce(RunContext runContext) throws Exception {
@@ -169,7 +197,8 @@ public class CommandsTrigger extends AbstractTrigger
 
         String renderedCondition = runContext.render(this.exitCondition)
             .as(String.class)
-            .orElse("");
+            .filter(condition -> !condition.isBlank())
+            .orElseThrow(() -> new IllegalArgumentException("exitCondition must render to a non-empty value"));
 
         try {
             ScriptOutput taskOutput = task.run(TriggerRunContext.forEmbeddedTask(runContext, task));
@@ -207,17 +236,14 @@ public class CommandsTrigger extends AbstractTrigger
         }
 
         try {
-            // Guard against catastrophic backtracking (ReDoS) from user-supplied patterns
-            var pattern = Pattern.compile(cond);
-            var future = CompletableFuture.supplyAsync(
-                () -> pattern.matcher(haystack).find()
-            );
-            return future.get(5, TimeUnit.SECONDS);
-        } catch (TimeoutException te) {
-            return haystack.contains(cond);
-        } catch (Exception e) {
+            return conditionPattern(cond).matcher(haystack).find();
+        } catch (Exception invalidRegex) {
             return haystack.contains(cond);
         }
+    }
+
+    static Pattern conditionPattern(String condition) {
+        return CONDITION_PATTERNS.computeIfAbsent(condition, Pattern::compile);
     }
 
     private String buildHaystack(Output out) {
