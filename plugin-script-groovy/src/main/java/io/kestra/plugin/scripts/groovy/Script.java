@@ -11,6 +11,7 @@ import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
+import io.kestra.core.models.tasks.runners.TaskRunner;
 import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.scripts.exec.AbstractExecScript;
@@ -31,7 +32,10 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Schema(
     title = "Execute a Groovy script inline with your Flow Code",
-    description = "Runs an inline Groovy script in the JVM and captures its output."
+    description = """
+        Runs an inline Groovy script in the JVM and captures its output.
+
+        On the Docker task runner, the container runs as `root` unless `taskRunner.user` is set explicitly, so it can read the mounted script. Other task runner settings are preserved."""
 )
 @Plugin(
     examples = {
@@ -94,13 +98,21 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
             builder.image(runContext.render(this.getContainerImage()).as(String.class).orElse(null));
         }
 
-        builder.user("root");
+        if (original.getUser() == null) {
+            builder.user("root");
+        }
         return builder.build();
     }
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
         CommandsWrapper commands = this.commands(runContext);
+
+        // The Groovy image user may not be able to read the mounted script.
+        TaskRunner<?> taskRunner = commands.getTaskRunner();
+        if (taskRunner instanceof Docker docker && docker.getUser() == null) {
+            commands = commands.withTaskRunner(docker.toBuilder().user("root").build());
+        }
 
         Map<String, String> inputFiles = FilesService.inputFiles(runContext, commands.getTaskRunner().additionalVars(runContext, commands), this.getInputFiles());
         Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(".groovy"));
@@ -115,12 +127,6 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
             .withInterpreter(this.interpreter)
             .withBeforeCommands(beforeCommands)
             .withBeforeCommandsWithOptions(true)
-            .withTaskRunner(
-                // because of, we are mounting a volume and the uid running Docker is not 1000, so it should run as user root (-u root).
-                Docker.builder()
-                    .user("root")
-                    .build()
-            )
             .withCommands(
                 Property.ofValue(
                     List.of(
