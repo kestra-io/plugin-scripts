@@ -68,7 +68,9 @@ This is a **multi-module** plugin with 19 submodules:
 **plugin-script-jbang:**
 
 - `io.kestra.plugin.scripts.jbang.Commands`
+- `io.kestra.plugin.scripts.jbang.CommandsTrigger`
 - `io.kestra.plugin.scripts.jbang.Script`
+- `io.kestra.plugin.scripts.jbang.ScriptTrigger`
 **plugin-script-julia:**
 
 - `io.kestra.plugin.scripts.julia.Commands`
