@@ -1,5 +1,15 @@
 package io.kestra.plugin.scripts.r;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
@@ -12,22 +22,14 @@ import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.storages.kv.KVStore;
 import io.kestra.core.storages.kv.KVValueAndMetadata;
+import io.kestra.plugin.scripts.exec.ExitConditionRegex;
 import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @SuperBuilder
 @ToString
@@ -68,8 +70,7 @@ public class CommandsTrigger extends AbstractTrigger
 
     private static final String DEFAULT_IMAGE = "r-base";
 
-    private static final Pattern EXIT_CONDITION_PATTERN =
-        Pattern.compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern EXIT_CONDITION_PATTERN = Pattern.compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE);
 
     // The trigger is rebuilt on every poll, so the compiled condition has to live in a static.
     // Conditions can be templated, so keep it bounded and drop the least recently used entry.
@@ -236,7 +237,7 @@ public class CommandsTrigger extends AbstractTrigger
         }
 
         try {
-            return conditionPattern(cond).matcher(haystack).find();
+            return ExitConditionRegex.find(conditionPattern(cond), haystack);
         } catch (Exception invalidRegex) {
             return haystack.contains(cond);
         }
@@ -270,7 +271,8 @@ public class CommandsTrigger extends AbstractTrigger
         }
     }
 
-    private record ExtractedFailure(Integer exitCode) {}
+    private record ExtractedFailure(Integer exitCode) {
+    }
 
     private ExtractedFailure extractFailure(RunnableTaskException e) {
         Integer exitCode = null;

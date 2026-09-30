@@ -1,17 +1,5 @@
 package io.kestra.plugin.scripts.python;
 
-import io.kestra.core.models.conditions.ConditionContext;
-import io.kestra.core.models.executions.Execution;
-import io.kestra.core.models.property.Property;
-import io.kestra.core.models.tasks.RunnableTaskException;
-import io.kestra.core.models.tasks.runners.TaskException;
-import io.kestra.core.models.triggers.*;
-import io.kestra.core.runners.RunContext;
-import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -19,7 +7,21 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.conditions.ConditionContext;
+import io.kestra.core.models.executions.Execution;
+import io.kestra.core.models.property.Property;
+import io.kestra.core.models.tasks.RunnableTaskException;
+import io.kestra.core.models.tasks.runners.TaskException;
+import io.kestra.core.models.triggers.*;
+import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.scripts.exec.ExitConditionRegex;
+import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
 @ToString
@@ -136,11 +138,7 @@ public abstract class AbstractPythonTrigger extends AbstractTrigger
             return false;
         }
 
-        try {
-            return Pattern.compile(cond).matcher(haystack).find();
-        } catch (Exception e) {
-            return haystack.contains(cond);
-        }
+        return ExitConditionRegex.find(cond, haystack);
     }
 
     private String buildHaystack(Output out) {
@@ -166,7 +164,8 @@ public abstract class AbstractPythonTrigger extends AbstractTrigger
         }
     }
 
-    private record ExtractedFailure(Integer exitCode) {}
+    private record ExtractedFailure(Integer exitCode) {
+    }
 
     private ExtractedFailure extractFailure(RunnableTaskException e) {
         Integer exitCode = null;

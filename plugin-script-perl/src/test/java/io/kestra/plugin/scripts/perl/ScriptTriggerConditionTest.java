@@ -1,12 +1,14 @@
 package io.kestra.plugin.scripts.perl;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Map;
+import io.kestra.plugin.scripts.exec.ExitConditionRegexTest;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
@@ -22,14 +24,16 @@ class ScriptTriggerConditionTest {
     }
 
     @ParameterizedTest
-    @CsvSource({
-        "exit 0, 0, true",
-        "exit 1, 1, true",
-        "EXIT 1, 1, true",
-        "exit 0, 1, false",
-        "exit 1, 0, false",
-        "exit 42, 42, true",
-    })
+    @CsvSource(
+        {
+            "exit 0, 0, true",
+            "exit 1, 1, true",
+            "EXIT 1, 1, true",
+            "exit 0, 1, false",
+            "exit 1, 0, false",
+            "exit 42, 42, true",
+        }
+    )
     void exitCodeCondition(String condition, int exitCode, boolean expected) {
         assertThat(trigger.matchesCondition(output(condition, exitCode, null)), is(expected));
     }
@@ -41,14 +45,20 @@ class ScriptTriggerConditionTest {
 
     @Test
     void substringMatch_inVars() {
-        assertThat(trigger.matchesCondition(
-            output("toto", 0, Map.of("key", "toto"))), is(true));
+        assertThat(
+            trigger.matchesCondition(
+                output("toto", 0, Map.of("key", "toto"))
+            ), is(true)
+        );
     }
 
     @Test
     void regexMatch_inVars() {
-        assertThat(trigger.matchesCondition(
-            output("status=\\w+", 0, Map.of("status", "status=ready"))), is(true));
+        assertThat(
+            trigger.matchesCondition(
+                output("status=\\w+", 0, Map.of("status", "status=ready"))
+            ), is(true)
+        );
     }
 
     @Test
@@ -74,18 +84,22 @@ class ScriptTriggerConditionTest {
         String value = "a".repeat(40) + "!";
 
         long start = System.nanoTime();
-        assertTimeoutPreemptively(Duration.ofSeconds(15), () ->
-            assertThat(trigger.matchesCondition(output(condition, 0, Map.of("k", value))), is(false))
+        assertTimeoutPreemptively(
+            Duration.ofSeconds(10), () -> assertThat(trigger.matchesCondition(output(condition, 0, Map.of("k", value))), is(false))
         );
         long elapsedMs = Duration.ofNanos(System.nanoTime() - start).toMillis();
 
         // Confirms the 5s timeout guard actually tripped rather than a fast regex miss.
         assertThat(elapsedMs, greaterThanOrEqualTo(4000L));
+        ExitConditionRegexTest.assertNoRegexOnCommonPool();
     }
 
     @Test
     void invalidRegex_fallsBackToSubstring() {
-        assertThat(trigger.matchesCondition(
-            output("[unclosed", 0, Map.of("k", "value with [unclosed inside"))), is(true));
+        assertThat(
+            trigger.matchesCondition(
+                output("[unclosed", 0, Map.of("k", "value with [unclosed inside"))
+            ), is(true)
+        );
     }
 }

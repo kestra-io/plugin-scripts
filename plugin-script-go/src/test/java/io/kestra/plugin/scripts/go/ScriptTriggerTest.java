@@ -1,9 +1,11 @@
 package io.kestra.plugin.scripts.go;
 
-import org.junit.jupiter.api.Test;
-
 import java.time.Instant;
 import java.util.Map;
+
+import org.junit.jupiter.api.Test;
+
+import io.kestra.plugin.scripts.exec.ExitConditionRegex;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -90,10 +92,6 @@ class ScriptTriggerTest {
             return false;
         }
 
-        try {
-            return java.util.regex.Pattern.compile(cond).matcher(haystack).find();
-        } catch (Exception e) {
-            return haystack.contains(cond);
-        }
+        return ExitConditionRegex.find(cond, haystack);
     }
 }

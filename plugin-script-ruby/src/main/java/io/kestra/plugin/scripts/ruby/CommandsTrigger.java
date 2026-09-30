@@ -1,7 +1,17 @@
 package io.kestra.plugin.scripts.ruby;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.conditions.ConditionContext;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.property.Property;
@@ -9,25 +19,14 @@ import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.scripts.exec.ExitConditionRegex;
 import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -37,7 +36,8 @@ import io.kestra.core.models.annotations.PluginProperty;
 @Schema(
     title = "Trigger a flow when Ruby commands match a condition",
     description = "Polls and triggers a flow by executing inline Ruby scripts and commands."
-)@Plugin(
+)
+@Plugin(
     examples = {
         @Example(
             title = "Trigger when Ruby command fails.",
@@ -69,8 +69,7 @@ public class CommandsTrigger extends AbstractTrigger
 
     private static final String DEFAULT_IMAGE = "ruby";
 
-    private static final Pattern EXIT_CONDITION_PATTERN =
-        Pattern.compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern EXIT_CONDITION_PATTERN = Pattern.compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE);
 
     @Schema(
         title = "Docker image used to execute the commands",
@@ -205,18 +204,7 @@ public class CommandsTrigger extends AbstractTrigger
             return false;
         }
 
-        try {
-            // Guard against catastrophic backtracking (ReDoS) from user-supplied patterns
-            var pattern = Pattern.compile(cond);
-            var future = CompletableFuture.supplyAsync(
-                () -> pattern.matcher(haystack).find()
-            );
-            return future.get(5, TimeUnit.SECONDS);
-        } catch (TimeoutException te) {
-            return haystack.contains(cond);
-        } catch (Exception e) {
-            return haystack.contains(cond);
-        }
+        return ExitConditionRegex.find(cond, haystack);
     }
 
     private String buildHaystack(Output out) {
@@ -243,7 +231,8 @@ public class CommandsTrigger extends AbstractTrigger
         }
     }
 
-    private record ExtractedFailure(Integer exitCode) {}
+    private record ExtractedFailure(Integer exitCode) {
+    }
 
     private ExtractedFailure extractFailure(RunnableTaskException e) {
         Integer exitCode = null;

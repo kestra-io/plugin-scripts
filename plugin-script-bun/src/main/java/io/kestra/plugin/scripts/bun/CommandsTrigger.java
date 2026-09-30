@@ -26,6 +26,7 @@ import io.kestra.core.models.triggers.TriggerService;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.storages.kv.KVStore;
 import io.kestra.core.storages.kv.KVValueAndMetadata;
+import io.kestra.plugin.scripts.exec.ExitConditionRegex;
 import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 
@@ -241,7 +242,7 @@ public class CommandsTrigger extends AbstractTrigger
         }
 
         try {
-            return conditionPattern(cond).matcher(haystack).find();
+            return ExitConditionRegex.find(conditionPattern(cond), haystack);
         } catch (Exception invalidRegex) {
             return haystack.contains(cond);
         }
