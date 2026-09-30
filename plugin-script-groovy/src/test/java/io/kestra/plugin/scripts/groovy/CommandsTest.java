@@ -2,17 +2,12 @@ package io.kestra.plugin.scripts.groovy;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.dockerjava.api.DockerClient;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
 
@@ -28,20 +23,19 @@ import io.kestra.core.tenant.TenantService;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.plugin.scripts.runner.docker.DockerService;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import reactor.core.publisher.Flux;
 
+import static io.kestra.plugin.scripts.groovy.GroovyTestImages.buildNonRootTestImage;
+import static io.kestra.plugin.scripts.groovy.GroovyTestImages.removeTestImage;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 
 @KestraTest
 public class CommandsTest {
-    private static final long IMAGE_BUILD_TIMEOUT_MINUTES = 5;
-
     @Inject
     RunContextFactory runContextFactory;
 
@@ -85,11 +79,15 @@ public class CommandsTest {
             .allowWarning(true)
             .containerImage(Property.ofValue(nonRootImage))
             .outputFiles(Property.ofValue(List.of("out.txt")))
-            .commands(Property.ofValue(List.of(
-                "id",
-                "ls -ld .",
-                "groovy -e 'new File(\"out.txt\").text = \"hello\"'"
-            )))
+            .commands(
+                Property.ofValue(
+                    List.of(
+                        "id",
+                        "ls -ld .",
+                        "groovy -e 'new File(\"out.txt\").text = \"hello\"'"
+                    )
+                )
+            )
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, groovyCommands, ImmutableMap.of());
@@ -120,11 +118,15 @@ public class CommandsTest {
             .allowWarning(true)
             .docker(DockerOptions.builder().image(nonRootImage).build())
             .outputFiles(Property.ofValue(List.of("out.txt")))
-            .commands(Property.ofValue(List.of(
-                "id",
-                "ls -ld .",
-                "groovy -e 'new File(\"out.txt\").text = \"hello\"'"
-            )))
+            .commands(
+                Property.ofValue(
+                    List.of(
+                        "id",
+                        "ls -ld .",
+                        "groovy -e 'new File(\"out.txt\").text = \"hello\"'"
+                    )
+                )
+            )
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, groovyCommands, ImmutableMap.of());
@@ -144,31 +146,4 @@ public class CommandsTest {
         }
     }
 
-    private void buildNonRootTestImage(RunContext runContext, String tag) throws Exception {
-        Path buildContext = Files.createTempDirectory("groovy-non-root-image");
-        Files.writeString(buildContext.resolve("Dockerfile"), """
-            FROM groovy:jdk21
-            USER root
-            RUN groupadd -g 5000 kestratest && useradd -u 5000 -g 5000 -m kestratest
-            USER kestratest
-            """);
-
-        try (DockerClient dockerClient = DockerService.client(runContext, null, null, null, null)) {
-            dockerClient.buildImageCmd(buildContext.resolve("Dockerfile").toFile())
-                .withTags(Set.of(tag))
-                .start()
-                .awaitImageId(IMAGE_BUILD_TIMEOUT_MINUTES, TimeUnit.MINUTES);
-        } finally {
-            Files.deleteIfExists(buildContext.resolve("Dockerfile"));
-            Files.deleteIfExists(buildContext);
-        }
-    }
-
-    private void removeTestImage(RunContext runContext, String tag) {
-        try (DockerClient dockerClient = DockerService.client(runContext, null, null, null, null)) {
-            dockerClient.removeImageCmd(tag).withForce(true).exec();
-        } catch (Exception ignored) {
-            // best-effort cleanup of the throwaway test image
-        }
-    }
 }

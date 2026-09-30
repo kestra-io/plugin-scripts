@@ -35,7 +35,9 @@ import lombok.experimental.SuperBuilder;
     description = """
         Runs an inline Groovy script in the JVM and captures its output.
 
-        On the Docker task runner, the container runs as `root` unless `taskRunner.user` is set explicitly, so it can read the mounted script. Other task runner settings are preserved."""
+        On the Docker task runner, the container runs as `root` unless `taskRunner.user` is set explicitly, so it can read the mounted script. Set `taskRunner.user` to keep the image's own default user instead. Other task runner settings are preserved.
+
+        With the Process or Kubernetes task runner, `groovy` must be installed on the worker or in the pod, respectively."""
 )
 @Plugin(
     examples = {
