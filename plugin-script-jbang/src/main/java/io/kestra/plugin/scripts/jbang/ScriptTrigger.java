@@ -53,7 +53,7 @@ import lombok.experimental.SuperBuilder;
 @Plugin(
     examples = {
         @Example(
-            title = "Trigger when the script fails with an implicit error (exit 1).",
+            title = "Trigger when the script fails with a specific exit code (exit 42).",
             full = true,
             code = """
                 id: script_trigger
@@ -63,13 +63,13 @@ import lombok.experimental.SuperBuilder;
                   - id: script_failure
                     type: io.kestra.plugin.scripts.jbang.ScriptTrigger
                     interval: PT60S
-                    exitCondition: "exit 1"
+                    exitCondition: "exit 42"
                     edge: true
                     containerImage: jbangdev/jbang-action
                     script: |
                       class Check {
                           public static void main(String[] args) {
-                              System.exit(1);
+                              System.exit(42);
                           }
                       }
 
@@ -114,7 +114,9 @@ public class ScriptTrigger extends AbstractTrigger
             Rendered condition evaluated after each execution; the trigger emits only when it matches.
             'exit N' compares the exit code, otherwise the string is used as a regex (or substring fallback) \
             against emitted vars (from ::{"outputs":...}::). On a failed run no vars are available to match \
-            against, so only an 'exit N' condition can match a failure.
+            against, so only an 'exit N' condition can match a failure. \
+            Note that JBang itself exits with 1 on compile errors and unresolvable //DEPS, \
+            so prefer a dedicated exit code (e.g. 'exit 42') for the condition you watch.
             """
     )
     @NotNull
@@ -142,6 +144,28 @@ public class ScriptTrigger extends AbstractTrigger
     @Builder.Default
     @PluginProperty(group = "advanced")
     protected Property<Boolean> edge = Property.ofValue(true);
+
+    @Schema(
+        title = "Script extension",
+        description = """
+            File extension to write (e.g., .java, .jsh, .kt, .groovy, .md); defaults to .java. \
+            Note that each poll starts a fresh container without a JBang cache, so .kt and .groovy \
+            scripts incur a compiler cold start (around 25-30s) on every poll.
+            """
+    )
+    @Builder.Default
+    @NotNull
+    @PluginProperty(group = "advanced")
+    protected Property<String> extension = Property.ofValue(".java");
+
+    @Schema(
+        title = "Quiet mode",
+        description = "When true (default), runs JBang with --quiet to suppress non-error logs."
+    )
+    @Builder.Default
+    @NotNull
+    @PluginProperty(group = "advanced")
+    protected Property<Boolean> quiet = Property.ofValue(true);
 
     @Override
     public Optional<Execution> evaluate(ConditionContext conditionContext, TriggerContext context) throws Exception {
@@ -203,6 +227,8 @@ public class ScriptTrigger extends AbstractTrigger
             .type(Script.class.getName())
             .containerImage(this.containerImage)
             .script(this.script)
+            .extension(this.extension)
+            .quiet(this.quiet)
             .build();
 
         String renderedExitCondition = runContext.render(this.exitCondition).as(String.class)

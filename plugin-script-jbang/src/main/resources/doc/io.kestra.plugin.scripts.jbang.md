@@ -26,8 +26,10 @@ Optional:
 - `interval`: time between polls, defaults to `PT60S`
 - `edge`: defaults to `true`, so the trigger fires only when the condition changes from not matching to matching. The previous result is kept in the namespace KV store under a key starting with `trigger-edge-`. Set to `false` to fire on every matching poll
 - `containerImage`: defaults to `jbangdev/jbang-action`
+- `extension`: file extension for the inline script (`.java`, `.jsh`, `.kt`, `.groovy`, `.md`), defaults to `.java`. Because each poll runs in a fresh container without a cached JBang environment, `.kt` and `.groovy` scripts incur a compiler cold start (around 25-30s) on every poll, so size `interval` accordingly
+- `quiet`: runs JBang with `--quiet`, defaults to `true`
 
-The trigger outputs are available as `{{ trigger.timestamp }}`, `{{ trigger.condition }}`, `{{ trigger.exitCode }}` and `{{ trigger.vars }}`. A failed run has no vars, so only an `exit N` condition can match a failure.
+The trigger outputs are available as `{{ trigger.timestamp }}`, `{{ trigger.condition }}`, `{{ trigger.exitCode }}` and `{{ trigger.vars }}`. A failed run has no vars, so only an `exit N` condition can match a failure. Since JBang itself exits with `1` on compile errors or unresolvable `//DEPS`, prefer a dedicated exit code such as `exit 42` for the condition you watch.
 
 ### CommandsTrigger
 

@@ -127,4 +127,27 @@ class ScriptTriggerTest {
         assertThat(vars, is(notNullValue()));
         assertThat(vars.get("status"), is("READY"));
     }
+
+    @Test
+    void kotlinScriptRunsWithExtension() throws Exception {
+        ScriptTrigger trigger = ScriptTrigger.builder()
+            .id("kotlin-trigger-" + IdUtils.create())
+            .type(ScriptTrigger.class.getName())
+            .interval(Duration.ofSeconds(5))
+            .edge(Property.ofValue(false))
+            .extension(Property.ofValue(".kt"))
+            .exitCondition(Property.ofValue("exit 42"))
+            .script(Property.ofValue("""
+                import kotlin.system.exitProcess
+                fun main() {
+                    exitProcess(42)
+                }
+                """))
+            .build();
+
+        Map.Entry<ConditionContext, Trigger> context = TestsUtils.mockTrigger(runContextFactory, trigger);
+        Optional<Execution> execution = trigger.evaluate(context.getKey(), context.getValue());
+        assertThat(execution.isPresent(), is(true));
+        assertThat(execution.get().getTrigger().getVariables().get("exitCode"), is(42));
+    }
 }

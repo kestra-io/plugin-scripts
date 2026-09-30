@@ -54,7 +54,7 @@ import lombok.experimental.SuperBuilder;
 @Plugin(
     examples = {
         @Example(
-            title = "Trigger when commands fail with an implicit error (exit 1).",
+            title = "Trigger when commands fail with a specific exit code (exit 42).",
             full = true,
             code = """
                 id: commands_trigger
@@ -64,11 +64,11 @@ import lombok.experimental.SuperBuilder;
                   - id: commands_failure
                     type: io.kestra.plugin.scripts.jbang.CommandsTrigger
                     interval: PT60S
-                    exitCondition: "exit 1"
+                    exitCondition: "exit 42"
                     edge: true
                     containerImage: jbangdev/jbang-action
                     commands:
-                      - exit 1
+                      - exit 42
 
                 tasks:
                   - id: log
@@ -109,10 +109,12 @@ public class CommandsTrigger extends AbstractTrigger
             Condition evaluated after each commands execution. The trigger emits an event only when this condition matches.
 
             Supported forms:
-            - 'exit N' (example: 'exit 1'): matches when the process exit code equals N.
+            - 'exit N' (example: 'exit 42'): matches when the process exit code equals N.
             - Any other string: treated as a regex (or substring if regex is invalid) matched against the
               task's 'vars' (when commands emit ::{"outputs":...}::). On a failed run no vars are available
-              to match against, so only an 'exit N' condition can match a failure.
+              to match against, so only an 'exit N' condition can match a failure. \
+            Note that JBang itself exits with 1 on compile errors and unresolvable //DEPS, \
+            so prefer a dedicated exit code (e.g. 'exit 42') for the condition you watch.
             """
     )
     @NotNull
