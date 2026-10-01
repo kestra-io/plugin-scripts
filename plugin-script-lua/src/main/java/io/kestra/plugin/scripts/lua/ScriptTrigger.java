@@ -103,9 +103,10 @@ public class ScriptTrigger extends AbstractTrigger
     @Schema(
         title = "Condition to match",
         description = """
-            Condition evaluated after each execution. The trigger emits only when it matches.
-            'exit N' compares the exit code, otherwise the string is used as a regex
-            (or substring fallback) against emitted vars and failure logs.
+            Rendered condition evaluated after each execution; the trigger emits only when it matches.
+            'exit N' compares the exit code, otherwise the string is used as a regex (or substring fallback) \
+            against emitted vars (from ::{"outputs":...}::). On a failed run no vars are available to match \
+            against, so only an 'exit N' condition can match a failure.
             """
     )
     @NotNull
@@ -165,14 +166,19 @@ public class ScriptTrigger extends AbstractTrigger
 
         // A polling trigger is rebuilt from the flow definition (and serialized to a worker) on
         // every poll, so the previous result cannot live in a field. It is kept in the namespace
-        // KV store instead and advanced on every poll.
+        // KV store instead and only rewritten when the result changes.
         KVStore kvStore = runContext.namespaceKv(context.getNamespace());
         String key = edgeStateKey(context);
 
         boolean previouslyMatched = kvStore.getValue(key)
             .map(value -> Boolean.parseBoolean(String.valueOf(value.value())))
             .orElse(false);
-        kvStore.put(key, new KVValueAndMetadata(null, matched));
+
+        // Skip the write on a poll that repeats the same result, so a condition that stays true
+        // for hours does not rewrite the same value every interval.
+        if (matched != previouslyMatched) {
+            kvStore.put(key, new KVValueAndMetadata(null, matched));
+        }
 
         return matched && !previouslyMatched;
     }

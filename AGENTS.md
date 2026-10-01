@@ -80,7 +80,9 @@ This is a **multi-module** plugin with 19 submodules:
 **plugin-script-lua:**
 
 - `io.kestra.plugin.scripts.lua.Commands`
+- `io.kestra.plugin.scripts.lua.CommandsTrigger`
 - `io.kestra.plugin.scripts.lua.Script`
+- `io.kestra.plugin.scripts.lua.ScriptTrigger`
 **plugin-script-nashorn:**
 
 - `io.kestra.plugin.scripts.nashorn.Eval`

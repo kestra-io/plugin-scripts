@@ -105,11 +105,13 @@ public class CommandsTrigger extends AbstractTrigger
     @Schema(
         title = "Condition to match",
         description = """
-            Condition evaluated after execution.
+            Condition evaluated after each commands execution. The trigger emits an event only when this condition matches.
 
             Supported forms:
-            - 'exit N'
-            - regex / substring matched against vars + logs
+            - 'exit N' (example: 'exit 1'): matches when the process exit code equals N.
+            - Any other string: treated as a regex (or substring if regex is invalid) matched against the
+              task's 'vars' (when commands emit ::{"outputs":...}::). On a failed run no vars are available
+              to match against, so only an 'exit N' condition can match a failure.
             """
     )
     @NotNull
@@ -169,14 +171,19 @@ public class CommandsTrigger extends AbstractTrigger
 
         // A polling trigger is rebuilt from the flow definition (and serialized to a worker) on
         // every poll, so the previous result cannot live in a field. It is kept in the namespace
-        // KV store instead and advanced on every poll.
+        // KV store instead and only rewritten when the result changes.
         KVStore kvStore = runContext.namespaceKv(context.getNamespace());
         String key = edgeStateKey(context);
 
         boolean previouslyMatched = kvStore.getValue(key)
             .map(value -> Boolean.parseBoolean(String.valueOf(value.value())))
             .orElse(false);
-        kvStore.put(key, new KVValueAndMetadata(null, matched));
+
+        // Skip the write on a poll that repeats the same result, so a condition that stays true
+        // for hours does not rewrite the same value every interval.
+        if (matched != previouslyMatched) {
+            kvStore.put(key, new KVValueAndMetadata(null, matched));
+        }
 
         return matched && !previouslyMatched;
     }
