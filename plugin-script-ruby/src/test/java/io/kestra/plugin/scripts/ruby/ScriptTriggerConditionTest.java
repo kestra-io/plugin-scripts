@@ -1,14 +1,19 @@
 package io.kestra.plugin.scripts.ruby;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import java.time.Instant;
-import java.util.Map;
+import io.kestra.plugin.scripts.exec.ExitConditionRegexTestSupport;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 class ScriptTriggerConditionTest {
 
@@ -55,5 +60,21 @@ class ScriptTriggerConditionTest {
     @Test
     void nullCondition_doesNotMatch() {
         assertThat(trigger.matchesCondition(output(null, 0, Map.of("k", "v"))), is(false));
+    }
+
+    @Test
+    void catastrophicBacktrackingRegex_fallsBackToSubstring_withoutHanging() {
+        String condition = "(.*a){20}$";
+        String value = "a".repeat(40) + "!";
+
+        long start = System.nanoTime();
+        assertTimeoutPreemptively(
+            Duration.ofSeconds(4),
+            () -> assertThat(trigger.matchesCondition(output(condition, 0, Map.of("k", value))), is(false))
+        );
+        long elapsedMs = Duration.ofNanos(System.nanoTime() - start).toMillis();
+
+        assertThat(elapsedMs, greaterThanOrEqualTo(500L));
+        ExitConditionRegexTestSupport.assertNoRegexOnCommonPool();
     }
 }

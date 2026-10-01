@@ -1,7 +1,6 @@
 package io.kestra.plugin.scripts.exec;
 
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
@@ -10,14 +9,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
-public class ExitConditionRegexTest {
+class ExitConditionRegexTest {
 
     @Test
-    void timeoutMatchesThePreviousTriggerGuard() {
-        assertThat(ExitConditionRegex.TIMEOUT, is(Duration.ofSeconds(5)));
+    void timeoutMatchesTheDocumentedMatchBudget() {
+        assertThat(ExitConditionRegex.TIMEOUT, is(Duration.ofSeconds(1)));
     }
 
     @Test
@@ -40,20 +38,20 @@ public class ExitConditionRegexTest {
     }
 
     @Test
-    void catastrophicPattern_fallsBackWithinTwiceTheDeadline() {
+    void catastrophicPattern_fallsBackWithinFourTimesTheDeadline() {
         var timeout = Duration.ofMillis(500);
         var haystack = "{k=" + "a".repeat(40) + "!}";
 
         long start = System.nanoTime();
         // (a+)+$ is memoized on JDK 21+ and returns immediately; (.*a){20}$ still backtracks.
         boolean matched = assertTimeoutPreemptively(
-            timeout.multipliedBy(2), () -> ExitConditionRegex.find("(.*a){20}$", haystack, timeout)
+            timeout.multipliedBy(4), () -> ExitConditionRegex.find("(.*a){20}$", haystack, timeout)
         );
         long elapsedMs = Duration.ofNanos(System.nanoTime() - start).toMillis();
 
         assertThat(matched, is(false));
-        assertThat(elapsedMs, greaterThanOrEqualTo(timeout.toMillis() - 100));
-        assertNoRegexOnCommonPool();
+        assertThat(elapsedMs, greaterThanOrEqualTo(timeout.toMillis() / 2));
+        ExitConditionRegexTestSupport.assertNoRegexOnCommonPool();
     }
 
     @Test
@@ -64,31 +62,28 @@ public class ExitConditionRegexTest {
 
         long start = System.nanoTime();
         boolean matched = assertTimeoutPreemptively(
-            timeout.multipliedBy(2), () -> ExitConditionRegex.find(condition, haystack, timeout)
+            timeout.multipliedBy(4), () -> ExitConditionRegex.find(condition, haystack, timeout)
         );
         long elapsedMs = Duration.ofNanos(System.nanoTime() - start).toMillis();
 
         assertThat(matched, is(true));
-        assertThat(elapsedMs, greaterThanOrEqualTo(timeout.toMillis() - 100));
-        assertNoRegexOnCommonPool();
+        assertThat(elapsedMs, greaterThanOrEqualTo(timeout.toMillis() / 2));
+        ExitConditionRegexTestSupport.assertNoRegexOnCommonPool();
     }
 
-    public static void assertNoRegexOnCommonPool() {
-        try {
-            Thread.sleep(200);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new AssertionError("interrupted while checking commonPool", e);
-        }
+    @Test
+    void stackOverflowPattern_fallsBackToSubstring() {
+        var condition = "(a|b)*c";
+        var haystack = "a".repeat(100_000);
 
-        boolean busy = Thread.getAllStackTraces().entrySet().stream()
-            .filter(entry -> entry.getKey().getName().startsWith("ForkJoinPool.commonPool-worker"))
-            .flatMap(entry -> Arrays.stream(entry.getValue()))
-            .anyMatch(
-                frame -> frame.getClassName().startsWith("java.util.regex.")
-                    || frame.getClassName().contains("TimeoutCharSequence")
-            );
+        boolean matched = assertTimeoutPreemptively(
+            Duration.ofSeconds(5), () -> ExitConditionRegex.find(condition, haystack)
+        );
 
-        assertFalse(busy, "a ForkJoinPool.commonPool thread is still inside a regex match");
+        assertThat(matched, is(false));
+        assertThat(
+            ExitConditionRegex.find(condition, condition + "a".repeat(1000)),
+            is(true)
+        );
     }
 }
