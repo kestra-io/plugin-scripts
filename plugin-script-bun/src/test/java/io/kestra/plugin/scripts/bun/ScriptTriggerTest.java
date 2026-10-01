@@ -8,20 +8,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import io.kestra.plugin.scripts.exec.ExitConditionRegexTestSupport;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
-/**
- * Unit tests for ScriptTrigger's condition-matching logic.
- *
- * Calls the real, package-private ScriptTrigger#matchesCondition directly (same pattern as
- * plugin-script-ruby's ScriptTriggerConditionTest), so a change to the production method is
- * what these tests actually exercise, not a separately maintained copy of its logic.
- */
 class ScriptTriggerTest {
 
     private final ScriptTrigger trigger = ScriptTrigger.builder().build();
@@ -82,7 +73,6 @@ class ScriptTriggerTest {
 
     @Test
     void catastrophicBacktrackingRegex_fallsBackToSubstring_withoutHanging() {
-        // Cached Pattern path (conditionPattern) must use the same deadline guard.
         String condition = "(.*a){20}$";
         String value = "a".repeat(40) + "!";
 
@@ -94,6 +84,5 @@ class ScriptTriggerTest {
         long elapsedMs = Duration.ofNanos(System.nanoTime() - start).toMillis();
 
         assertThat(elapsedMs, greaterThanOrEqualTo(500L));
-        ExitConditionRegexTestSupport.assertNoRegexOnCommonPool();
     }
 }

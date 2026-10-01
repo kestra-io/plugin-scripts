@@ -324,7 +324,7 @@ abstract class AbstractBashTest {
         assertThat(AbstractBashTest.getMetrics(runContext, "count").getTags().get("tag1"), is("i"));
         assertThat(AbstractBashTest.getMetrics(runContext, "count").getTags().get("tag2"), is("win"));
 
-        assertThat(AbstractBashTest.<Duration> getMetrics(runContext, "timer1").getValue().getNano(), greaterThan(0));
+        assertThat(AbstractBashTest.<Duration> getMetrics(runContext, "timer1").getValue().toNanos(), greaterThan(0L));
         assertThat(AbstractBashTest.<Duration> getMetrics(runContext, "timer1").getTags().size(), is(2));
         assertThat(AbstractBashTest.<Duration> getMetrics(runContext, "timer1").getTags().get("tag1"), is("i"));
         assertThat(AbstractBashTest.<Duration> getMetrics(runContext, "timer1").getTags().get("tag2"), is("lost"));

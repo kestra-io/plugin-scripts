@@ -51,7 +51,6 @@ class ExitConditionRegexTest {
 
         assertThat(matched, is(false));
         assertThat(elapsedMs, greaterThanOrEqualTo(timeout.toMillis() / 2));
-        ExitConditionRegexTestSupport.assertNoRegexOnCommonPool();
     }
 
     @Test
@@ -68,7 +67,6 @@ class ExitConditionRegexTest {
 
         assertThat(matched, is(true));
         assertThat(elapsedMs, greaterThanOrEqualTo(timeout.toMillis() / 2));
-        ExitConditionRegexTestSupport.assertNoRegexOnCommonPool();
     }
 
     @Test

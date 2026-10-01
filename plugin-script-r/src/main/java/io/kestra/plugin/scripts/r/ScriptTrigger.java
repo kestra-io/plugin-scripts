@@ -235,7 +235,7 @@ public class ScriptTrigger extends AbstractTrigger
         try {
             return ExitConditionRegex.find(conditionPattern(cond), haystack);
         } catch (Exception invalidRegex) {
-            return haystack.contains(cond);
+            return ExitConditionRegex.invalidPatternFallback(cond, haystack);
         }
     }
 

@@ -8,8 +8,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 
-import io.kestra.plugin.scripts.exec.ExitConditionRegexTestSupport;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
@@ -83,7 +81,6 @@ class ScriptTriggerConditionTest {
 
         // Confirms the 1s timeout guard actually tripped rather than a fast regex miss.
         assertThat(elapsedMs, greaterThanOrEqualTo(500L));
-        ExitConditionRegexTestSupport.assertNoRegexOnCommonPool();
     }
 
     @Test

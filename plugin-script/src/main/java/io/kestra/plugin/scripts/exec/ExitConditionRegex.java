@@ -4,25 +4,20 @@ import java.time.Duration;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-/**
- * Bounded {@code exitCondition} regex search on the caller thread (1s deadline; substring on timeout / stack overflow).
- * Shim of Kestra 2.0 {@code RegexUtils} for 1.3.x — swap when the plugin targets 2.0+.
- */
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/** Caller-thread exitCondition match with a 1s deadline and substring fallback. */
 public final class ExitConditionRegex {
 
-    /** Match budget per poll against a few KB of script output. */
     static final Duration TIMEOUT = Duration.ofSeconds(1);
 
+    private static final Logger LOG = LoggerFactory.getLogger(ExitConditionRegex.class);
     private static final int CHECK_INTERVAL = 1024;
 
     private ExitConditionRegex() {
     }
 
-    /**
-     * Whether {@code condition} occurs in {@code haystack}.
-     * An invalid pattern, a match that exceeds {@link #TIMEOUT}, or a regex stack overflow
-     * falls back to a literal substring check.
-     */
     public static boolean find(String condition, String haystack) {
         return find(condition, haystack, TIMEOUT);
     }
@@ -35,16 +30,27 @@ public final class ExitConditionRegex {
         try {
             return find(Pattern.compile(condition), haystack, timeout);
         } catch (PatternSyntaxException e) {
-            return haystack.contains(condition);
+            return invalidPatternFallback(condition, haystack);
         }
     }
 
     static boolean find(Pattern pattern, String haystack, Duration timeout) {
         try {
             return pattern.matcher(new TimeoutCharSequence(haystack, timeout)).find();
-        } catch (RegexTimeoutException | StackOverflowError e) {
-            return haystack.contains(pattern.pattern());
+        } catch (RegexTimeoutException e) {
+            return substringFallback(pattern.pattern(), haystack, "timed out");
+        } catch (StackOverflowError e) {
+            return substringFallback(pattern.pattern(), haystack, "overflowed the stack");
         }
+    }
+
+    public static boolean invalidPatternFallback(String condition, String haystack) {
+        return substringFallback(condition, haystack, "is not a valid regex");
+    }
+
+    private static boolean substringFallback(String condition, String haystack, String reason) {
+        LOG.warn("exitCondition '{}' {}; falling back to a substring match", condition, reason);
+        return haystack.contains(condition);
     }
 
     static final class RegexTimeoutException extends RuntimeException {

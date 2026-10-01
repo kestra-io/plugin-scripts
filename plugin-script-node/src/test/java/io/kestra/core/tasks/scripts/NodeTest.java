@@ -197,7 +197,7 @@ class NodeTest {
         assertThat(NodeTest.getMetrics(runContext, "count").getTags().get("tag1"), is("i"));
         assertThat(NodeTest.getMetrics(runContext, "count").getTags().get("tag2"), is("win"));
 
-        assertThat(NodeTest.<Duration> getMetrics(runContext, "timer1").getValue().getNano(), greaterThan(0));
+        assertThat(NodeTest.<Duration> getMetrics(runContext, "timer1").getValue().toNanos(), greaterThan(0L));
         assertThat(NodeTest.<Duration> getMetrics(runContext, "timer1").getTags().size(), is(2));
         assertThat(NodeTest.<Duration> getMetrics(runContext, "timer1").getTags().get("tag1"), is("i"));
         assertThat(NodeTest.<Duration> getMetrics(runContext, "timer1").getTags().get("tag2"), is("lost"));

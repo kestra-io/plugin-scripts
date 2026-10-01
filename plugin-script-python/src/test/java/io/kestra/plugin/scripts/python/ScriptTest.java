@@ -303,7 +303,7 @@ class ScriptTest {
         assertThat(getMetrics(runContext, "count").getTags().get("tag1"), is("i"));
         assertThat(getMetrics(runContext, "count").getTags().get("tag2"), is("win"));
 
-        assertThat(ScriptTest.<Duration> getMetrics(runContext, "timer1").getValue().getNano(), greaterThan(0));
+        assertThat(ScriptTest.<Duration> getMetrics(runContext, "timer1").getValue().toNanos(), greaterThan(0L));
         assertThat(ScriptTest.<Duration> getMetrics(runContext, "timer1").getTags().size(), is(2));
         assertThat(ScriptTest.<Duration> getMetrics(runContext, "timer1").getTags().get("tag1"), is("i"));
         assertThat(ScriptTest.<Duration> getMetrics(runContext, "timer1").getTags().get("tag2"), is("lost"));
