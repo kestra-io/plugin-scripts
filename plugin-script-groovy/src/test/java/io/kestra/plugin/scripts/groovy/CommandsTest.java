@@ -6,7 +6,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
@@ -35,6 +38,7 @@ import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 
 @KestraTest
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class CommandsTest {
     @Inject
     RunContextFactory runContextFactory;
@@ -45,6 +49,22 @@ public class CommandsTest {
     @Inject
     @Named(QueueFactoryInterface.WORKERTASKLOG_NAMED)
     private QueueInterface<LogEntry> logQueue;
+
+    private final String nonRootImage = "kestra-test/groovy-commands-non-root:" + UUID.randomUUID();
+    private RunContext imageRunContext;
+
+    @BeforeAll
+    void buildTestImage() throws Exception {
+        imageRunContext = runContextFactory.of();
+        buildNonRootTestImage(imageRunContext, nonRootImage);
+    }
+
+    @AfterAll
+    void cleanUpTestImage() {
+        if (imageRunContext != null) {
+            removeTestImage(imageRunContext, nonRootImage);
+        }
+    }
 
     @Test
     void task() throws Exception {
@@ -71,8 +91,6 @@ public class CommandsTest {
     // A non-root image user may not own the working directory, breaking outputFiles - see https://github.com/kestra-io/plugin-scripts/issues/411.
     @Test
     void outputFilesOnNonRootImage() throws Exception {
-        String nonRootImage = "kestra-test/groovy-non-root:" + UUID.randomUUID();
-
         var groovyCommands = Commands.builder()
             .id("groovy-commands-" + UUID.randomUUID())
             .type(Commands.class.getName())
@@ -92,26 +110,19 @@ public class CommandsTest {
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, groovyCommands, ImmutableMap.of());
 
-        buildNonRootTestImage(runContext, nonRootImage);
-        try {
-            ScriptOutput run = groovyCommands.run(runContext);
+        ScriptOutput run = groovyCommands.run(runContext);
 
-            assertThat(run.getExitCode(), is(0));
-            assertThat(run.getOutputFiles(), hasKey("out.txt"));
+        assertThat(run.getExitCode(), is(0));
+        assertThat(run.getOutputFiles(), hasKey("out.txt"));
 
-            try (InputStream is = storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("out.txt"))) {
-                assertThat(CharStreams.toString(new InputStreamReader(is)), is("hello"));
-            }
-        } finally {
-            removeTestImage(runContext, nonRootImage);
+        try (InputStream is = storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("out.txt"))) {
+            assertThat(CharStreams.toString(new InputStreamReader(is)), is("hello"));
         }
     }
 
     // Same regression on the deprecated `docker` property path, which rebuilds the runner from `DockerOptions`.
     @Test
     void outputFilesOnNonRootImageLegacyDockerProperty() throws Exception {
-        String nonRootImage = "kestra-test/groovy-non-root-legacy:" + UUID.randomUUID();
-
         var groovyCommands = Commands.builder()
             .id("groovy-commands-" + UUID.randomUUID())
             .type(Commands.class.getName())
@@ -131,18 +142,13 @@ public class CommandsTest {
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, groovyCommands, ImmutableMap.of());
 
-        buildNonRootTestImage(runContext, nonRootImage);
-        try {
-            ScriptOutput run = groovyCommands.run(runContext);
+        ScriptOutput run = groovyCommands.run(runContext);
 
-            assertThat(run.getExitCode(), is(0));
-            assertThat(run.getOutputFiles(), hasKey("out.txt"));
+        assertThat(run.getExitCode(), is(0));
+        assertThat(run.getOutputFiles(), hasKey("out.txt"));
 
-            try (InputStream is = storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("out.txt"))) {
-                assertThat(CharStreams.toString(new InputStreamReader(is)), is("hello"));
-            }
-        } finally {
-            removeTestImage(runContext, nonRootImage);
+        try (InputStream is = storageInterface.get(TenantService.MAIN_TENANT, null, run.getOutputFiles().get("out.txt"))) {
+            assertThat(CharStreams.toString(new InputStreamReader(is)), is("hello"));
         }
     }
 

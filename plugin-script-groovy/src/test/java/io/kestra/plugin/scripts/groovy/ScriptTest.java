@@ -8,7 +8,12 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -29,7 +34,6 @@ import io.kestra.plugin.core.runner.Process;
 import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.kestra.plugin.scripts.runner.docker.Docker;
-import io.kestra.plugin.scripts.runner.docker.PullPolicy;
 
 import groovy.lang.GroovyShell;
 import jakarta.inject.Inject;
@@ -43,6 +47,7 @@ import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 
 @KestraTest
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ScriptTest {
 
     @Inject
@@ -54,6 +59,22 @@ public class ScriptTest {
     @Inject
     @Named(QueueFactoryInterface.WORKERTASKLOG_NAMED)
     private QueueInterface<LogEntry> logQueue;
+
+    private final String nonRootImage = "kestra-test/groovy-script-non-root:" + UUID.randomUUID();
+    private RunContext imageRunContext;
+
+    @BeforeAll
+    void buildTestImage() throws Exception {
+        imageRunContext = runContextFactory.of();
+        buildNonRootTestImage(imageRunContext, nonRootImage);
+    }
+
+    @AfterAll
+    void cleanUpTestImage() {
+        if (imageRunContext != null) {
+            removeTestImage(imageRunContext, nonRootImage);
+        }
+    }
 
     @Test
     void script() throws Exception {
@@ -91,12 +112,11 @@ public class ScriptTest {
     }
 
     private void runOnNonRootImage(boolean legacyDocker, String user, String expectedIdentity) throws Exception {
-        String image = "kestra-test/groovy-script-non-root:" + UUID.randomUUID();
         var builder = Script.builder()
             .id("groovy-script-" + UUID.randomUUID())
             .type(Script.class.getName())
             .allowWarning(true)
-            .containerImage(Property.ofValue(image))
+            .containerImage(Property.ofValue(nonRootImage))
             .outputFiles(Property.ofValue(List.of("out.txt")))
             .script(Property.ofValue("""
                 assert NetworkInterface.getByName('eth0') == null
@@ -105,29 +125,24 @@ public class ScriptTest {
                 new File('out.txt').text = uid + ':' + gid
                 """));
         if (legacyDocker) {
-            builder.docker(DockerOptions.builder().image(image).user(user).networkMode("none").build());
+            builder.docker(DockerOptions.builder().image(nonRootImage).user(user).networkMode("none").build());
         } else {
             builder.taskRunner(
                 Docker.builder()
                     .type(Docker.class.getName())
                     .user(user)
                     .networkMode("none")
-                    .pullPolicy(Property.ofValue(PullPolicy.NEVER))
                     .build()
             );
         }
         var script = builder.build();
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, script, Map.of());
 
-        buildNonRootTestImage(runContext, image);
-        try {
-            assertOutput(script.run(runContext), expectedIdentity);
-        } finally {
-            removeTestImage(runContext, image);
-        }
+        assertOutput(script.run(runContext), expectedIdentity);
     }
 
     @Test
+    @DisabledOnOs(OS.WINDOWS)
     void preservesProcessRunner() throws Exception {
         String java = Path.of(System.getProperty("java.home"), "bin", "java").toString();
         String groovy = Path.of(GroovyShell.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
