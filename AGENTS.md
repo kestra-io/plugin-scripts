@@ -105,7 +105,9 @@ This is a **multi-module** plugin with 19 submodules:
 **plugin-script-php:**
 
 - `io.kestra.plugin.scripts.php.Commands`
+- `io.kestra.plugin.scripts.php.CommandsTrigger`
 - `io.kestra.plugin.scripts.php.Script`
+- `io.kestra.plugin.scripts.php.ScriptTrigger`
 **plugin-script-powershell:**
 
 - `io.kestra.plugin.scripts.powershell.Commands`
