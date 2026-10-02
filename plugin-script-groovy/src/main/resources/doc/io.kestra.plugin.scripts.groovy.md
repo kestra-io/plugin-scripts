@@ -4,11 +4,7 @@ Execute Groovy code in the Kestra JVM, or run Groovy scripts and commands on a t
 
 ## Tasks
 
-`Eval` runs inline Groovy code and is the primary task for general scripting. It executes in-process on the Kestra worker with access to the full JVM classpath — no `containerImage` or `taskRunner` is needed.
-
 `Script` runs an inline Groovy script and `Commands` runs Groovy commands against script files. Both execute on a task runner — Docker by default, using the `groovy` image.
-
-`FileTransform` processes Kestra internal storage files (Ion, Avro, JSON) record by record, transforming or filtering rows without writing intermediate files to disk. It is the right choice when you need lightweight row-level data transformation between tasks.
 
 Add Maven dependencies inline using Grape annotations: `@Grab('group:artifact:version')` at the top of your script resolves the dependency from Maven Central at runtime.
 
