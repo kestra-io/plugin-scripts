@@ -87,7 +87,6 @@ class CommandsTriggerTest {
         Optional<Execution> first = trigger.evaluate(context.getKey(), context.getValue());
         assertThat("First evaluation should fire", first.isPresent(), is(true));
 
-        // The second poll runs on a copy that went through the worker's serialize/deserialize round trip.
         CommandsTrigger nextPoll = JacksonMapper.ofJson().readValue(JacksonMapper.ofJson().writeValueAsString(trigger), CommandsTrigger.class);
         context = TestsUtils.mockTrigger(runContextFactory, nextPoll);
         Optional<Execution> second = nextPoll.evaluate(context.getKey(), context.getValue());

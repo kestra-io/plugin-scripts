@@ -7,11 +7,12 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
-import io.kestra.core.models.enums.MonacoLanguages;
 import io.kestra.core.models.conditions.ConditionContext;
+import io.kestra.core.models.enums.MonacoLanguages;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
@@ -24,9 +25,9 @@ import io.kestra.core.models.triggers.TriggerService;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.storages.kv.KVStore;
 import io.kestra.core.storages.kv.KVValueAndMetadata;
+import io.kestra.plugin.scripts.exec.ExitConditionRegex;
 import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -48,7 +49,8 @@ import lombok.experimental.SuperBuilder;
     description = """
         Polls by running an inline PHP script in a container (default image php) and emits when exitCondition matches. \
         Edge mode (the default) emits only on a transition from not matching to matching, remembering the previous result in the namespace KV store. \
-        Polls every 60s by default. Accepts 'exit N' or a regex (fallback substring) matched against emitted vars; a failed run has no vars, so only 'exit N' can match a failure.
+        Polls every 60s by default. Accepts 'exit N' or a regex (fallback substring) matched against emitted vars; a failed run has no vars, so only 'exit N' can match a failure. \
+        Only containerImage, script, interval, edge, and exitCondition are configurable here; the Script task's taskRunner, env, beforeCommands, inputFiles, and namespaceFiles are not exposed on this trigger.
         """
 )
 @Plugin(
@@ -145,12 +147,15 @@ public class ScriptTrigger extends AbstractTrigger
     public Optional<Execution> evaluate(ConditionContext conditionContext, TriggerContext context) throws Exception {
         RunContext runContext = conditionContext.getRunContext();
         boolean renderedEdge = runContext.render(this.edge).as(Boolean.class).orElse(true);
+        String renderedExitCondition = renderExitCondition(runContext);
 
         Output out;
         try {
-            out = runOnce(runContext);
+            out = runOnce(runContext, renderedExitCondition);
+        } catch (IllegalArgumentException | IllegalVariableEvaluationException e) {
+            throw e;
         } catch (Exception e) {
-            runContext.logger().warn("Trigger evaluation failed, returning empty result to avoid blocking the scheduler", e);
+            runContext.logger().warn("Trigger execution failed, returning empty result to avoid blocking the scheduler", e);
             return Optional.empty();
         }
 
@@ -170,9 +175,6 @@ public class ScriptTrigger extends AbstractTrigger
             return matched;
         }
 
-        // A polling trigger is rebuilt from the flow definition (and serialized to a worker) on
-        // every poll, so the previous result cannot live in a field. It is kept in the namespace
-        // KV store instead and advanced on every poll.
         KVStore kvStore = runContext.namespaceKv(context.getNamespace());
         String key = edgeStateKey(context);
 
@@ -180,8 +182,6 @@ public class ScriptTrigger extends AbstractTrigger
             .map(value -> Boolean.parseBoolean(String.valueOf(value.value())))
             .orElse(false);
 
-        // Skip the write on a poll that repeats the same result, so a condition that stays true
-        // for hours does not rewrite the same value every interval.
         if (matched != previouslyMatched) {
             kvStore.put(key, new KVValueAndMetadata(null, matched));
         }
@@ -189,13 +189,21 @@ public class ScriptTrigger extends AbstractTrigger
         return matched && !previouslyMatched;
     }
 
-    // Length prefixed so that the pairs ("a-b", "c") and ("a", "b-c") can never share a key.
-    // Flow and trigger ids only use characters that are valid in a KV key.
     static String edgeStateKey(TriggerContext context) {
         return "trigger-edge-" + context.getFlowId().length() + "-" + context.getFlowId() + "-" + context.getTriggerId();
     }
 
-    private Output runOnce(RunContext runContext) throws Exception {
+    static String renderExitCondition(RunContext runContext, Property<String> exitCondition) throws IllegalVariableEvaluationException {
+        return runContext.render(exitCondition).as(String.class)
+            .filter(condition -> !condition.isBlank())
+            .orElseThrow(() -> new IllegalArgumentException("exitCondition must render to a non-empty value"));
+    }
+
+    private String renderExitCondition(RunContext runContext) throws IllegalVariableEvaluationException {
+        return renderExitCondition(runContext, this.exitCondition);
+    }
+
+    private Output runOnce(RunContext runContext, String renderedExitCondition) throws Exception {
         Script task = Script.builder()
             .id(this.getId())
             .type(Script.class.getName())
@@ -203,16 +211,10 @@ public class ScriptTrigger extends AbstractTrigger
             .script(this.script)
             .build();
 
-        String renderedExitCondition = runContext.render(this.exitCondition).as(String.class)
-            .filter(condition -> !condition.isBlank())
-            .orElseThrow(() -> new IllegalArgumentException("exitCondition must render to a non-empty value"));
-
         try {
             ScriptOutput taskOutput = task.run(TriggerRunContext.forEmbeddedTask(runContext, task));
-            Integer exitCode = safeExitCode(taskOutput);
-            Map<String, Object> vars = safeVars(taskOutput);
 
-            return new Output(Instant.now(), renderedExitCondition, exitCode, vars);
+            return new Output(Instant.now(), renderedExitCondition, taskOutput.getExitCode(), taskOutput.getVars());
         } catch (RunnableTaskException e) {
             ExtractedFailure failure = extractFailure(e);
             return new Output(Instant.now(), renderedExitCondition, failure.exitCode, null);
@@ -224,8 +226,12 @@ public class ScriptTrigger extends AbstractTrigger
 
         Matcher exitMatcher = EXIT_CONDITION_PATTERN.matcher(cond);
         if (exitMatcher.matches()) {
-            int expected = Integer.parseInt(exitMatcher.group(1));
-            return out.getExitCode() != null && out.getExitCode() == expected;
+            try {
+                long expected = Long.parseLong(exitMatcher.group(1));
+                return out.getExitCode() != null && out.getExitCode() == expected;
+            } catch (NumberFormatException e) {
+                return false;
+            }
         }
 
         String haystack = buildHaystack(out);
@@ -233,11 +239,7 @@ public class ScriptTrigger extends AbstractTrigger
             return false;
         }
 
-        try {
-            return Pattern.compile(cond).matcher(haystack).find();
-        } catch (Exception invalidRegex) {
-            return haystack.contains(cond);
-        }
+        return ExitConditionRegex.find(cond, haystack);
     }
 
     private String buildHaystack(Output out) {
@@ -245,22 +247,6 @@ public class ScriptTrigger extends AbstractTrigger
             return "";
         }
         return out.getVars().toString();
-    }
-
-    private Integer safeExitCode(ScriptOutput taskOutput) {
-        try {
-            return taskOutput.getExitCode();
-        } catch (Exception ignored) {
-            return null;
-        }
-    }
-
-    private Map<String, Object> safeVars(ScriptOutput taskOutput) {
-        try {
-            return taskOutput.getVars();
-        } catch (Exception ignored) {
-            return null;
-        }
     }
 
     private record ExtractedFailure(Integer exitCode) {
@@ -302,8 +288,9 @@ public class ScriptTrigger extends AbstractTrigger
         @Schema(
             title = "Script vars",
             description = """
-                Vars produced by the task (e.g. via ::{"outputs":{...}}:: convention). This is the main structured
-                way to evaluate non-exit conditions on successful runs.
+                Vars produced by the task (e.g. via ::{"outputs":{...}}:: convention). May contain sensitive values \
+                from script output; treat trigger payloads accordingly. This is the main structured way to evaluate \
+                non-exit conditions on successful runs.
                 """
         )
         private Map<String, Object> vars;

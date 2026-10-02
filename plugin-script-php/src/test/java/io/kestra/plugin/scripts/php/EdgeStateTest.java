@@ -23,13 +23,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
-/**
- * Edge mode keeps its previous result in the namespace KV store. None of these tests need Docker:
- * they drive shouldEmit directly, so only the state handling is under test.
- *
- * The KV store used by the test config is a local folder that survives between runs, so every
- * test uses a unique trigger id.
- */
 @KestraTest
 class EdgeStateTest {
     @Inject
@@ -53,7 +46,6 @@ class EdgeStateTest {
             .build();
     }
 
-    // The scheduler hands every poll a freshly deserialized trigger, so each poll here does the same.
     private static <T> T freshCopy(T trigger, Class<T> type) throws Exception {
         return JacksonMapper.ofJson().readValue(JacksonMapper.ofJson().writeValueAsString(trigger), type);
     }
