@@ -1,14 +1,21 @@
 package io.kestra.plugin.scripts.exec;
 
 import java.time.Duration;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 class ExitConditionRegexTest {
@@ -19,16 +26,11 @@ class ExitConditionRegexTest {
     }
 
     @Test
-    void safeRegex_matchesASubstringWithoutWaitingForTheDeadline() {
-        long start = System.nanoTime();
-
+    void safeRegex_matchesASubstring() {
         assertThat(ExitConditionRegex.find("status=\\w+", "{status=status=ready}"), is(true));
         assertThat(ExitConditionRegex.find("toto", "{listing=toto}"), is(true));
         assertThat(ExitConditionRegex.find("missing", "{listing=toto}"), is(false));
         assertThat(ExitConditionRegex.find(Pattern.compile("k=\\w+"), "{k=ready}"), is(true));
-
-        long elapsedMs = Duration.ofNanos(System.nanoTime() - start).toMillis();
-        assertThat(elapsedMs, lessThan(1000L));
     }
 
     @Test
@@ -38,35 +40,31 @@ class ExitConditionRegexTest {
     }
 
     @Test
-    void catastrophicPattern_fallsBackWithinFourTimesTheDeadline() {
-        var timeout = Duration.ofMillis(500);
-        var haystack = "{k=" + "a".repeat(40) + "!}";
-
-        long start = System.nanoTime();
-        // (a+)+$ is memoized on JDK 21+ and returns immediately; (.*a){20}$ still backtracks.
-        boolean matched = assertTimeoutPreemptively(
-            timeout.multipliedBy(4), () -> ExitConditionRegex.find("(.*a){20}$", haystack, timeout)
-        );
-        long elapsedMs = Duration.ofNanos(System.nanoTime() - start).toMillis();
-
-        assertThat(matched, is(false));
-        assertThat(elapsedMs, greaterThanOrEqualTo(timeout.toMillis() / 2));
+    void catastrophicPattern_checksInjectedDeadlineAndFallsBack() {
+        var timeout = Duration.ofMillis(10);
+        var condition = "(.*a){20}$";
+        for (boolean literalPresent : new boolean[] { false, true }) {
+            var clockReads = new AtomicInteger();
+            var haystack = (literalPresent ? condition : "") + "a".repeat(40) + "!";
+            boolean matched = assertTimeoutPreemptively(
+                Duration.ofSeconds(5), () -> ExitConditionRegex.find(
+                    Pattern.compile(condition), haystack, timeout,
+                    () -> clockReads.getAndIncrement() < 2 ? 0 : timeout.toNanos()
+                )
+            );
+            assertThat(matched, is(literalPresent));
+            assertThat(clockReads.get(), is(3));
+        }
     }
 
     @Test
-    void catastrophicPattern_fallsBackToSubstringWhenTheLiteralIsPresent() {
-        var timeout = Duration.ofMillis(500);
-        var condition = "(.*a){20}$";
-        var haystack = condition + "a".repeat(40) + "!";
-
-        long start = System.nanoTime();
-        boolean matched = assertTimeoutPreemptively(
-            timeout.multipliedBy(4), () -> ExitConditionRegex.find(condition, haystack, timeout)
+    void timeoutDoesNotBlacklistPatternForLaterOutput() {
+        var pattern = Pattern.compile("(.*a){20}$");
+        assertTimeoutPreemptively(
+            Duration.ofSeconds(5),
+            () -> assertThat(ExitConditionRegex.find(pattern, "a".repeat(40) + "!", Duration.ZERO), is(false))
         );
-        long elapsedMs = Duration.ofNanos(System.nanoTime() - start).toMillis();
-
-        assertThat(matched, is(true));
-        assertThat(elapsedMs, greaterThanOrEqualTo(timeout.toMillis() / 2));
+        assertThat(ExitConditionRegex.find(pattern, "a".repeat(20)), is(true));
     }
 
     @Test
@@ -79,9 +77,54 @@ class ExitConditionRegexTest {
         );
 
         assertThat(matched, is(false));
-        assertThat(
-            ExitConditionRegex.find(condition, condition + "a".repeat(1000)),
-            is(true)
-        );
+    }
+
+    @Test
+    void repeatedFallback_warnsOnceThenLogsDebug() {
+        Logger logger = (Logger) LoggerFactory.getLogger(ExitConditionRegex.class);
+        Level previousLevel = logger.getLevel();
+        var appender = new ListAppender<ILoggingEvent>();
+        appender.start();
+        logger.addAppender(appender);
+        logger.setLevel(Level.DEBUG);
+        try {
+            var condition = "[" + UUID.randomUUID();
+            assertThat(ExitConditionRegex.find(condition, condition), is(true));
+            assertThat(ExitConditionRegex.find(condition, "absent"), is(false));
+
+            assertThat(appender.list.size(), is(2));
+            assertThat(appender.list.get(0).getLevel(), is(Level.WARN));
+            assertThat(appender.list.get(1).getLevel(), is(Level.DEBUG));
+            for (var event : appender.list) {
+                assertThat(event.getFormattedMessage(), containsString(condition));
+                assertThat(event.getFormattedMessage(), containsString("is not a valid regex"));
+            }
+        } finally {
+            logger.setLevel(previousLevel);
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+    }
+
+    @Test
+    void warningCache_evictsOldConditions() {
+        Logger logger = (Logger) LoggerFactory.getLogger(ExitConditionRegex.class);
+        Level previousLevel = logger.getLevel();
+        var appender = new ListAppender<ILoggingEvent>();
+        appender.start();
+        logger.addAppender(appender);
+        logger.setLevel(Level.WARN);
+        try {
+            var prefix = "[" + UUID.randomUUID();
+            for (int i = 0; i <= 64; i++) {
+                ExitConditionRegex.find(prefix + i, "");
+            }
+            ExitConditionRegex.find(prefix + 0, "");
+            assertThat(appender.list.size(), is(66));
+        } finally {
+            logger.setLevel(previousLevel);
+            logger.detachAppender(appender);
+            appender.stop();
+        }
     }
 }

@@ -1,19 +1,31 @@
 package io.kestra.plugin.scripts.exec;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.LongSupplier;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Caller-thread exitCondition match with a 1s deadline and substring fallback. */
 public final class ExitConditionRegex {
 
     static final Duration TIMEOUT = Duration.ofSeconds(1);
 
     private static final Logger LOG = LoggerFactory.getLogger(ExitConditionRegex.class);
     private static final int CHECK_INTERVAL = 1024;
+    private static final int MAX_WARNED_CONDITIONS = 64;
+    private static final Map<String, Boolean> WARNED_CONDITIONS = Collections.synchronizedMap(
+        new LinkedHashMap<>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Boolean> eldest) {
+                return size() > MAX_WARNED_CONDITIONS;
+            }
+        }
+    );
 
     private ExitConditionRegex() {
     }
@@ -35,8 +47,12 @@ public final class ExitConditionRegex {
     }
 
     static boolean find(Pattern pattern, String haystack, Duration timeout) {
+        return find(pattern, haystack, timeout, System::nanoTime);
+    }
+
+    static boolean find(Pattern pattern, String haystack, Duration timeout, LongSupplier nanoTime) {
         try {
-            return pattern.matcher(new TimeoutCharSequence(haystack, timeout)).find();
+            return pattern.matcher(new TimeoutCharSequence(haystack, timeout, nanoTime)).find();
         } catch (RegexTimeoutException e) {
             return substringFallback(pattern.pattern(), haystack, "timed out");
         } catch (StackOverflowError e) {
@@ -49,7 +65,11 @@ public final class ExitConditionRegex {
     }
 
     private static boolean substringFallback(String condition, String haystack, String reason) {
-        LOG.warn("exitCondition '{}' {}; falling back to a substring match", condition, reason);
+        if (WARNED_CONDITIONS.putIfAbsent(condition, Boolean.TRUE) == null) {
+            LOG.warn("exitCondition '{}' {}; falling back to a substring match", condition, reason);
+        } else {
+            LOG.debug("exitCondition '{}' {}; falling back to a substring match", condition, reason);
+        }
         return haystack.contains(condition);
     }
 
@@ -65,19 +85,22 @@ public final class ExitConditionRegex {
         private final long deadlineNanos;
         private final Duration timeout;
         private final int[] counter;
+        private final LongSupplier nanoTime;
 
-        TimeoutCharSequence(CharSequence delegate, Duration timeout) {
+        TimeoutCharSequence(CharSequence delegate, Duration timeout, LongSupplier nanoTime) {
             this.delegate = delegate;
             this.timeout = timeout;
-            this.deadlineNanos = System.nanoTime() + timeout.toNanos();
+            this.nanoTime = nanoTime;
+            this.deadlineNanos = nanoTime.getAsLong() + timeout.toNanos();
             this.counter = new int[1];
         }
 
-        private TimeoutCharSequence(CharSequence delegate, long deadlineNanos, Duration timeout, int[] counter) {
+        private TimeoutCharSequence(CharSequence delegate, long deadlineNanos, Duration timeout, int[] counter, LongSupplier nanoTime) {
             this.delegate = delegate;
             this.deadlineNanos = deadlineNanos;
             this.timeout = timeout;
             this.counter = counter;
+            this.nanoTime = nanoTime;
         }
 
         @Override
@@ -87,7 +110,7 @@ public final class ExitConditionRegex {
 
         @Override
         public char charAt(int index) {
-            if (++counter[0] % CHECK_INTERVAL == 0 && System.nanoTime() > deadlineNanos) {
+            if (++counter[0] % CHECK_INTERVAL == 0 && nanoTime.getAsLong() - deadlineNanos >= 0) {
                 throw new RegexTimeoutException(timeout);
             }
             return delegate.charAt(index);
@@ -95,7 +118,7 @@ public final class ExitConditionRegex {
 
         @Override
         public CharSequence subSequence(int start, int end) {
-            return new TimeoutCharSequence(delegate.subSequence(start, end), deadlineNanos, timeout, counter);
+            return new TimeoutCharSequence(delegate.subSequence(start, end), deadlineNanos, timeout, counter, nanoTime);
         }
 
         @Override

@@ -1,17 +1,21 @@
 package io.kestra.plugin.scripts.bun;
 
-import java.time.Duration;
+import io.kestra.plugin.scripts.exec.ExitConditionRegex;
+
 import java.time.Instant;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
 
 class ScriptTriggerTest {
 
@@ -72,17 +76,25 @@ class ScriptTriggerTest {
     }
 
     @Test
-    void catastrophicBacktrackingRegex_fallsBackToSubstring_withoutHanging() {
-        String condition = "(.*a){20}$";
-        String value = "a".repeat(40) + "!";
+    void regexCondition_delegatesToHelperAndReturnsItsResult() {
+        String condition = "status=\\w+";
+        String haystack = "{status=status=ready}";
+        ScriptTrigger.Output output = output(" " + condition + " ", 0, Map.of("status", "status=ready"));
 
-        long start = System.nanoTime();
-        assertTimeoutPreemptively(
-            Duration.ofSeconds(4),
-            () -> assertThat(trigger.matchesCondition(output(condition, 0, Map.of("k", value))), is(false))
-        );
-        long elapsedMs = Duration.ofNanos(System.nanoTime() - start).toMillis();
+        try (var helper = mockStatic(ExitConditionRegex.class)) {
+            helper.when(() -> ExitConditionRegex.find(
+                argThat((Pattern pattern) -> pattern.pattern().equals(condition) && pattern.flags() == 0),
+                eq(haystack)
+            )).thenReturn(true, false);
 
-        assertThat(elapsedMs, greaterThanOrEqualTo(500L));
+            assertThat(trigger.matchesCondition(output), is(true));
+            assertThat(trigger.matchesCondition(output), is(false));
+
+            helper.verify(() -> ExitConditionRegex.find(
+                argThat((Pattern pattern) -> pattern.pattern().equals(condition) && pattern.flags() == 0),
+                eq(haystack)
+            ), times(2));
+            helper.verifyNoMoreInteractions();
+        }
     }
 }

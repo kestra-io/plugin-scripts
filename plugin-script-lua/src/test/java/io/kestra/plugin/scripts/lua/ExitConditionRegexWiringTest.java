@@ -1,12 +1,11 @@
-package io.kestra.plugin.scripts.bun;
+package io.kestra.plugin.scripts.lua;
 
 import io.kestra.plugin.scripts.exec.ExitConditionRegex;
+import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.Map;
 import java.util.regex.Pattern;
-
-import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -15,12 +14,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 
-class CommandsTriggerConditionTest {
-
-    private final CommandsTrigger trigger = CommandsTrigger.builder().build();
+class ExitConditionRegexWiringTest {
 
     @Test
-    void regexCondition_delegatesToHelperAndReturnsItsResult() {
+    void commandsTrigger_delegatesToHelperAndReturnsItsResult() {
+        CommandsTrigger trigger = CommandsTrigger.builder().build();
         String condition = "status=\\w+";
         String haystack = "{status=status=ready}";
         CommandsTrigger.Output output = new CommandsTrigger.Output(

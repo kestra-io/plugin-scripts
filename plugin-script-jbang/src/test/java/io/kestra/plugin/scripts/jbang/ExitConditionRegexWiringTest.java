@@ -1,26 +1,24 @@
-package io.kestra.plugin.scripts.node;
+package io.kestra.plugin.scripts.jbang;
 
 import io.kestra.plugin.scripts.exec.ExitConditionRegex;
+import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.Map;
-
-import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 
-class ScriptTriggerConditionTest {
-
-    private final ScriptTrigger trigger = ScriptTrigger.builder().build();
+class ExitConditionRegexWiringTest {
 
     @Test
-    void regexCondition_delegatesToHelperAndReturnsItsResult() {
+    void commandsTrigger_delegatesToHelperAndReturnsItsResult() {
+        CommandsTrigger trigger = CommandsTrigger.builder().build();
         String condition = "status=\\w+";
         String haystack = "{status=status=ready}";
-        ScriptTrigger.Output output = new ScriptTrigger.Output(
+        CommandsTrigger.Output output = new CommandsTrigger.Output(
             Instant.now(), " " + condition + " ", 0, Map.of("status", "status=ready")
         );
 
