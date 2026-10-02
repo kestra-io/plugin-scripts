@@ -23,6 +23,7 @@ import io.kestra.core.models.triggers.TriggerContext;
 import io.kestra.core.models.triggers.TriggerOutput;
 import io.kestra.core.models.triggers.TriggerService;
 import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.scripts.exec.ExitConditionRegex;
 import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 
@@ -259,11 +260,7 @@ public class ScriptTrigger extends AbstractTrigger
             return false;
         }
 
-        try {
-            return Pattern.compile(cond).matcher(haystack).find();
-        } catch (Exception invalidRegex) {
-            return haystack.contains(cond);
-        }
+        return ExitConditionRegex.find(cond, haystack);
     }
 
     private String buildHaystack(Output out) {

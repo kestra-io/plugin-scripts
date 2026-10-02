@@ -22,6 +22,7 @@ import io.kestra.core.models.triggers.TriggerContext;
 import io.kestra.core.models.triggers.TriggerOutput;
 import io.kestra.core.models.triggers.TriggerService;
 import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.scripts.exec.ExitConditionRegex;
 import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 
@@ -186,7 +187,7 @@ public class CommandsTrigger extends AbstractTrigger
         }
     }
 
-    private boolean matchesCondition(Output out) {
+    boolean matchesCondition(Output out) {
         String cond = out.getCondition() == null ? "" : out.getCondition().trim();
 
         Matcher exitMatcher = EXIT_CONDITION_PATTERN.matcher(cond);
@@ -200,11 +201,7 @@ public class CommandsTrigger extends AbstractTrigger
             return false;
         }
 
-        try {
-            return Pattern.compile(cond).matcher(haystack).find();
-        } catch (Exception invalidRegex) {
-            return haystack.contains(cond);
-        }
+        return ExitConditionRegex.find(cond, haystack);
     }
 
     private String buildHaystack(Output out) {
