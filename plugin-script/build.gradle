@@ -1,5 +1,9 @@
 project.description = 'Abstract Script plugin for Kestra'
 
+dependencies {
+    testImplementation 'ch.qos.logback:logback-classic'
+}
+
 jar {
     manifest {
         attributes(

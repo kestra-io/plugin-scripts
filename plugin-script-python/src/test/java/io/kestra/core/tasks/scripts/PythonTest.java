@@ -259,7 +259,7 @@ class PythonTest {
         assertThat(PythonTest.getMetrics(runContext, "count").getTags().get("tag1"), is("i"));
         assertThat(PythonTest.getMetrics(runContext, "count").getTags().get("tag2"), is("win"));
 
-        assertThat(PythonTest.<Duration> getMetrics(runContext, "timer1").getValue().getNano(), greaterThan(0));
+        assertThat(PythonTest.<Duration> getMetrics(runContext, "timer1").getValue().toNanos(), greaterThan(0L));
         assertThat(PythonTest.<Duration> getMetrics(runContext, "timer1").getTags().size(), is(2));
         assertThat(PythonTest.<Duration> getMetrics(runContext, "timer1").getTags().get("tag1"), is("i"));
         assertThat(PythonTest.<Duration> getMetrics(runContext, "timer1").getTags().get("tag2"), is("lost"));

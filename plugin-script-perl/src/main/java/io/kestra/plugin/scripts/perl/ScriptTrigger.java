@@ -4,9 +4,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,6 +23,7 @@ import io.kestra.core.models.triggers.TriggerService;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.storages.kv.KVStore;
 import io.kestra.core.storages.kv.KVValueAndMetadata;
+import io.kestra.plugin.scripts.exec.ExitConditionRegex;
 import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 
@@ -224,18 +222,7 @@ public class ScriptTrigger extends AbstractTrigger
             return false;
         }
 
-        try {
-            // Guard against catastrophic backtracking (ReDoS) from user-supplied patterns
-            var pattern = Pattern.compile(cond);
-            var future = CompletableFuture.supplyAsync(
-                () -> pattern.matcher(haystack).find()
-            );
-            return future.get(5, TimeUnit.SECONDS);
-        } catch (TimeoutException te) {
-            return haystack.contains(cond);
-        } catch (Exception e) {
-            return haystack.contains(cond);
-        }
+        return ExitConditionRegex.find(cond, haystack);
     }
 
     private String buildHaystack(Output out) {
