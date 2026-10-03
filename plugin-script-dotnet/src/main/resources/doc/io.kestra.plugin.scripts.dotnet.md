@@ -1,6 +1,6 @@
-# How to use the .NET (C#) plugin
+# How to use the .NET (C# and F#) plugin
 
-Run C# scripts and dotnet CLI commands from Kestra workflows using [dotnet-script](https://github.com/dotnet-script/dotnet-script) inside a .NET SDK container.
+Run C# and F# scripts and dotnet CLI commands from Kestra workflows using .NET runtimes inside a .NET SDK container.
 
 ## Authentication
 
@@ -10,21 +10,27 @@ This plugin has no authentication properties. Use environment variables for secr
 
 ### Script
 
-Runs an inline C# script defined in the `script` property. The script is written to a temporary `.csx` file and executed with `dotnet-script`.
+Runs an inline C# or F# script defined in the `script` property.
 
-`dotnet-script` is installed automatically via `dotnet tool install -g dotnet-script` before each run. To avoid the installation overhead, use a custom `containerImage` that already includes `dotnet-script`.
+For C#, the script is written to a temporary `.csx` file and executed with `dotnet-script`.
+
+For F#, the script is written to a temporary `.fsx` file and executed with `dotnet fsi`.
+
+`dotnet-script` is installed automatically via `dotnet tool install -g dotnet-script` before each C# run. F# scripts use `dotnet fsi`, which is available in the default .NET SDK image. To avoid the C# tool installation overhead, use a custom `containerImage` that already includes `dotnet-script`.
 
 NuGet package references work out of the box — place `#r "nuget:PackageName,Version"` directives at the top of your script. The first run with a new package reference triggers a NuGet restore which may take 30–60 seconds.
 
 Required properties:
-- `script` — inline C# script body in `.csx` format
+
+* `script` — inline C# script body in `.csx` format, or inline F# script body in `.fsx` format depending on the task used
 
 Optional:
-- `containerImage` — defaults to `mcr.microsoft.com/dotnet/sdk:10.0`
-- `beforeCommands` — shell commands to run before the script (e.g., set environment variables)
-- `inputFiles` — additional files to stage alongside the script
-- `outputFiles` — glob patterns for files to capture into Kestra internal storage
-- `taskRunner` — override the execution environment (default: Docker)
+
+* `containerImage` — defaults to `mcr.microsoft.com/dotnet/sdk:10.0`
+* `beforeCommands` — shell commands to run before the script (e.g., set environment variables)
+* `inputFiles` — additional files to stage alongside the script
+* `outputFiles` — glob patterns for files to capture into Kestra internal storage
+* `taskRunner` — override the execution environment (default: Docker)
 
 ### Commands
 
@@ -39,11 +45,13 @@ beforeCommands:
 ```
 
 Required properties:
-- `commands` — list of shell commands to execute in order
+
+* `commands` — list of shell commands to execute in order
 
 Optional:
-- `containerImage` — defaults to `mcr.microsoft.com/dotnet/sdk:10.0`
-- `beforeCommands`, `inputFiles`, `namespaceFiles`, `outputFiles`, `taskRunner` — same as `Script`
+
+* `containerImage` — defaults to `mcr.microsoft.com/dotnet/sdk:10.0`
+* `beforeCommands`, `inputFiles`, `namespaceFiles`, `outputFiles`, `taskRunner` — same as `Script`
 
 ## Triggers
 
@@ -52,13 +60,15 @@ Optional:
 Polls on an interval by running an inline .NET script the same way the `Script` task does, and starts an execution when `exitCondition` matches. The script runs in a fresh container on every poll, so keep it quick.
 
 Required properties:
-- `script`: inline .NET script body
-- `exitCondition`: either `exit N`, which matches when the script exits with code N, or a regex (with substring fallback) matched against the vars the script emits with `::{"outputs":{...}}::`
+
+* `script`: inline .NET script body
+* `exitCondition`: either `exit N`, which matches when the script exits with code N, or a regex (with substring fallback) matched against the vars the script emits with `::{"outputs":{...}}::`
 
 Optional:
-- `interval`: time between polls, defaults to `PT60S`
-- `edge`: defaults to `true`, so the trigger fires only when the condition changes from not matching to matching. The previous result is kept in the namespace KV store under a key starting with `trigger-edge-`. Set to `false` to fire on every matching poll
-- `containerImage`: defaults to `mcr.microsoft.com/dotnet/sdk:10.0`
+
+* `interval`: time between polls, defaults to `PT60S`
+* `edge`: defaults to `true`, so the trigger fires only when the condition changes from not matching to matching. The previous result is kept in the namespace KV store under a key starting with `trigger-edge-`. Set to `false` to fire on every matching poll
+* `containerImage`: defaults to `mcr.microsoft.com/dotnet/sdk:10.0`
 
 The trigger outputs are available as `{{ trigger.timestamp }}`, `{{ trigger.condition }}`, `{{ trigger.exitCode }}` and `{{ trigger.vars }}`. A failed run has no vars, so only an `exit N` condition can match a failure.
 
