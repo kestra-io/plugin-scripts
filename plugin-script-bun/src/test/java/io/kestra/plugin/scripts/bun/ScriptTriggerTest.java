@@ -1,7 +1,10 @@
 package io.kestra.plugin.scripts.bun;
 
+import io.kestra.plugin.scripts.exec.ExitConditionRegex;
+
 import java.time.Instant;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -9,14 +12,11 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
 
-/**
- * Unit tests for ScriptTrigger's condition-matching logic.
- *
- * Calls the real, package-private ScriptTrigger#matchesCondition directly (same pattern as
- * plugin-script-ruby's ScriptTriggerConditionTest), so a change to the production method is
- * what these tests actually exercise, not a separately maintained copy of its logic.
- */
 class ScriptTriggerTest {
 
     private final ScriptTrigger trigger = ScriptTrigger.builder().build();
@@ -73,5 +73,28 @@ class ScriptTriggerTest {
     @Test
     void nullCondition_doesNotMatch() {
         assertThat(trigger.matchesCondition(output(null, 0, Map.of("k", "v"))), is(false));
+    }
+
+    @Test
+    void regexCondition_delegatesToHelperAndReturnsItsResult() {
+        String condition = "status=\\w+";
+        String haystack = "{status=status=ready}";
+        ScriptTrigger.Output output = output(" " + condition + " ", 0, Map.of("status", "status=ready"));
+
+        try (var helper = mockStatic(ExitConditionRegex.class)) {
+            helper.when(() -> ExitConditionRegex.find(
+                argThat((Pattern pattern) -> pattern.pattern().equals(condition) && pattern.flags() == 0),
+                eq(haystack)
+            )).thenReturn(true, false);
+
+            assertThat(trigger.matchesCondition(output), is(true));
+            assertThat(trigger.matchesCondition(output), is(false));
+
+            helper.verify(() -> ExitConditionRegex.find(
+                argThat((Pattern pattern) -> pattern.pattern().equals(condition) && pattern.flags() == 0),
+                eq(haystack)
+            ), times(2));
+            helper.verifyNoMoreInteractions();
+        }
     }
 }

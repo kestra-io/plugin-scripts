@@ -9,6 +9,7 @@ import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.scripts.exec.ExitConditionRegex;
 import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -198,11 +199,7 @@ public class CommandsTrigger extends AbstractTrigger
             return false;
         }
 
-        try {
-            return Pattern.compile(cond).matcher(haystack).find();
-        } catch (Exception e) {
-            return haystack.contains(cond);
-        }
+        return ExitConditionRegex.find(cond, haystack);
     }
 
     private String buildHaystack(Output out) {
