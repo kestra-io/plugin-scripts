@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts.dotnet;
+package io.kestra.plugin.scripts.fsharp;
 
 import java.util.List;
 import java.util.UUID;
@@ -30,7 +30,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 
 @KestraTest
-class FSharpTest {
+class ScriptTest {
     @Inject
     RunContextFactory runContextFactory;
 
@@ -43,9 +43,9 @@ class FSharpTest {
         List<LogEntry> logs = new CopyOnWriteArrayList<>();
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
-        FSharp fsharpScript = FSharp.builder()
+        Script fsharpScript = Script.builder()
             .id("fsharp-script-" + UUID.randomUUID())
-            .type(FSharp.class.getName())
+            .type(Script.class.getName())
             .script(Property.ofValue("printfn \"Hello from Kestra!\""))
             .targetOS(Property.ofValue(TargetOS.LINUX))
             .build();
@@ -84,9 +84,9 @@ class FSharpTest {
         List<LogEntry> logs = new CopyOnWriteArrayList<>();
         Flux<LogEntry> receive = TestsUtils.receive(logQueue, l -> logs.add(l.getLeft()));
 
-        FSharp fsharpScript = FSharp.builder()
+        Script fsharpScript = Script.builder()
             .id("fsharp-nuget-" + UUID.randomUUID())
-            .type(FSharp.class.getName())
+            .type(Script.class.getName())
             .script(Property.ofValue("""
                 #r "nuget: Newtonsoft.Json, 13.0.3"
 
@@ -129,9 +129,9 @@ class FSharpTest {
 
     @Test
     void scriptWithOutputFile() throws Exception {
-        FSharp fsharpScript = FSharp.builder()
+        Script fsharpScript = Script.builder()
             .id("fsharp-output-" + UUID.randomUUID())
-            .type(FSharp.class.getName())
+            .type(Script.class.getName())
             .script(Property.ofValue("""
                 System.IO.File.WriteAllText(
                     "result.txt",
@@ -160,9 +160,9 @@ class FSharpTest {
 
     @Test
     void scriptFailure() {
-        FSharp fsharpScript = FSharp.builder()
+        Script fsharpScript = Script.builder()
             .id("fsharp-fail-" + UUID.randomUUID())
-            .type(FSharp.class.getName())
+            .type(Script.class.getName())
             .script(Property.ofValue("""
                 failwith "deliberate failure"
                 """))

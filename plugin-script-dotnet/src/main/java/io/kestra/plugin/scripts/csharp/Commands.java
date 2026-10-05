@@ -1,9 +1,8 @@
-package io.kestra.plugin.scripts.dotnet;
+package io.kestra.plugin.scripts.csharp;
 
-import java.util.Collections;
 import java.util.List;
 
-import io.kestra.core.exceptions.IllegalVariableEvaluationException;
+import io.kestra.plugin.scripts.dotnet.AbstractDotnetCommands;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
@@ -11,8 +10,6 @@ import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.RunContext;
-import io.kestra.plugin.scripts.exec.AbstractExecScript;
-import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -21,8 +18,8 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
-@ToString
-@EqualsAndHashCode
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 @Getter
 @NoArgsConstructor
 @Schema(
@@ -45,7 +42,7 @@ import lombok.experimental.SuperBuilder;
 
                 tasks:
                   - id: run_dotnet
-                    type: io.kestra.plugin.scripts.dotnet.Commands
+                    type: io.kestra.plugin.scripts.csharp.Commands
                     inputFiles:
                       analyze.csx: |
                         Console.WriteLine("Analyzing data...");
@@ -66,15 +63,15 @@ import lombok.experimental.SuperBuilder;
 
                 tasks:
                   - id: build
-                    type: io.kestra.plugin.scripts.dotnet.Commands
+                    type: io.kestra.plugin.scripts.csharp.Commands
                     commands:
                       - dotnet --version
                 """
         )
-    }
+    },
+    aliases = "io.kestra.plugin.scripts.dotnet.Commands"
 )
-public class Commands extends AbstractExecScript implements RunnableTask<ScriptOutput> {
-    private static final String DEFAULT_IMAGE = "mcr.microsoft.com/dotnet/sdk:10.0";
+public class Commands extends AbstractDotnetCommands {
 
     @Schema(
         title = "Container image for the .NET runtime",
@@ -95,18 +92,6 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
     @NotNull
     @PluginProperty(group = "main")
     protected Property<List<String>> commands;
-
-    @Override
-    protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
-        var builder = original.toBuilder();
-        if (original.getImage() == null) {
-            builder.image(runContext.render(this.getContainerImage()).as(String.class).orElse(DEFAULT_IMAGE));
-        }
-        if (original.getEntryPoint() == null) {
-            builder.entryPoint(Collections.emptyList());
-        }
-        return builder.build();
-    }
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {

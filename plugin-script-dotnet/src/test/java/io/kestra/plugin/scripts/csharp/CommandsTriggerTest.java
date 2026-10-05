@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts.dotnet;
+package io.kestra.plugin.scripts.csharp;
 
 import java.util.List;
 import java.util.Map;
@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.property.Property;
@@ -34,6 +35,7 @@ class CommandsTriggerTest {
             .edge(Property.ofValue(true))
             .containerImage(Property.ofValue("mcr.microsoft.com/dotnet/sdk:10.0"))
             .commands(Property.ofValue(List.of("exit 1")))
+            .targetOS(Property.ofValue(TargetOS.LINUX))
             .build();
 
         var context = TestsUtils.mockTrigger(runContextFactory, trigger);
@@ -57,6 +59,7 @@ class CommandsTriggerTest {
             .edge(Property.ofValue(true))
             .containerImage(Property.ofValue("mcr.microsoft.com/dotnet/sdk:10.0"))
             .commands(Property.ofValue(List.of("echo '::{\"outputs\":{\"listing\":\"toto\"}}::'")))
+            .targetOS(Property.ofValue(TargetOS.LINUX))
             .build();
 
         var context = TestsUtils.mockTrigger(runContextFactory, trigger);
@@ -81,6 +84,7 @@ class CommandsTriggerTest {
             .edge(Property.ofValue(true))
             .containerImage(Property.ofValue("mcr.microsoft.com/dotnet/sdk:10.0"))
             .commands(Property.ofValue(List.of("exit 1")))
+            .targetOS(Property.ofValue(TargetOS.LINUX))
             .build();
 
         var context = TestsUtils.mockTrigger(runContextFactory, trigger);
@@ -103,6 +107,7 @@ class CommandsTriggerTest {
             .edge(Property.ofValue(true))
             .containerImage(Property.ofValue("mcr.microsoft.com/dotnet/sdk:10.0"))
             .commands(Property.ofValue(List.of("echo '::{\"outputs\":{\"status\":\"status=ready\"}}::'")))
+            .targetOS(Property.ofValue(TargetOS.LINUX))
             .build();
 
         var context = TestsUtils.mockTrigger(runContextFactory, trigger);

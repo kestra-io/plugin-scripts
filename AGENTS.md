@@ -45,50 +45,69 @@ This is a **multi-module** plugin with 19 submodules:
 - `io.kestra.plugin.scripts.bun.CommandsTrigger`
 - `io.kestra.plugin.scripts.bun.Script`
 - `io.kestra.plugin.scripts.bun.ScriptTrigger`
+
 **plugin-script-deno:**
 
 - `io.kestra.plugin.scripts.deno.Commands`
 - `io.kestra.plugin.scripts.deno.Script`
+
 **plugin-script-dotnet:**
 
-- `io.kestra.plugin.scripts.dotnet.Commands`
-- `io.kestra.plugin.scripts.dotnet.CommandsTrigger`
-- `io.kestra.plugin.scripts.dotnet.Script`
-- `io.kestra.plugin.scripts.dotnet.ScriptTrigger`
+**C#:**
+
+- `io.kestra.plugin.scripts.csharp.Commands`
+- `io.kestra.plugin.scripts.csharp.CommandsTrigger`
+- `io.kestra.plugin.scripts.csharp.Script`
+- `io.kestra.plugin.scripts.csharp.ScriptTrigger`
+
+**F#:**
+
+- `io.kestra.plugin.scripts.fsharp.Commands`
+- `io.kestra.plugin.scripts.fsharp.CommandsTrigger`
+- `io.kestra.plugin.scripts.fsharp.Script`
+- `io.kestra.plugin.scripts.fsharp.ScriptTrigger`
+
 **plugin-script-go:**
 
 - `io.kestra.plugin.scripts.go.Commands`
 - `io.kestra.plugin.scripts.go.Script`
+
 **plugin-script-groovy:**
 
 - `io.kestra.plugin.scripts.groovy.Commands`
 - `io.kestra.plugin.scripts.groovy.Eval`
 - `io.kestra.plugin.scripts.groovy.FileTransform`
 - `io.kestra.plugin.scripts.groovy.Script`
+
 **plugin-script-jbang:**
 
 - `io.kestra.plugin.scripts.jbang.Commands`
 - `io.kestra.plugin.scripts.jbang.CommandsTrigger`
 - `io.kestra.plugin.scripts.jbang.Script`
 - `io.kestra.plugin.scripts.jbang.ScriptTrigger`
+
 **plugin-script-julia:**
 
 - `io.kestra.plugin.scripts.julia.Commands`
 - `io.kestra.plugin.scripts.julia.Script`
+
 **plugin-script-jython:**
 
 - `io.kestra.plugin.scripts.jython.Eval`
 - `io.kestra.plugin.scripts.jython.FileTransform`
+
 **plugin-script-lua:**
 
 - `io.kestra.plugin.scripts.lua.Commands`
 - `io.kestra.plugin.scripts.lua.CommandsTrigger`
 - `io.kestra.plugin.scripts.lua.Script`
 - `io.kestra.plugin.scripts.lua.ScriptTrigger`
+
 **plugin-script-nashorn:**
 
 - `io.kestra.plugin.scripts.nashorn.Eval`
 - `io.kestra.plugin.scripts.nashorn.FileTransform`
+
 **plugin-script-node:**
 
 - `io.kestra.core.tasks.scripts.Node`
@@ -96,37 +115,44 @@ This is a **multi-module** plugin with 19 submodules:
 - `io.kestra.plugin.scripts.node.CommandsTrigger`
 - `io.kestra.plugin.scripts.node.Script`
 - `io.kestra.plugin.scripts.node.ScriptTrigger`
+
 **plugin-script-perl:**
 
 - `io.kestra.plugin.scripts.perl.Commands`
 - `io.kestra.plugin.scripts.perl.CommandsTrigger`
 - `io.kestra.plugin.scripts.perl.Script`
 - `io.kestra.plugin.scripts.perl.ScriptTrigger`
+
 **plugin-script-php:**
 
 - `io.kestra.plugin.scripts.php.Commands`
 - `io.kestra.plugin.scripts.php.Script`
+
 **plugin-script-powershell:**
 
 - `io.kestra.plugin.scripts.powershell.Commands`
 - `io.kestra.plugin.scripts.powershell.CommandsTrigger`
 - `io.kestra.plugin.scripts.powershell.Script`
 - `io.kestra.plugin.scripts.powershell.ScriptTrigger`
+
 **plugin-script-python:**
 
 - `io.kestra.core.tasks.scripts.Python`
 - `io.kestra.plugin.scripts.python.Commands`
 - `io.kestra.plugin.scripts.python.Script`
+
 **plugin-script-r:**
 
 - `io.kestra.plugin.scripts.r.Commands`
 - `io.kestra.plugin.scripts.r.CommandsTrigger`
 - `io.kestra.plugin.scripts.r.Script`
 - `io.kestra.plugin.scripts.r.ScriptTrigger`
+
 **plugin-script-ruby:**
 
 - `io.kestra.plugin.scripts.ruby.Commands`
 - `io.kestra.plugin.scripts.ruby.Script`
+
 **plugin-script-shell:**
 
 - `io.kestra.core.tasks.scripts.Bash`

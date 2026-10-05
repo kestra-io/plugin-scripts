@@ -1,0 +1,7 @@
+group: io.kestra.plugin.scripts.csharp
+name: "plugin-csharp"
+title: "C#"
+description: "Tasks and triggers that run C# scripts and .NET commands."
+body: "Run C# scripts using dotnet-script or execute .NET CLI commands inside a .NET SDK container, with support for triggers, inputs, outputs, and workflow variables."
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"

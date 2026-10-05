@@ -5,7 +5,9 @@ import io.kestra.plugin.scripts.exec.ExitConditionRegex;
 import java.time.Instant;
 import java.util.Map;
 
+import io.kestra.plugin.scripts.csharp.ScriptTrigger;
 import org.junit.jupiter.api.Test;
+import io.kestra.plugin.scripts.csharp.ScriptTrigger;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 

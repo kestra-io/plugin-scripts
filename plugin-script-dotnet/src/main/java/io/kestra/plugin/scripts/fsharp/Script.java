@@ -1,8 +1,8 @@
-package io.kestra.plugin.scripts.dotnet;
+package io.kestra.plugin.scripts.fsharp;
 
 import java.util.List;
 
-import io.kestra.core.exceptions.IllegalVariableEvaluationException;
+import io.kestra.plugin.scripts.dotnet.AbstractDotnetScript;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
@@ -12,8 +12,6 @@ import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.RunContext;
-import io.kestra.plugin.scripts.exec.AbstractExecScript;
-import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,8 +20,8 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
-@ToString
-@EqualsAndHashCode
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 @Getter
 @NoArgsConstructor
 @Schema(
@@ -37,6 +35,7 @@ import lombok.experimental.SuperBuilder;
 @Plugin(
     examples = {
         @Example(
+            // Hello World
             title = "Run a simple F# Hello World script.",
             full = true,
             code = """
@@ -45,12 +44,13 @@ import lombok.experimental.SuperBuilder;
 
                 tasks:
                   - id: hello_fsharp
-                    type: io.kestra.plugin.scripts.dotnet.FSharp
+                    type: io.kestra.plugin.scripts.fsharp.Script
                     script: |
                       printfn "Hello from Kestra!"
                 """
         ),
         @Example(
+            // NuGet dependency
             title = "Run an inline F# script with a NuGet dependency.",
             full = true,
             code = """
@@ -59,7 +59,7 @@ import lombok.experimental.SuperBuilder;
 
                 tasks:
                   - id: hello_fsharp
-                    type: io.kestra.plugin.scripts.dotnet.FSharp
+                    type: io.kestra.plugin.scripts.fsharp.Script
                     script: |
                       #r "nuget: Newtonsoft.Json, 13.0.3"
 
@@ -68,19 +68,29 @@ import lombok.experimental.SuperBuilder;
                       let data = {| message = "Hello from Kestra" |}
                       printfn "%s" (JsonConvert.SerializeObject(data))
                 """
+        ),
+        @Example(
+            // output files
+            full = true,
+            title = """
+        Generate output files from an F# script. Files written to `{{ outputDir }}` are persisted \
+        in Kestra's internal storage and accessible to downstream tasks via \
+        `{{ outputs.yourTaskId.outputFiles['yourFileName.txt'] }}`.
+        """,
+            code = """
+        id: fsharp_generate_files
+        namespace: company.team
+
+        tasks:
+          - id: write_file
+            type: io.kestra.plugin.scripts.fsharp.Script
+            script: |
+              System.IO.File.WriteAllText("{{ outputDir }}/hello.txt", "Hello from F#!")
+        """
         )
     }
 )
-public class FSharp extends AbstractExecScript implements RunnableTask<ScriptOutput> {
-    private static final String DEFAULT_IMAGE = "mcr.microsoft.com/dotnet/sdk:10.0";
-
-    @Schema(
-        title = "Container image for the .NET runtime",
-        description = "Docker image used to run the F# script. Defaults to `mcr.microsoft.com/dotnet/sdk:10.0`."
-    )
-    @Builder.Default
-    @PluginProperty(group = "execution")
-    protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
+public class Script extends AbstractDotnetScript {
 
     @Schema(
         title = "Inline F# script to execute",
@@ -93,24 +103,6 @@ public class FSharp extends AbstractExecScript implements RunnableTask<ScriptOut
     @NotNull
     @PluginProperty(language = MonacoLanguages.FSHARP, group = "main")
     protected Property<String> script;
-
-    @Override
-    protected DockerOptions injectDefaults(
-        RunContext runContext,
-        DockerOptions original
-    ) throws IllegalVariableEvaluationException {
-        var builder = original.toBuilder();
-
-        if (original.getImage() == null) {
-            builder.image(
-                runContext.render(this.getContainerImage())
-                    .as(String.class)
-                    .orElse(DEFAULT_IMAGE)
-            );
-        }
-
-        return builder.build();
-    }
 
     @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
