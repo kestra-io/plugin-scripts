@@ -74,7 +74,9 @@ This is a **multi-module** plugin with 19 submodules:
 **plugin-script-julia:**
 
 - `io.kestra.plugin.scripts.julia.Commands`
+- `io.kestra.plugin.scripts.julia.CommandsTrigger`
 - `io.kestra.plugin.scripts.julia.Script`
+- `io.kestra.plugin.scripts.julia.ScriptTrigger`
 **plugin-script-jython:**
 
 - `io.kestra.plugin.scripts.jython.Eval`
