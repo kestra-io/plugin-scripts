@@ -2,8 +2,6 @@ package io.kestra.plugin.scripts.php;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
@@ -22,6 +20,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @KestraTest
 class ScriptTriggerEvaluateTest {
@@ -58,23 +58,43 @@ class ScriptTriggerEvaluateTest {
 
     @Test
     void evaluate_executionFailure_doesNotAdvanceEdgeState() throws Exception {
-        ScriptTrigger trigger = trigger("script-exec-fail", "<?php exit(1);");
+        assumeTrue(DockerTestSupport.dockerAvailable());
+
+        ScriptTrigger trigger = ScriptTrigger.builder()
+            .id("script-no-emit-" + IdUtils.create())
+            .type(ScriptTrigger.class.getName())
+            .exitCondition(Property.ofValue("exit 1"))
+            .edge(Property.ofValue(true))
+            .containerImage(Property.ofValue(IMAGE))
+            .script(Property.ofValue("<?php echo \"ok\\n\";"))
+            .build();
+
         var mock = TestsUtils.mockTrigger(runContextFactory, trigger);
         KVStore kvStore = mock.getKey().getRunContext().namespaceKv(mock.getValue().getNamespace());
         String key = ScriptTrigger.edgeStateKey(mock.getValue());
 
         Optional<Execution> execution = trigger.evaluate(mock.getKey(), mock.getValue());
 
-        if (execution.isEmpty()) {
-            assertThat(kvStore.getValue(key).isPresent(), is(false));
-        }
+        assertThat(execution.isPresent(), is(false));
+        assertThat(kvStore.getValue(key).isPresent(), is(false));
+    }
+
+    @Test
+    void evaluate_infrastructureFailure_propagatesWithoutAdvancingEdgeState() throws Exception {
+        assumeFalse(DockerTestSupport.dockerAvailable());
+
+        ScriptTrigger trigger = trigger("script-infra-fail", "<?php exit(1);");
+        var mock = TestsUtils.mockTrigger(runContextFactory, trigger);
+        KVStore kvStore = mock.getKey().getRunContext().namespaceKv(mock.getValue().getNamespace());
+        String key = ScriptTrigger.edgeStateKey(mock.getValue());
+
+        assertThrows(Exception.class, () -> trigger.evaluate(mock.getKey(), mock.getValue()));
+        assertThat(kvStore.getValue(key).isPresent(), is(false));
     }
 
     @Test
     void evaluate_edgeDisabledEmitsOnEveryMatchWhenDockerWorks() throws Exception {
-        if (!dockerAvailable()) {
-            return;
-        }
+        assumeTrue(DockerTestSupport.dockerAvailable());
 
         ScriptTrigger trigger = ScriptTrigger.builder()
             .id("edge-off-" + IdUtils.create())
@@ -95,9 +115,7 @@ class ScriptTriggerEvaluateTest {
 
     @Test
     void scriptTrigger_shouldEmitWhenExitCodeMatches() throws Exception {
-        if (!dockerAvailable()) {
-            return;
-        }
+        assumeTrue(DockerTestSupport.dockerAvailable());
 
         ScriptTrigger trigger = trigger("script-exit1", "<?php\nexit(1);\n");
 
@@ -114,9 +132,7 @@ class ScriptTriggerEvaluateTest {
 
     @Test
     void scriptTrigger_shouldStayQuietWhenConditionDoesNotMatch() throws Exception {
-        if (!dockerAvailable()) {
-            return;
-        }
+        assumeTrue(DockerTestSupport.dockerAvailable());
 
         ScriptTrigger trigger = trigger("script-exit0", "<?php\necho \"ok\\n\";\n");
 
@@ -128,9 +144,7 @@ class ScriptTriggerEvaluateTest {
 
     @Test
     void scriptTrigger_edgeModeShouldSuppressSecondEmissionAcrossFreshInstances() throws Exception {
-        if (!dockerAvailable()) {
-            return;
-        }
+        assumeTrue(DockerTestSupport.dockerAvailable());
 
         ScriptTrigger trigger = trigger("script-edge", "<?php\nexit(1);\n");
 
@@ -144,12 +158,4 @@ class ScriptTriggerEvaluateTest {
         assertThat("edge mode should suppress the repeat", second.isPresent(), is(false));
     }
 
-    private static boolean dockerAvailable() {
-        try {
-            var process = new ProcessBuilder("docker", "info").start();
-            return process.waitFor(10, TimeUnit.SECONDS) && process.exitValue() == 0;
-        } catch (Exception e) {
-            return false;
-        }
-    }
 }

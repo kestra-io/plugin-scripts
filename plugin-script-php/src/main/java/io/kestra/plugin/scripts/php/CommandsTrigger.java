@@ -146,16 +146,7 @@ public class CommandsTrigger extends AbstractTrigger
         RunContext runContext = conditionContext.getRunContext();
         boolean renderedEdge = runContext.render(this.edge).as(Boolean.class).orElse(true);
         String renderedExitCondition = renderExitCondition(runContext);
-
-        Output out;
-        try {
-            out = runOnce(runContext, renderedExitCondition);
-        } catch (IllegalArgumentException | IllegalVariableEvaluationException e) {
-            throw e;
-        } catch (Exception e) {
-            runContext.logger().warn("Trigger execution failed, returning empty result to avoid blocking the scheduler", e);
-            return Optional.empty();
-        }
+        Output out = runOnce(runContext, renderedExitCondition);
 
         boolean matched = matchesCondition(out);
 

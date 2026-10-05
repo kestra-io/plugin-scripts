@@ -19,6 +19,7 @@ import jakarta.inject.Inject;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @KestraTest
 class CommandsTriggerTest {
@@ -27,6 +28,7 @@ class CommandsTriggerTest {
 
     @Test
     void commandsTrigger_shouldTriggerOnImplicitFailureExit1() throws Exception {
+        assumeTrue(DockerTestSupport.dockerAvailable());
         CommandsTrigger trigger = CommandsTrigger.builder()
             .id("commands-trigger-" + IdUtils.create())
             .type(CommandsTrigger.class.getName())
@@ -50,6 +52,7 @@ class CommandsTriggerTest {
 
     @Test
     void commandsTrigger_shouldTriggerOnStdoutMatchUsingStructuredOutputs() throws Exception {
+        assumeTrue(DockerTestSupport.dockerAvailable());
         CommandsTrigger trigger = CommandsTrigger.builder()
             .id("commands-stdout-match-trigger-" + IdUtils.create())
             .type(CommandsTrigger.class.getName())
@@ -74,6 +77,7 @@ class CommandsTriggerTest {
 
     @Test
     void commandsTrigger_edgeModeShouldSuppressSecondEmission() throws Exception {
+        assumeTrue(DockerTestSupport.dockerAvailable());
         CommandsTrigger trigger = CommandsTrigger.builder()
             .id("commands-edge-trigger-" + IdUtils.create())
             .type(CommandsTrigger.class.getName())
@@ -95,6 +99,7 @@ class CommandsTriggerTest {
 
     @Test
     void commandsTrigger_shouldMatchRegexAgainstStructuredOutputs() throws Exception {
+        assumeTrue(DockerTestSupport.dockerAvailable());
         CommandsTrigger trigger = CommandsTrigger.builder()
             .id("commands-regex-trigger-" + IdUtils.create())
             .type(CommandsTrigger.class.getName())
