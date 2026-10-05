@@ -298,6 +298,32 @@ class GroovyTriggerTest {
         assertEquals(true, store.getValue(key).orElseThrow().value());
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = { false, true })
+    void missingAndInvalidInputsCannotEmitWithoutEdgeSuppression(boolean commands) throws Exception {
+        var original = trigger(commands, id(), "unused", "exit 0", false);
+        var context = TestsUtils.mockTrigger(runContextFactory, original);
+        var store = context.getKey().getRunContext().namespaceKv(context.getValue().getNamespace());
+        var key = AbstractGroovyTrigger.edgeStateKey(context.getValue().getFlowId(), context.getValue().getTriggerId());
+        assertTrue(store.getValue(key).isEmpty());
+        AbstractGroovyTrigger missing = commands
+            ? CommandsTrigger.builder().id(original.getId()).type(CommandsTrigger.class.getName())
+                .exitCondition(Property.ofValue("exit 0")).edge(Property.ofValue(false)).build()
+            : ScriptTrigger.builder().id(original.getId()).type(ScriptTrigger.class.getName())
+                .exitCondition(Property.ofValue("exit 0")).edge(Property.ofValue(false)).build();
+        assertTrue(missing.evaluate(context.getKey(), context.getValue()).isEmpty());
+        assertTrue(store.getValue(key).isEmpty());
+        AbstractGroovyTrigger invalid = commands
+            ? CommandsTrigger.builder().id(original.getId()).type(CommandsTrigger.class.getName())
+                .commands(TestsUtils.propertyFromList(List.of("echo {{ absent }}")))
+                .exitCondition(Property.ofValue("exit 0")).edge(Property.ofValue(false)).build()
+            : ScriptTrigger.builder().id(original.getId()).type(ScriptTrigger.class.getName())
+                .script(Property.ofExpression("println '{{ absent }}'"))
+                .exitCondition(Property.ofValue("exit 0")).edge(Property.ofValue(false)).build();
+        assertTrue(invalid.evaluate(context.getKey(), context.getValue()).isEmpty());
+        assertTrue(store.getValue(key).isEmpty());
+    }
+
     @Test
     void persistedStateIsIsolatedByFlowTriggerAndNamespaceAndSurvivesInfrastructureFailure() throws Exception {
         var trigger = spy(trigger(false, id(), "unused", "exit 0", true));
@@ -379,6 +405,39 @@ class GroovyTriggerTest {
                 io.kestra.core.exceptions.IllegalVariableEvaluationException.class,
                 () -> task.run(TestsUtils.mockRunContext(runContextFactory, task, Map.of()))
             );
+            assertTrue(trigger.evaluate(context.getKey(), context.getValue()).isEmpty());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { false, true })
+    void literalValuePropertiesKeepUnderlyingTaskSemantics(boolean commands) throws Exception {
+        String script = "println '::{\"outputs\":{\"literal\":\"{{ absent }}\"}}::'";
+        String command = "groovy -e \"" + script.replace("\"", "\\\"") + "\"";
+        if (commands) {
+            var task = Commands.builder().id(id()).type(Commands.class.getName())
+                .containerImage(Property.ofValue("groovy:jdk21"))
+                .commands(Property.ofValue(List.of(command))).build();
+            var output = task.run(TestsUtils.mockRunContext(runContextFactory, task, Map.of()));
+            assertEquals(Map.of("literal", "{{ absent }}"), output.getVars());
+            var trigger = CommandsTrigger.builder().id(id()).type(CommandsTrigger.class.getName())
+                .containerImage(Property.ofValue("groovy:jdk21"))
+                .commands(Property.ofValue(List.of(command))).exitCondition(Property.ofValue("exit 0")).build();
+            var context = TestsUtils.mockTrigger(runContextFactory, trigger);
+            var vars = trigger.evaluate(context.getKey(), context.getValue()).orElseThrow().getTrigger().getVariables().get("vars");
+            assertEquals(output.getVars(), vars);
+        } else {
+            // Even literal Script values pass through the task's input-file rendering.
+            var task = Script.builder().id(id()).type(Script.class.getName())
+                .containerImage(Property.ofValue("groovy:jdk21")).script(Property.ofValue(script)).build();
+            assertThrows(
+                io.kestra.core.exceptions.IllegalVariableEvaluationException.class,
+                () -> task.run(TestsUtils.mockRunContext(runContextFactory, task, Map.of()))
+            );
+            var trigger = ScriptTrigger.builder().id(id()).type(ScriptTrigger.class.getName())
+                .containerImage(Property.ofValue("groovy:jdk21"))
+                .script(Property.ofValue(script)).exitCondition(Property.ofValue("exit 0")).build();
+            var context = TestsUtils.mockTrigger(runContextFactory, trigger);
             assertTrue(trigger.evaluate(context.getKey(), context.getValue()).isEmpty());
         }
     }
