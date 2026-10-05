@@ -86,7 +86,9 @@ public abstract class AbstractGroovyTrigger extends AbstractTrigger
         var store = runContext.namespaceKv(context.getNamespace());
         var key = edgeStateKey(context.getFlowId(), context.getTriggerId());
         var lastMatched = store.getValue(key).map(value -> Boolean.TRUE.equals(value.value())).orElse(false);
-        store.put(key, new KVValueAndMetadata(null, matched));
+        if (matched != lastMatched) {
+            store.put(key, new KVValueAndMetadata(null, matched));
+        }
 
         if (!matched || (rEdge && lastMatched)) {
             return Optional.empty();

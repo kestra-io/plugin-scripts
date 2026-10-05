@@ -47,7 +47,10 @@ import lombok.experimental.SuperBuilder;
 )
 public class CommandsTrigger extends AbstractGroovyTrigger {
 
-    @Schema(title = "Groovy commands", description = "Executed on each poll with the same semantics as the Groovy Commands task.")
+    @Schema(
+        title = "Groovy commands",
+        description = "Executed on each poll with the same command rendering semantics as the Groovy Commands task, including runner variables such as workingDir. beforeCommands, env and taskRunner are not exposed by this trigger. Supply dependencies and configuration in the commands (for example @Grab in Groovy code, which may require network access) or container image."
+    )
     @NotNull
     @PluginProperty(group = "main")
     protected Property<List<String>> commands;
@@ -57,13 +60,12 @@ public class CommandsTrigger extends AbstractGroovyTrigger {
         if (this.commands == null) {
             throw new IllegalArgumentException("commands is required; supply the Groovy commands to run on each poll");
         }
-        var rInput = runContext.render(this.commands).asList(String.class);
         var rImage = runContext.render(this.containerImage).as(String.class).orElse(DEFAULT_IMAGE);
         var task = Commands.builder()
             .id(this.getId())
             .type(Commands.class.getName())
             .containerImage(Property.ofValue(rImage))
-            .commands(Property.ofValue(rInput))
+            .commands(this.commands)
             .build();
         return task.run(TriggerRunContext.forEmbeddedTask(runContext, task));
     }

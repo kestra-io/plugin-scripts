@@ -45,21 +45,25 @@ import lombok.experimental.SuperBuilder;
 )
 public class ScriptTrigger extends AbstractGroovyTrigger {
 
-    @Schema(title = "Groovy script", description = "Executed on each poll with the same semantics as the Groovy Script task.")
+    @Schema(
+        title = "Groovy script",
+        description = "Executed on each poll with the same script rendering semantics as the Groovy Script task, including runner variables such as workingDir. beforeCommands, env and taskRunner are not exposed by this trigger. Supply dependencies and configuration in the script (for example @Grab, which may require network access) or container image."
+    )
     @NotNull
     @PluginProperty(group = "main")
     protected Property<String> script;
 
     @Override
     protected ScriptOutput executeTask(RunContext runContext) throws Exception {
-        var rInput = runContext.render(this.script).as(String.class)
-            .orElseThrow(() -> new IllegalArgumentException("script is required; supply the Groovy script to run on each poll"));
+        if (this.script == null) {
+            throw new IllegalArgumentException("script is required; supply the Groovy script to run on each poll");
+        }
         var rImage = runContext.render(this.containerImage).as(String.class).orElse(DEFAULT_IMAGE);
         var task = Script.builder()
             .id(this.getId())
             .type(Script.class.getName())
             .containerImage(Property.ofValue(rImage))
-            .script(Property.ofValue(rInput))
+            .script(this.script)
             .build();
         return task.run(TriggerRunContext.forEmbeddedTask(runContext, task));
     }
