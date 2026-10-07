@@ -57,7 +57,8 @@ public abstract class AbstractGroovyTrigger extends AbstractTrigger
     @Schema(title = "Edge trigger mode", description = """
         When true (default), the first matching poll emits and consecutive matches are suppressed
         until a nonmatching poll. The last match state is stored in the flow namespace KV store,
-        scoped to this flow and trigger. When false, each fresh matching run emits.
+        scoped to this flow and trigger. When false, each fresh matching run emits without accessing
+        or updating KV state. Re-enabling edge mode resumes the last stored edge-mode state.
         This does not provide exactly-once delivery if an evaluation crashes.
         """)
     @PluginProperty(group = "advanced")
@@ -83,14 +84,20 @@ public abstract class AbstractGroovyTrigger extends AbstractTrigger
         }
 
         var matched = matchesCondition(output);
+        if (!rEdge) {
+            return matched
+                ? Optional.of(TriggerService.generateExecution(this, conditionContext, context, output))
+                : Optional.empty();
+        }
+
         var store = runContext.namespaceKv(context.getNamespace());
         var key = edgeStateKey(context.getFlowId(), context.getTriggerId());
-        var lastMatched = store.getValue(key).map(value -> Boolean.TRUE.equals(value.value())).orElse(false);
+        var lastMatched = store.getValue(key).map(value -> Boolean.parseBoolean(String.valueOf(value.value()))).orElse(false);
         if (matched != lastMatched) {
             store.put(key, new KVValueAndMetadata(null, matched));
         }
 
-        if (!matched || (rEdge && lastMatched)) {
+        if (!matched || lastMatched) {
             return Optional.empty();
         }
         return Optional.of(TriggerService.generateExecution(this, conditionContext, context, output));

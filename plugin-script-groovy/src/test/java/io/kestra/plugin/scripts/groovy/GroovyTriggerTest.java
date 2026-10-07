@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import io.kestra.core.junit.annotations.KestraTest;
@@ -253,7 +254,7 @@ class GroovyTriggerTest {
 
     @ParameterizedTest
     @ValueSource(booleans = { false, true })
-    void writesOnlyTransitionsEvenWithEdgeDisabled(boolean commands) throws Exception {
+    void writesOnlyTransitionsWithEdgeEnabled(boolean commands) throws Exception {
         var original = trigger(commands, id(), "unused", "exit 0", true);
         var context = TestsUtils.mockTrigger(runContextFactory, original);
         var runContext = spy(context.getKey().getRunContext());
@@ -261,15 +262,97 @@ class GroovyTriggerTest {
         doReturn(store).when(runContext).namespaceKv(context.getValue().getNamespace());
         var conditionContext = context.getKey().withRunContext(runContext);
         boolean[] matched = { false, true, true, false, false, true, true, true };
-        boolean[] edges = { true, true, true, true, true, false, false, true };
-        boolean[] emits = { false, true, false, false, false, true, true, false };
+        boolean[] emits = { false, true, false, false, false, true, false, false };
         int[] writes = { 0, 1, 1, 2, 2, 3, 3, 3 };
         for (int i = 0; i < matched.length; i++) {
-            var fresh = spy(trigger(commands, original.getId(), "unused", "exit 0", edges[i]));
+            var fresh = spy(trigger(commands, original.getId(), "unused", "exit 0", true));
             doReturn(ScriptOutput.builder().exitCode(matched[i] ? 0 : 1).build()).when(fresh).executeTask(any());
             assertEquals(emits[i], fresh.evaluate(conditionContext, context.getValue()).isPresent(), "poll " + i);
             verify(store, times(writes[i])).put(anyString(), any(KVValueAndMetadata.class));
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { false, true })
+    void edgeDisabledDoesNotAccessKv(boolean commands) throws Exception {
+        var trigger = spy(trigger(commands, id(), "unused", "exit 0", false));
+        var context = TestsUtils.mockTrigger(runContextFactory, trigger);
+        var runContext = spy(context.getKey().getRunContext());
+        doThrow(new IllegalStateException("KV unavailable")).when(runContext).namespaceKv(anyString());
+        for (int exitCode : new int[] { 0, 0, 1 }) {
+            doReturn(ScriptOutput.builder().exitCode(exitCode).build()).when(trigger).executeTask(any());
+            assertEquals(exitCode == 0, trigger.evaluate(context.getKey().withRunContext(runContext), context.getValue()).isPresent());
+        }
+        verify(runContext, never()).namespaceKv(anyString());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "booleanTrue", "booleanFalse", "true", "TRUE", "false", "missing", "null", "unexpected" })
+    void persistedBooleanAndStringStateControlsEdges(String state) throws Exception {
+        Object stored = switch (state) {
+            case "booleanTrue" -> Boolean.TRUE;
+            case "booleanFalse" -> Boolean.FALSE;
+            case "missing", "null" -> null;
+            default -> state;
+        };
+        var trigger = spy(trigger(false, id(), "unused", "exit 0", true));
+        var context = TestsUtils.mockTrigger(runContextFactory, trigger);
+        var runContext = spy(context.getKey().getRunContext());
+        var store = mock(KVStore.class);
+        doReturn(store).when(runContext).namespaceKv(anyString());
+        when(store.getValue(anyString())).thenReturn(
+            state.equals("missing")
+                ? java.util.Optional.empty()
+                : java.util.Optional.of(new io.kestra.core.storages.kv.KVValue(stored))
+        );
+        doReturn(ScriptOutput.builder().exitCode(0).build()).when(trigger).executeTask(any());
+        boolean previouslyMatched = Boolean.TRUE.equals(stored) || "true".equals(stored) || "TRUE".equals(stored);
+        assertEquals(!previouslyMatched, trigger.evaluate(context.getKey().withRunContext(runContext), context.getValue()).isPresent());
+        verify(store, times(previouslyMatched ? 0 : 1)).put(anyString(), any(KVValueAndMetadata.class));
+    }
+
+    @ParameterizedTest
+    @MethodSource("priorEdgeStates")
+    void disabledObservationsPreserveStateWhenEdgeModeResumes(Boolean prior) throws Exception {
+        var original = trigger(false, id(), "unused", "exit 0", true);
+        var context = TestsUtils.mockTrigger(runContextFactory, original);
+        var store = spy(context.getKey().getRunContext().namespaceKv(context.getValue().getNamespace()));
+        var key = AbstractGroovyTrigger.edgeStateKey(context.getValue().getFlowId(), context.getValue().getTriggerId());
+        if (prior != null) {
+            store.put(key, new KVValueAndMetadata(null, prior));
+        }
+        var runContext = spy(context.getKey().getRunContext());
+        doReturn(store).when(runContext).namespaceKv(anyString());
+        var conditionContext = context.getKey().withRunContext(runContext);
+        var disabled = spy(trigger(false, original.getId(), "unused", "exit 0", false));
+        doReturn(ScriptOutput.builder().exitCode(Boolean.TRUE.equals(prior) ? 1 : 0).build()).when(disabled).executeTask(any());
+        assertEquals(!Boolean.TRUE.equals(prior), disabled.evaluate(conditionContext, context.getValue()).isPresent());
+        assertEquals(prior, store.getValue(key).map(value -> (Boolean) value.value()).orElse(null));
+        var enabled = spy(trigger(false, original.getId(), "unused", "exit 0", true));
+        doReturn(ScriptOutput.builder().exitCode(0).build()).when(enabled).executeTask(any());
+        assertEquals(!Boolean.TRUE.equals(prior), enabled.evaluate(conditionContext, context.getValue()).isPresent());
+        doReturn(ScriptOutput.builder().exitCode(1).build()).when(enabled).executeTask(any());
+        assertTrue(enabled.evaluate(conditionContext, context.getValue()).isEmpty());
+        doReturn(ScriptOutput.builder().exitCode(0).build()).when(enabled).executeTask(any());
+        assertTrue(enabled.evaluate(conditionContext, context.getValue()).isPresent());
+    }
+
+    static java.util.stream.Stream<Boolean> priorEdgeStates() {
+        return java.util.stream.Stream.of(true, false, null);
+    }
+
+    @Test
+    void stringTrueIsClearedByNonmatchingPoll() throws Exception {
+        var trigger = spy(trigger(false, id(), "unused", "exit 0", true));
+        var context = TestsUtils.mockTrigger(runContextFactory, trigger);
+        var store = context.getKey().getRunContext().namespaceKv(context.getValue().getNamespace());
+        var key = AbstractGroovyTrigger.edgeStateKey(context.getValue().getFlowId(), context.getValue().getTriggerId());
+        store.put(key, new KVValueAndMetadata(null, "true"));
+        doReturn(ScriptOutput.builder().exitCode(1).build()).when(trigger).executeTask(any());
+        assertTrue(trigger.evaluate(context.getKey(), context.getValue()).isEmpty());
+        assertEquals(Boolean.FALSE, store.getValue(key).orElseThrow().value());
+        doReturn(ScriptOutput.builder().exitCode(0).build()).when(trigger).executeTask(any());
+        assertTrue(trigger.evaluate(context.getKey(), context.getValue()).isPresent());
     }
 
     @ParameterizedTest
