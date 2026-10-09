@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -22,6 +23,7 @@ import jakarta.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @KestraTest
@@ -77,25 +79,101 @@ class NodeTest {
         assertThat(((io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) nodeException.getOutput()).getStdErrLineCount(), equalTo(0));
     }
 
-    @Test
-    void requirements() throws Exception {
+    private Node requirementsNode(int status) {
         Map<String, String> files = new HashMap<>();
-        files.put("main.js", "require('axios').get('http://google.com').then(r => { console.log('::{\"outputs\": {\"extract\":\"' + r.status + '\"}}::') })");
+        files.put("main.js", """
+            const http = require('http');
+            const axios = require('axios');
+            const sockets = new Set();
+            const server = http.createServer((req, res) => {
+                res.writeHead(%d, { 'Content-Type': 'text/plain' });
+                res.end('kestra-axios-fixture');
+            });
+            server.on('connection', socket => {
+                sockets.add(socket);
+                socket.on('close', () => sockets.delete(socket));
+            });
+            const deadline = setTimeout(() => {
+                console.error('HTTP fixture timed out');
+                process.exit(1);
+            }, 15000);
+            (async () => {
+                try {
+                    await new Promise((resolve, reject) => {
+                        server.once('error', reject);
+                        server.listen(0, '127.0.0.1', resolve);
+                    });
+                    const response = await axios.get('http://127.0.0.1:' + server.address().port, {
+                        proxy: false,
+                        timeout: 5000
+                    });
+                    if (response.status !== 200 || response.data !== 'kestra-axios-fixture') {
+                        throw new Error('Unexpected HTTP fixture response');
+                    }
+                    console.log('::' + JSON.stringify({ outputs: { extract: String(response.status), body: response.data } }) + '::');
+                } finally {
+                    sockets.forEach(socket => socket.destroy());
+                    await new Promise(resolve => server.close(resolve));
+                    clearTimeout(deadline);
+                }
+            })().catch(error => {
+                console.error(error.message);
+                process.exitCode = 1;
+            });
+            """.formatted(status));
         files.put("package.json", "{\"dependencies\":{\"axios\":\"^0.20.0\"}}");
-
-        Node node = Node.builder()
+        return Node.builder()
             .id("test-node-task")
             .type(Node.class.getName())
             .nodePath(Property.ofValue("node"))
             .npmPath(Property.ofValue("npm"))
             .inputFiles(files)
             .build();
+    }
 
+    @Test
+    @Timeout(90)
+    void requirements() throws Exception {
+        Node node = requirementsNode(200);
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, node, ImmutableMap.of());
         ScriptOutput run = node.run(runContext);
-
         assertThat(run.getExitCode(), is(0));
         assertThat(run.getVars().get("extract"), is("200"));
+        assertThat(run.getVars().get("body"), is("kestra-axios-fixture"));
+    }
+
+    @Test
+    @Timeout(90)
+    void requirementsHttpFailureDoesNotEmitSuccess() throws Exception {
+        Node node = requirementsNode(503);
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, node, ImmutableMap.of());
+        var failure = assertThrows(RunnableTaskException.class, () -> node.run(runContext));
+        var output = (io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) failure.getOutput();
+        assertThat(output.getExitCode(), is(1));
+        assertFalse(output.getVars().containsKey("extract"));
+    }
+
+    @Test
+    @Timeout(90)
+    void invalidRequirementsDoNotExecuteMain() throws Exception {
+        Node node = Node.builder()
+            .id("test-node-task")
+            .type(Node.class.getName())
+            .nodePath(Property.ofValue("node"))
+            .npmPath(Property.ofValue("npm"))
+            .inputFiles(
+                Map.of(
+                    "package.json", "{invalid json",
+                    "main.js", "console.log('::{\"outputs\":{\"mainExecuted\":true}}::')"
+                )
+            )
+            .build();
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, node, ImmutableMap.of());
+        var failure = assertThrows(RunnableTaskException.class, () -> node.run(runContext));
+        var output = (io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput) failure.getOutput();
+        assertThat(output.getExitCode(), not(0));
+        assertFalse(output.getVars().containsKey("mainExecuted"));
+        assertThat(output.getStdOutLineCount(), is(0));
     }
 
     @Test
