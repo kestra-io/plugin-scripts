@@ -1,24 +1,20 @@
-package io.kestra.plugin.scripts.dotnet;
+package io.kestra.plugin.scripts.csharp;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.enums.MonacoLanguages;
-import io.kestra.core.models.property.Property;
-import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.runners.TargetOS;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.FilesService;
 import io.kestra.core.runners.RunContext;
-import io.kestra.plugin.scripts.exec.AbstractExecScript;
-import io.kestra.plugin.scripts.exec.scripts.models.DockerOptions;
+import io.kestra.plugin.scripts.dotnet.AbstractDotnetScript;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
-import io.kestra.plugin.scripts.exec.scripts.runners.CommandsWrapper;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -26,8 +22,8 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
-@ToString
-@EqualsAndHashCode
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 @Getter
 @NoArgsConstructor
 @Schema(
@@ -52,7 +48,7 @@ import lombok.experimental.SuperBuilder;
 
                 tasks:
                   - id: hello_csharp
-                    type: io.kestra.plugin.scripts.dotnet.Script
+                    type: io.kestra.plugin.scripts.csharp.Script
                     script: |
                       Console.WriteLine("Hello from Kestra!");
                 """
@@ -66,7 +62,7 @@ import lombok.experimental.SuperBuilder;
 
                 tasks:
                   - id: hello_csharp
-                    type: io.kestra.plugin.scripts.dotnet.Script
+                    type: io.kestra.plugin.scripts.csharp.Script
                     script: |
                       #r "nuget:Newtonsoft.Json,13.0.3"
                       using Newtonsoft.Json;
@@ -74,41 +70,36 @@ import lombok.experimental.SuperBuilder;
                       Console.WriteLine(JsonConvert.SerializeObject(data));
                 """
         ),
+
         @Example(
             full = true,
             title = """
-                Generate output files from a C# script. Files written to `{{ outputDir }}` are persisted \
-                in Kestra's internal storage and accessible to downstream tasks via \
-                `{{ outputs.yourTaskId.outputFiles['yourFileName.txt'] }}`.
-                """,
+        Generate output files from a C# script. Files declared in `outputFiles` are persisted \
+        in Kestra's internal storage and accessible to downstream tasks via \
+        `{{ outputs.write_file.outputFiles['hello.txt'] }}`.
+        """,
             code = """
-                id: dotnet_generate_files
-                namespace: company.team
+        id: dotnet_generate_files
+        namespace: company.team
 
-                tasks:
-                  - id: write_file
-                    type: io.kestra.plugin.scripts.dotnet.Script
-                    script: |
-                      File.WriteAllText("{{ outputDir }}/hello.txt", "Hello from dotnet-script!");
-                """
+        tasks:
+          - id: write_file
+            type: io.kestra.plugin.scripts.csharp.Script
+            outputFiles:
+              - hello.txt
+            script: |
+              File.WriteAllText("hello.txt", "Hello from dotnet-script!");
+        """
         )
-    }
+    },
+    aliases = "io.kestra.plugin.scripts.dotnet.Script"
 )
-public class Script extends AbstractExecScript implements RunnableTask<ScriptOutput> {
-    private static final String DEFAULT_IMAGE = "mcr.microsoft.com/dotnet/sdk:10.0";
+public class Script extends AbstractDotnetScript {
 
     private static final List<String> DOTNET_SCRIPT_INSTALL = List.of(
         "dotnet tool install -g dotnet-script --ignore-failed-sources || true",
         "export PATH=\"$PATH:$HOME/.dotnet/tools\""
     );
-
-    @Schema(
-        title = "Container image for the .NET runtime",
-        description = "Docker image used to run the script. Defaults to `mcr.microsoft.com/dotnet/sdk:10.0`. Use a custom image pre-built with `dotnet-script` to avoid tool installation on each run."
-    )
-    @Builder.Default
-    @PluginProperty(group = "execution")
-    protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
         title = "Inline C# script to execute",
@@ -122,27 +113,29 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
     protected Property<String> script;
 
     @Override
-    protected DockerOptions injectDefaults(RunContext runContext, DockerOptions original) throws IllegalVariableEvaluationException {
-        var builder = original.toBuilder();
-        if (original.getImage() == null) {
-            builder.image(runContext.render(this.getContainerImage()).as(String.class).orElse(DEFAULT_IMAGE));
-        }
-        return builder.build();
-    }
-
-    @Override
     public ScriptOutput run(RunContext runContext) throws Exception {
         var commands = this.commands(runContext);
 
-        var inputFiles = FilesService.inputFiles(runContext, commands.getTaskRunner().additionalVars(runContext, commands), this.getInputFiles());
-        Path relativeScriptPath = runContext.workingDir().path().relativize(runContext.workingDir().createTempFile(".csx"));
+        var inputFiles = FilesService.inputFiles(
+            runContext,
+            commands.getTaskRunner().additionalVars(runContext, commands),
+            this.getInputFiles()
+        );
+
+        Path relativeScriptPath = runContext.workingDir().path()
+            .relativize(runContext.workingDir().createTempFile(".csx"));
+
         inputFiles.put(
             relativeScriptPath.toString(),
             commands.render(runContext, this.script)
         );
+
         commands = commands.withInputFiles(inputFiles);
 
-        var os = runContext.render(this.targetOS).as(TargetOS.class).orElse(null);
+        var os = runContext.render(this.targetOS)
+            .as(TargetOS.class)
+            .orElse(null);
+
         return commands
             .withInterpreter(this.interpreter)
             .withBeforeCommands(buildBeforeCommands(runContext))
@@ -150,7 +143,13 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
             .withCommands(
                 Property.ofValue(
                     List.of(
-                        "dotnet-script " + commands.getTaskRunner().toAbsolutePath(runContext, commands, "./" + relativeScriptPath, os)
+                        "dotnet-script "
+                            + commands.getTaskRunner().toAbsolutePath(
+                            runContext,
+                            commands,
+                            "./" + relativeScriptPath,
+                            os
+                        )
                     )
                 )
             )
@@ -158,10 +157,16 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
             .run();
     }
 
-    private Property<List<String>> buildBeforeCommands(RunContext runContext) throws IllegalVariableEvaluationException {
-        var userBefore = runContext.render(this.getBeforeCommands()).asList(String.class);
+    private Property<List<String>> buildBeforeCommands(
+        RunContext runContext
+    ) throws IllegalVariableEvaluationException {
+
+        var userBefore =
+            runContext.render(this.getBeforeCommands()).asList(String.class);
+
         var combined = new ArrayList<>(DOTNET_SCRIPT_INSTALL);
         combined.addAll(userBefore);
+
         return Property.ofValue(combined);
     }
 }

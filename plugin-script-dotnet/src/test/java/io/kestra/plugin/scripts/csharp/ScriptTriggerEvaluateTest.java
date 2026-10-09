@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts.dotnet;
+package io.kestra.plugin.scripts.csharp;
 
 import java.util.Map;
 import java.util.Optional;

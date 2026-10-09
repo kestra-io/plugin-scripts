@@ -1,7 +1,7 @@
 group: io.kestra.plugin.scripts.dotnet
 name: "plugin-dotnet"
-title: ".NET (C#)"
-description: "Tasks that run .NET C# scripts using dotnet-script."
-body: "Provide C# code inline as .csx scripts or run arbitrary dotnet CLI commands inside a .NET SDK container, capturing stdout/stderr and any output files for subsequent steps."
+title: ".NET (C# and F#)"
+description: "Tasks that run .NET C# and F# scripts and commands."
+body: "Run C# scripts using dotnet-script, F# scripts using dotnet fsi, or arbitrary .NET CLI commands inside a .NET SDK container, with support for triggers, inputs, outputs, and workflow variables."
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"
