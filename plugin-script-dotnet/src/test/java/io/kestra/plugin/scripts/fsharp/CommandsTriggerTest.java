@@ -47,7 +47,6 @@ class CommandsTriggerTest {
                         List.of("exit 1")
                     )
                 )
-                .targetOS(Property.ofValue(TargetOS.LINUX))
                 .build();
 
         var context =

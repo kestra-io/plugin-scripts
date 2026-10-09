@@ -70,23 +70,26 @@ import lombok.experimental.SuperBuilder;
                       Console.WriteLine(JsonConvert.SerializeObject(data));
                 """
         ),
+
         @Example(
             full = true,
             title = """
-                Generate output files from a C# script. Files written to `{{ outputDir }}` are persisted \
-                in Kestra's internal storage and accessible to downstream tasks via \
-                `{{ outputs.yourTaskId.outputFiles['yourFileName.txt'] }}`.
-                """,
+        Generate output files from a C# script. Files declared in `outputFiles` are persisted \
+        in Kestra's internal storage and accessible to downstream tasks via \
+        `{{ outputs.write_file.outputFiles['hello.txt'] }}`.
+        """,
             code = """
-                id: dotnet_generate_files
-                namespace: company.team
+        id: dotnet_generate_files
+        namespace: company.team
 
-                tasks:
-                  - id: write_file
-                    type: io.kestra.plugin.scripts.csharp.Script
-                    script: |
-                      File.WriteAllText("{{ outputDir }}/hello.txt", "Hello from dotnet-script!");
-                """
+        tasks:
+          - id: write_file
+            type: io.kestra.plugin.scripts.csharp.Script
+            outputFiles:
+              - hello.txt
+            script: |
+              File.WriteAllText("hello.txt", "Hello from dotnet-script!");
+        """
         )
     },
     aliases = "io.kestra.plugin.scripts.dotnet.Script"

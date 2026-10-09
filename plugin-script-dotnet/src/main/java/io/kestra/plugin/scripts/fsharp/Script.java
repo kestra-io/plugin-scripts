@@ -67,12 +67,13 @@ import lombok.experimental.SuperBuilder;
                       printfn "%s" (JsonConvert.SerializeObject(data))
                 """
         ),
+
         @Example(
             full = true,
             title = """
-        Generate output files from an F# script. Files written to `{{ outputDir }}` are persisted \
+        Generate output files from an F# script. Files declared in `outputFiles` are persisted \
         in Kestra's internal storage and accessible to downstream tasks via \
-        `{{ outputs.yourTaskId.outputFiles['yourFileName.txt'] }}`.
+        `{{ outputs.write_file.outputFiles['hello.txt'] }}`.
         """,
             code = """
         id: fsharp_generate_files
@@ -81,8 +82,11 @@ import lombok.experimental.SuperBuilder;
         tasks:
           - id: write_file
             type: io.kestra.plugin.scripts.fsharp.Script
+            outputFiles:
+              - hello.txt
             script: |
-              System.IO.File.WriteAllText("{{ outputDir }}/hello.txt", "Hello from F#!")
+              System.IO.File.WriteAllText("hello.txt", "Hello from F#!")
+              printfn "Created hello.txt successfully."
         """
         )
     }

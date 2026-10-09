@@ -64,8 +64,10 @@ public abstract class AbstractDotnetTrigger<O extends AbstractDotnetTrigger.Outp
         title = "Target operating system",
         description = "Operating system used by the underlying .NET task."
     )
+    @Builder.Default
     @PluginProperty(group = "execution")
-    protected Property<TargetOS> targetOS;
+    protected Property<TargetOS> targetOS =
+        Property.ofValue(TargetOS.AUTO);
 
     @Schema(
         title = "Condition to match",

@@ -35,7 +35,6 @@ class CommandsTriggerTest {
             .edge(Property.ofValue(true))
             .containerImage(Property.ofValue("mcr.microsoft.com/dotnet/sdk:10.0"))
             .commands(Property.ofValue(List.of("exit 1")))
-            .targetOS(Property.ofValue(TargetOS.LINUX))
             .build();
 
         var context = TestsUtils.mockTrigger(runContextFactory, trigger);

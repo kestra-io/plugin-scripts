@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.plugin.scripts.fsharp.ScriptTrigger;
@@ -44,7 +43,6 @@ class ScriptTriggerEvaluateTest {
             .edge(Property.ofValue(true))
             .containerImage(Property.ofValue(IMAGE))
             .script(Property.ofValue(script))
-            .targetOS(Property.ofValue(TargetOS.LINUX))
             .build();
     }
 

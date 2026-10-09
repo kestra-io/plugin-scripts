@@ -74,14 +74,6 @@ import lombok.experimental.SuperBuilder;
 public class Commands extends AbstractDotnetCommands {
 
     @Schema(
-        title = "Container image for the .NET runtime",
-        description = "Docker image used to run the commands. Defaults to `mcr.microsoft.com/dotnet/sdk:10.0`. Use a custom image pre-installed with `dotnet-script` or other tools to skip manual setup in `beforeCommands`."
-    )
-    @Builder.Default
-    @PluginProperty(group = "execution")
-    protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
-
-    @Schema(
         title = "Shell commands to execute",
         description = """
             List of shell commands executed in order inside the .NET SDK container.

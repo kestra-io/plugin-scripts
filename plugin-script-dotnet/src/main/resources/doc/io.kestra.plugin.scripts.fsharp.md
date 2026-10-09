@@ -62,9 +62,10 @@ tasks:
       printfn "%s" (JsonConvert.SerializeObject(data))
 ```
 
+
 #### Generate output files
 
-Files written to `{{ outputDir }}` are persisted in Kestra's internal storage and are available to downstream tasks through the task output.
+Files declared in `outputFiles` are persisted in Kestra's internal storage and available to downstream tasks through the task output.
 
 ```yaml
 id: fsharp_generate_files
@@ -73,8 +74,11 @@ namespace: company.team
 tasks:
   - id: write_file
     type: io.kestra.plugin.scripts.fsharp.Script
+    outputFiles:
+      - hello.txt
     script: |
-      System.IO.File.WriteAllText("{{ outputDir }}/hello.txt", "Hello from F#!")
+      System.IO.File.WriteAllText("hello.txt", "Hello from F#!")
+      printfn "Created hello.txt successfully."
 ```
 
 ### Commands
