@@ -35,7 +35,6 @@ import lombok.experimental.SuperBuilder;
 @Plugin(
     examples = {
         @Example(
-            // Hello World
             title = "Run a simple F# Hello World script.",
             full = true,
             code = """
@@ -50,7 +49,6 @@ import lombok.experimental.SuperBuilder;
                 """
         ),
         @Example(
-            // NuGet dependency
             title = "Run an inline F# script with a NuGet dependency.",
             full = true,
             code = """
@@ -70,7 +68,6 @@ import lombok.experimental.SuperBuilder;
                 """
         ),
         @Example(
-            // output files
             full = true,
             title = """
         Generate output files from an F# script. Files written to `{{ outputDir }}` are persisted \
