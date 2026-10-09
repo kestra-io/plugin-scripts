@@ -3,21 +3,27 @@ package io.kestra.plugin.scripts.groovy;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
+import io.kestra.core.models.triggers.Trigger;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.core.storages.kv.KVStore;
+import io.kestra.core.storages.kv.KVValue;
 import io.kestra.core.storages.kv.KVValueAndMetadata;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
@@ -302,8 +308,8 @@ class GroovyTriggerTest {
         doReturn(store).when(runContext).namespaceKv(anyString());
         when(store.getValue(anyString())).thenReturn(
             state.equals("missing")
-                ? java.util.Optional.empty()
-                : java.util.Optional.of(new io.kestra.core.storages.kv.KVValue(stored))
+                ? Optional.empty()
+                : Optional.of(new KVValue(stored))
         );
         doReturn(ScriptOutput.builder().exitCode(0).build()).when(trigger).executeTask(any());
         boolean previouslyMatched = Boolean.TRUE.equals(stored) || "true".equals(stored) || "TRUE".equals(stored);
@@ -337,8 +343,8 @@ class GroovyTriggerTest {
         assertTrue(enabled.evaluate(conditionContext, context.getValue()).isPresent());
     }
 
-    static java.util.stream.Stream<Boolean> priorEdgeStates() {
-        return java.util.stream.Stream.of(true, false, null);
+    static Stream<Boolean> priorEdgeStates() {
+        return Stream.of(true, false, null);
     }
 
     @Test
@@ -414,20 +420,20 @@ class GroovyTriggerTest {
         var base = context.getValue();
         var scopes = List.of(
             base,
-            io.kestra.core.models.triggers.Trigger.builder().tenantId(base.getTenantId())
+            Trigger.builder().tenantId(base.getTenantId())
                 .namespace(base.getNamespace()).flowId(base.getFlowId() + "-other").triggerId(base.getTriggerId())
-                .date(java.time.ZonedDateTime.now()).build(),
-            io.kestra.core.models.triggers.Trigger.builder().tenantId(base.getTenantId())
+                .date(ZonedDateTime.now()).build(),
+            Trigger.builder().tenantId(base.getTenantId())
                 .namespace(base.getNamespace()).flowId(base.getFlowId()).triggerId(base.getTriggerId() + "-other")
-                .date(java.time.ZonedDateTime.now()).build(),
-            io.kestra.core.models.triggers.Trigger.builder().tenantId(base.getTenantId())
+                .date(ZonedDateTime.now()).build(),
+            Trigger.builder().tenantId(base.getTenantId())
                 .namespace(base.getNamespace() + ".other").flowId(base.getFlowId()).triggerId(base.getTriggerId())
-                .date(java.time.ZonedDateTime.now()).build()
+                .date(ZonedDateTime.now()).build()
         );
         var runContext = spy(context.getKey().getRunContext());
         var otherNamespaceStore = mock(KVStore.class);
-        when(otherNamespaceStore.getValue(anyString())).thenReturn(java.util.Optional.empty())
-            .thenReturn(java.util.Optional.of(new io.kestra.core.storages.kv.KVValue(true)));
+        when(otherNamespaceStore.getValue(anyString())).thenReturn(Optional.empty())
+            .thenReturn(Optional.of(new KVValue(true)));
         doReturn(otherNamespaceStore).when(runContext).namespaceKv(base.getNamespace() + ".other");
         var conditionContext = context.getKey().withRunContext(runContext);
         for (var scope : scopes) {
@@ -485,7 +491,7 @@ class GroovyTriggerTest {
             var task = Script.builder().id(id()).type(Script.class.getName())
                 .containerImage(Property.ofValue("groovy:jdk21")).script(Property.ofExpression(script)).build();
             assertThrows(
-                io.kestra.core.exceptions.IllegalVariableEvaluationException.class,
+                IllegalVariableEvaluationException.class,
                 () -> task.run(TestsUtils.mockRunContext(runContextFactory, task, Map.of()))
             );
             assertTrue(trigger.evaluate(context.getKey(), context.getValue()).isEmpty());
@@ -514,7 +520,7 @@ class GroovyTriggerTest {
             var task = Script.builder().id(id()).type(Script.class.getName())
                 .containerImage(Property.ofValue("groovy:jdk21")).script(Property.ofValue(script)).build();
             assertThrows(
-                io.kestra.core.exceptions.IllegalVariableEvaluationException.class,
+                IllegalVariableEvaluationException.class,
                 () -> task.run(TestsUtils.mockRunContext(runContextFactory, task, Map.of()))
             );
             var trigger = ScriptTrigger.builder().id(id()).type(ScriptTrigger.class.getName())
