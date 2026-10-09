@@ -75,9 +75,11 @@ This is a **multi-module** plugin with 19 submodules:
 **plugin-script-groovy:**
 
 - `io.kestra.plugin.scripts.groovy.Commands`
+- `io.kestra.plugin.scripts.groovy.CommandsTrigger`
 - `io.kestra.plugin.scripts.groovy.Eval`
 - `io.kestra.plugin.scripts.groovy.FileTransform`
 - `io.kestra.plugin.scripts.groovy.Script`
+- `io.kestra.plugin.scripts.groovy.ScriptTrigger`
 
 **plugin-script-jbang:**
 
