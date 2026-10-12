@@ -1,7 +1,9 @@
-package io.kestra.plugin.scripts.dotnet;
+package io.kestra.plugin.scripts.julia;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,9 +47,9 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Trigger a flow when .NET commands match a condition",
+    title = "Trigger a flow when Julia commands match a condition",
     description = """
-        Polls by running .NET commands in a script container (default image mcr.microsoft.com/dotnet/sdk:10.0) and emits when exitCondition matches. \
+        Polls by running Julia commands in a container (default image julia) and emits when exitCondition matches. \
         Edge mode (the default) emits only on a transition from not matching to matching, remembering the previous result in the namespace KV store. \
         Polls every 60s by default. Accepts 'exit N' or a regex (fallback substring) matched against emitted vars; a failed run has no vars, so only 'exit N' can match a failure.
         """
@@ -55,21 +57,21 @@ import lombok.experimental.SuperBuilder;
 @Plugin(
     examples = {
         @Example(
-            title = "Trigger when commands fail with an implicit error (exit 1).",
+            title = "Trigger when commands exit with code 42.",
             full = true,
             code = """
-                id: commands_trigger
+                id: julia_commands_trigger
                 namespace: company.team
 
                 triggers:
-                  - id: commands_failure
-                    type: io.kestra.plugin.scripts.dotnet.CommandsTrigger
-                    interval: PT60S
-                    exitCondition: "exit 1"
+                  - id: on_exit_42
+                    type: io.kestra.plugin.scripts.julia.CommandsTrigger
+                    interval: PT10S
+                    exitCondition: "exit 42"
                     edge: true
-                    containerImage: mcr.microsoft.com/dotnet/sdk:10.0
+                    containerImage: julia
                     commands:
-                      - dotnet run --project missing
+                      - julia -e 'exit(42)'
 
                 tasks:
                   - id: log
@@ -82,23 +84,30 @@ import lombok.experimental.SuperBuilder;
 public class CommandsTrigger extends AbstractTrigger
     implements PollingTriggerInterface, TriggerOutput<CommandsTrigger.Output> {
 
-    private static final String DEFAULT_IMAGE = "mcr.microsoft.com/dotnet/sdk:10.0";
+    private static final String DEFAULT_IMAGE = "julia";
     private static final Pattern EXIT_CONDITION_PATTERN = Pattern.compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE);
 
+    private static final int MAX_CACHED_CONDITIONS = 64;
+    private static final Map<String, Pattern> CONDITION_PATTERNS = Collections.synchronizedMap(
+        new LinkedHashMap<>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Pattern> eldest) {
+                return size() > MAX_CACHED_CONDITIONS;
+            }
+        }
+    );
+
     @Schema(
-        title = "Docker image used to execute the commands",
-        description = """
-            Container image used by the underlying Commands task to run .NET commands.
-            Defaults to 'mcr.microsoft.com/dotnet/sdk:10.0'.
-            """
+        title = "Container image for commands execution",
+        description = "Image used to run the Julia commands; defaults to 'julia'. Provide an image that includes Julia."
     )
     @Builder.Default
     @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = ".NET commands to execute",
-        description = "Commands executed on each poll (same semantics as the .NET Commands task)."
+        title = "Julia commands to execute",
+        description = "Julia commands executed on each poll. Note that beforeCommands and env are not exposed on the trigger, so package installs or configuration must live in the commands or container image."
     )
     @NotNull
     @PluginProperty(group = "main")
@@ -107,13 +116,12 @@ public class CommandsTrigger extends AbstractTrigger
     @Schema(
         title = "Condition to match",
         description = """
-            Condition evaluated after each commands execution. The trigger emits an event only when this condition matches.
-
-            Supported forms:
-            - 'exit N' (example: 'exit 1'): matches when the process exit code equals N.
-            - Any other string: treated as a regex (or substring if regex is invalid) matched against the
-              task's 'vars' (when commands emit ::{"outputs":...}::). On a failed run no vars are available
-              to match against, so only an 'exit N' condition can match a failure.
+            Condition evaluated after each commands execution. The trigger emits only when it matches. \
+            'exit N' compares the exit code, otherwise the string is used as a regex (or substring fallback) \
+            against emitted vars (from ::{"outputs":...}::). On a failed run no vars are available to match \
+            against, so only an 'exit N' condition can match a failure. \
+            Note that Julia exits with 1 on syntax or runtime errors, \
+            so prefer a dedicated exit code (e.g. 'exit 42') for the condition you watch.
             """
     )
     @NotNull
@@ -122,7 +130,7 @@ public class CommandsTrigger extends AbstractTrigger
 
     @Schema(
         title = "Check interval",
-        description = "Interval between polling evaluations."
+        description = "Interval between polling evaluations; default PT60S."
     )
     @Builder.Default
     @PluginProperty(group = "execution")
@@ -131,9 +139,9 @@ public class CommandsTrigger extends AbstractTrigger
     @Schema(
         title = "Edge trigger mode",
         description = """
-            If true (default), the trigger emits only on a transition from 'not matching' to 'matching' \
-            (anti-spam). The previous result is kept in the namespace KV store, keyed by flow and trigger id. \
-            If false, the trigger emits on every poll where the condition matches.
+            When true (default), emit only on a transition from not matching to matching. \
+            The previous result is kept in the namespace KV store, keyed by flow and trigger id. \
+            When false, emit on every poll that matches.
             """
     )
     @Builder.Default
@@ -154,7 +162,6 @@ public class CommandsTrigger extends AbstractTrigger
         }
 
         boolean matched = matchesCondition(out);
-
         boolean emit = shouldEmit(runContext, context, renderedEdge, matched);
 
         if (!emit) {
@@ -169,9 +176,6 @@ public class CommandsTrigger extends AbstractTrigger
             return matched;
         }
 
-        // A polling trigger is rebuilt from the flow definition (and serialized to a worker) on
-        // every poll, so the previous result cannot live in a field. It is kept in the namespace
-        // KV store instead and advanced on every poll.
         KVStore kvStore = runContext.namespaceKv(context.getNamespace());
         String key = edgeStateKey(context);
 
@@ -179,8 +183,6 @@ public class CommandsTrigger extends AbstractTrigger
             .map(value -> Boolean.parseBoolean(String.valueOf(value.value())))
             .orElse(false);
 
-        // Skip the write on a poll that repeats the same result, so a condition that stays true
-        // for hours does not rewrite the same value every interval.
         if (matched != previouslyMatched) {
             kvStore.put(key, new KVValueAndMetadata(null, matched));
         }
@@ -188,8 +190,6 @@ public class CommandsTrigger extends AbstractTrigger
         return matched && !previouslyMatched;
     }
 
-    // Length prefixed so that the pairs ("a-b", "c") and ("a", "b-c") can never share a key.
-    // Flow and trigger ids only use characters that are valid in a KV key.
     static String edgeStateKey(TriggerContext context) {
         return "trigger-edge-" + context.getFlowId().length() + "-" + context.getFlowId() + "-" + context.getTriggerId();
     }
@@ -208,13 +208,9 @@ public class CommandsTrigger extends AbstractTrigger
 
         try {
             ScriptOutput taskOutput = task.run(TriggerRunContext.forEmbeddedTask(runContext, task));
-            Integer exitCode = safeExitCode(taskOutput);
-            Map<String, Object> vars = safeVars(taskOutput);
-
-            return new Output(Instant.now(), renderedCondition, exitCode, vars);
+            return new Output(Instant.now(), renderedCondition, safeExitCode(taskOutput), safeVars(taskOutput));
         } catch (RunnableTaskException e) {
-            ExtractedFailure failure = extractFailure(e);
-            return new Output(Instant.now(), renderedCondition, failure.exitCode, null);
+            return new Output(Instant.now(), renderedCondition, extractExitCode(e), null);
         }
     }
 
@@ -227,19 +223,20 @@ public class CommandsTrigger extends AbstractTrigger
             return out.getExitCode() != null && out.getExitCode() == expected;
         }
 
-        String haystack = buildHaystack(out);
+        String haystack = out.getVars() == null || out.getVars().isEmpty() ? "" : out.getVars().toString();
         if (haystack.isEmpty() || cond.isEmpty()) {
             return false;
         }
 
-        return ExitConditionRegex.find(cond, haystack);
+        try {
+            return ExitConditionRegex.find(conditionPattern(cond), haystack);
+        } catch (Exception invalidRegex) {
+            return ExitConditionRegex.invalidPatternFallback(cond, haystack);
+        }
     }
 
-    private String buildHaystack(Output out) {
-        if (out.getVars() == null || out.getVars().isEmpty()) {
-            return "";
-        }
-        return out.getVars().toString();
+    static Pattern conditionPattern(String condition) {
+        return CONDITION_PATTERNS.computeIfAbsent(condition, Pattern::compile);
     }
 
     private Integer safeExitCode(ScriptOutput taskOutput) {
@@ -258,22 +255,15 @@ public class CommandsTrigger extends AbstractTrigger
         }
     }
 
-    private record ExtractedFailure(Integer exitCode) {
-    }
-
-    private ExtractedFailure extractFailure(RunnableTaskException e) {
-        Integer exitCode = null;
-
+    private Integer extractExitCode(RunnableTaskException e) {
         Throwable cur = e.getCause();
         while (cur != null) {
             if (cur instanceof TaskException te) {
-                exitCode = te.getExitCode();
-                break;
+                return te.getExitCode();
             }
             cur = cur.getCause();
         }
-
-        return new ExtractedFailure(exitCode);
+        return null;
     }
 
     @Data
@@ -282,22 +272,13 @@ public class CommandsTrigger extends AbstractTrigger
         @Schema(title = "Timestamp of the event that fired the trigger")
         private Instant timestamp;
 
-        @Schema(
-            title = "Rendered condition",
-            description = "Rendered value of the exitCondition property for this poll."
-        )
+        @Schema(title = "Rendered condition", description = "Rendered value of the exitCondition property for this poll.")
         private String condition;
 
-        @Schema(
-            title = "Commands exit code",
-            description = "Exit code returned by the .NET process (may be null if not available)."
-        )
+        @Schema(title = "Commands exit code", description = "Exit code returned by the Julia process (may be null if not available).")
         private Integer exitCode;
 
-        @Schema(
-            title = "Commands vars",
-            description = "Vars produced by the task (e.g. via ::{\"outputs\":{...}}:: convention)."
-        )
+        @Schema(title = "Commands vars", description = "Vars produced by the task (e.g. via ::{\"outputs\":{...}}:: convention).")
         private Map<String, Object> vars;
     }
 }

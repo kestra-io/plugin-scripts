@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts.dotnet;
+package io.kestra.plugin.scripts.csharp;
 
 import java.util.List;
 import java.util.UUID;
@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
@@ -46,6 +47,7 @@ class ScriptTest {
             .id("dotnet-script-" + UUID.randomUUID())
             .type(Script.class.getName())
             .script(Property.ofValue("Console.WriteLine(\"Hello from Kestra!\");"))
+            .targetOS(Property.ofValue(TargetOS.LINUX))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, dotnetScript, ImmutableMap.of());
@@ -77,6 +79,7 @@ class ScriptTest {
                 var data = new { message = "Hello from NuGet" };
                 Console.WriteLine(JsonConvert.SerializeObject(data));
                 """))
+            .targetOS(Property.ofValue(TargetOS.LINUX))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, dotnetScript, ImmutableMap.of());
@@ -101,6 +104,7 @@ class ScriptTest {
             .type(Script.class.getName())
             .script(Property.ofValue("File.WriteAllText(\"result.txt\", \"hello from dotnet\");"))
             .outputFiles(Property.ofValue(List.of("result.txt")))
+            .targetOS(Property.ofValue(TargetOS.LINUX))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, dotnetScript, ImmutableMap.of());
@@ -117,6 +121,7 @@ class ScriptTest {
             .id("dotnet-fail-" + UUID.randomUUID())
             .type(Script.class.getName())
             .script(Property.ofValue("throw new Exception(\"deliberate failure\");"))
+            .targetOS(Property.ofValue(TargetOS.LINUX))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, dotnetScript, ImmutableMap.of());

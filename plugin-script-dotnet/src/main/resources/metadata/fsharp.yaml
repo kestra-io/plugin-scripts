@@ -1,0 +1,7 @@
+group: io.kestra.plugin.scripts.fsharp
+name: "plugin-fsharp"
+title: "F#"
+description: "Tasks and triggers that run F# scripts and commands."
+body: "Run F# scripts using F# Interactive through dotnet fsi or execute F#-related commands inside a .NET SDK container, with support for triggers, inputs, outputs, and workflow variables."
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"

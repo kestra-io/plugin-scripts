@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts.dotnet;
+package io.kestra.plugin.scripts.csharp;
 
 import org.junit.jupiter.api.Test;
 

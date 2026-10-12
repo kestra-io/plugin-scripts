@@ -1,7 +1,9 @@
-package io.kestra.plugin.scripts.dotnet;
+package io.kestra.plugin.scripts.julia;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -11,6 +13,7 @@ import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.conditions.ConditionContext;
+import io.kestra.core.models.enums.MonacoLanguages;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTaskException;
@@ -44,9 +47,9 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Trigger on .NET script condition",
+    title = "Trigger on Julia script condition",
     description = """
-        Polls by running an inline .NET script in a container (default image mcr.microsoft.com/dotnet/sdk:10.0) and emits when exitCondition matches. \
+        Polls by running an inline Julia script in a container (default image julia) and emits when exitCondition matches. \
         Edge mode (the default) emits only on a transition from not matching to matching, remembering the previous result in the namespace KV store. \
         Polls every 60s by default. Accepts 'exit N' or a regex (fallback substring) matched against emitted vars; a failed run has no vars, so only 'exit N' can match a failure.
         """
@@ -54,21 +57,21 @@ import lombok.experimental.SuperBuilder;
 @Plugin(
     examples = {
         @Example(
-            title = "Trigger when the script fails with an implicit error (exit 1).",
+            title = "Trigger when the script exits with code 42.",
             full = true,
             code = """
-                id: script_trigger
+                id: julia_script_trigger
                 namespace: company.team
 
                 triggers:
-                  - id: script_failure
-                    type: io.kestra.plugin.scripts.dotnet.ScriptTrigger
-                    interval: PT60S
-                    exitCondition: "exit 1"
+                  - id: on_exit_42
+                    type: io.kestra.plugin.scripts.julia.ScriptTrigger
+                    interval: PT10S
+                    exitCondition: "exit 42"
                     edge: true
-                    containerImage: mcr.microsoft.com/dotnet/sdk:10.0
+                    containerImage: julia
                     script: |
-                      System.Environment.Exit(1);
+                      exit(42)
 
                 tasks:
                   - id: log
@@ -81,37 +84,44 @@ import lombok.experimental.SuperBuilder;
 public class ScriptTrigger extends AbstractTrigger
     implements PollingTriggerInterface, TriggerOutput<ScriptTrigger.Output> {
 
-    private static final String DEFAULT_IMAGE = "mcr.microsoft.com/dotnet/sdk:10.0";
+    private static final String DEFAULT_IMAGE = "julia";
     private static final Pattern EXIT_CONDITION_PATTERN = Pattern.compile("^\\s*exit\\s+(\\d+)\\s*$", Pattern.CASE_INSENSITIVE);
+
+    private static final int MAX_CACHED_CONDITIONS = 64;
+    private static final Map<String, Pattern> CONDITION_PATTERNS = Collections.synchronizedMap(
+        new LinkedHashMap<>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Pattern> eldest) {
+                return size() > MAX_CACHED_CONDITIONS;
+            }
+        }
+    );
 
     @Schema(
         title = "Container image for script execution",
-        description = """
-            Image used by the Script task to run the inline .NET script; defaults to 'mcr.microsoft.com/dotnet/sdk:10.0'.
-            Provide an image that includes the .NET SDK.
-            """
+        description = "Image used to run the inline Julia script; defaults to 'julia'. Provide an image that includes Julia."
     )
     @Builder.Default
     @PluginProperty(group = "execution")
     protected Property<String> containerImage = Property.ofValue(DEFAULT_IMAGE);
 
     @Schema(
-        title = "Inline .NET script",
-        description = """
-            Multi-line script executed on each poll, with the same semantics as the .NET Script task.
-            """
+        title = "Inline Julia script",
+        description = "Multi-line Julia script executed on each poll. Note that beforeCommands and env are not exposed on the trigger, so package installs or configuration must live in the script or container image."
     )
     @NotNull
-    @PluginProperty(group = "main")
+    @PluginProperty(language = MonacoLanguages.JULIA, group = "main")
     protected Property<String> script;
 
     @Schema(
         title = "Condition to match",
         description = """
-            Rendered condition evaluated after each execution; the trigger emits only when it matches.
+            Rendered condition evaluated after each execution; the trigger emits only when it matches. \
             'exit N' compares the exit code, otherwise the string is used as a regex (or substring fallback) \
             against emitted vars (from ::{"outputs":...}::). On a failed run no vars are available to match \
-            against, so only an 'exit N' condition can match a failure.
+            against, so only an 'exit N' condition can match a failure. \
+            Note that Julia exits with 1 on syntax or runtime errors, \
+            so prefer a dedicated exit code (e.g. 'exit 42') for the condition you watch.
             """
     )
     @NotNull
@@ -120,9 +130,7 @@ public class ScriptTrigger extends AbstractTrigger
 
     @Schema(
         title = "Check interval",
-        description = """
-            Interval between polls; default PT60S. The scheduler uses this to schedule the next evaluation.
-            """
+        description = "Interval between polls; default PT60S."
     )
     @Builder.Default
     @PluginProperty(group = "execution")
@@ -154,7 +162,6 @@ public class ScriptTrigger extends AbstractTrigger
         }
 
         boolean matched = matchesCondition(out);
-
         boolean emit = shouldEmit(runContext, context, renderedEdge, matched);
 
         if (!emit) {
@@ -169,9 +176,6 @@ public class ScriptTrigger extends AbstractTrigger
             return matched;
         }
 
-        // A polling trigger is rebuilt from the flow definition (and serialized to a worker) on
-        // every poll, so the previous result cannot live in a field. It is kept in the namespace
-        // KV store instead and advanced on every poll.
         KVStore kvStore = runContext.namespaceKv(context.getNamespace());
         String key = edgeStateKey(context);
 
@@ -179,8 +183,6 @@ public class ScriptTrigger extends AbstractTrigger
             .map(value -> Boolean.parseBoolean(String.valueOf(value.value())))
             .orElse(false);
 
-        // Skip the write on a poll that repeats the same result, so a condition that stays true
-        // for hours does not rewrite the same value every interval.
         if (matched != previouslyMatched) {
             kvStore.put(key, new KVValueAndMetadata(null, matched));
         }
@@ -188,8 +190,6 @@ public class ScriptTrigger extends AbstractTrigger
         return matched && !previouslyMatched;
     }
 
-    // Length prefixed so that the pairs ("a-b", "c") and ("a", "b-c") can never share a key.
-    // Flow and trigger ids only use characters that are valid in a KV key.
     static String edgeStateKey(TriggerContext context) {
         return "trigger-edge-" + context.getFlowId().length() + "-" + context.getFlowId() + "-" + context.getTriggerId();
     }
@@ -208,13 +208,9 @@ public class ScriptTrigger extends AbstractTrigger
 
         try {
             ScriptOutput taskOutput = task.run(TriggerRunContext.forEmbeddedTask(runContext, task));
-            Integer exitCode = safeExitCode(taskOutput);
-            Map<String, Object> vars = safeVars(taskOutput);
-
-            return new Output(Instant.now(), renderedExitCondition, exitCode, vars);
+            return new Output(Instant.now(), renderedExitCondition, safeExitCode(taskOutput), safeVars(taskOutput));
         } catch (RunnableTaskException e) {
-            ExtractedFailure failure = extractFailure(e);
-            return new Output(Instant.now(), renderedExitCondition, failure.exitCode, null);
+            return new Output(Instant.now(), renderedExitCondition, extractExitCode(e), null);
         }
     }
 
@@ -227,19 +223,20 @@ public class ScriptTrigger extends AbstractTrigger
             return out.getExitCode() != null && out.getExitCode() == expected;
         }
 
-        String haystack = buildHaystack(out);
+        String haystack = out.getVars() == null || out.getVars().isEmpty() ? "" : out.getVars().toString();
         if (haystack.isEmpty() || cond.isEmpty()) {
             return false;
         }
 
-        return ExitConditionRegex.find(cond, haystack);
+        try {
+            return ExitConditionRegex.find(conditionPattern(cond), haystack);
+        } catch (Exception invalidRegex) {
+            return ExitConditionRegex.invalidPatternFallback(cond, haystack);
+        }
     }
 
-    private String buildHaystack(Output out) {
-        if (out.getVars() == null || out.getVars().isEmpty()) {
-            return "";
-        }
-        return out.getVars().toString();
+    static Pattern conditionPattern(String condition) {
+        return CONDITION_PATTERNS.computeIfAbsent(condition, Pattern::compile);
     }
 
     private Integer safeExitCode(ScriptOutput taskOutput) {
@@ -258,22 +255,15 @@ public class ScriptTrigger extends AbstractTrigger
         }
     }
 
-    private record ExtractedFailure(Integer exitCode) {
-    }
-
-    private ExtractedFailure extractFailure(RunnableTaskException e) {
-        Integer exitCode = null;
-
+    private Integer extractExitCode(RunnableTaskException e) {
         Throwable cur = e.getCause();
         while (cur != null) {
             if (cur instanceof TaskException te) {
-                exitCode = te.getExitCode();
-                break;
+                return te.getExitCode();
             }
             cur = cur.getCause();
         }
-
-        return new ExtractedFailure(exitCode);
+        return null;
     }
 
     @Data
@@ -282,25 +272,13 @@ public class ScriptTrigger extends AbstractTrigger
         @Schema(title = "Timestamp of the event that fired the trigger")
         private Instant timestamp;
 
-        @Schema(
-            title = "Rendered condition",
-            description = "Rendered value of the exitCondition property for this poll."
-        )
+        @Schema(title = "Rendered condition", description = "Rendered value of the exitCondition property for this poll.")
         private String condition;
 
-        @Schema(
-            title = "Script exit code",
-            description = "Exit code returned by the .NET process (may be null if not available)."
-        )
+        @Schema(title = "Script exit code", description = "Exit code returned by the Julia process (may be null if not available).")
         private Integer exitCode;
 
-        @Schema(
-            title = "Script vars",
-            description = """
-                Vars produced by the task (e.g. via ::{"outputs":{...}}:: convention). This is the main structured
-                way to evaluate non-exit conditions on successful runs.
-                """
-        )
+        @Schema(title = "Script vars", description = "Vars produced by the task (e.g. via ::{\"outputs\":{...}}:: convention).")
         private Map<String, Object> vars;
     }
 }
