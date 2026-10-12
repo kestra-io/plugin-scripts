@@ -15,7 +15,7 @@
 
 ### Architecture
 
-This is a **multi-module** plugin with 19 submodules:
+This is a **multi-module** plugin with 20 submodules:
 
 - `plugin-script`
 - `plugin-script-bun`
@@ -36,6 +36,7 @@ This is a **multi-module** plugin with 19 submodules:
 - `plugin-script-r`
 - `plugin-script-ruby`
 - `plugin-script-shell`
+- `plugin-script-zx`
 
 ### Key Plugin Classes
 
@@ -136,6 +137,11 @@ This is a **multi-module** plugin with 19 submodules:
 - `io.kestra.plugin.scripts.shell.CommandsTrigger`
 - `io.kestra.plugin.scripts.shell.Script`
 - `io.kestra.plugin.scripts.shell.ScriptTrigger`
+
+**plugin-script-zx:**
+
+- `io.kestra.plugin.scripts.zx.Commands`
+- `io.kestra.plugin.scripts.zx.Script`
 
 ### Project Structure
 
