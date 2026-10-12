@@ -1,4 +1,4 @@
-package io.kestra.plugin.scripts.dotnet;
+package io.kestra.plugin.scripts.csharp;
 
 import java.util.List;
 import java.util.UUID;
@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.kestra.core.models.tasks.runners.TargetOS;
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
@@ -45,6 +46,7 @@ class CommandsTest {
             .id("dotnet-commands-" + UUID.randomUUID())
             .type(Commands.class.getName())
             .commands(Property.ofValue(List.of("dotnet --version")))
+            .targetOS(Property.ofValue(TargetOS.LINUX))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, dotnetCommands, ImmutableMap.of());
@@ -64,6 +66,7 @@ class CommandsTest {
             .type(Commands.class.getName())
             .commands(Property.ofValue(List.of("dotnet nonexistent-command", "echo \"This should not run\"")))
             .failFast(Property.ofValue(true))
+            .targetOS(Property.ofValue(TargetOS.LINUX))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, dotnetCommands, ImmutableMap.of());
@@ -77,6 +80,7 @@ class CommandsTest {
             .type(Commands.class.getName())
             .commands(Property.ofValue(List.of("dotnet nonexistent-command", "echo \"This should still run\"")))
             .failFast(Property.ofValue(false))
+            .targetOS(Property.ofValue(TargetOS.LINUX))
             .build();
 
         RunContext runContext = TestsUtils.mockRunContext(runContextFactory, dotnetCommands, ImmutableMap.of());

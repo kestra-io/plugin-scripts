@@ -5,6 +5,10 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import io.kestra.plugin.scripts.csharp.CommandsTrigger;
+import io.kestra.plugin.scripts.csharp.ScriptTrigger;
+import io.kestra.plugin.scripts.csharp.CommandsTrigger;
+import io.kestra.plugin.scripts.csharp.ScriptTrigger;
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.triggers.Trigger;
