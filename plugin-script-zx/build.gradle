@@ -1,0 +1,22 @@
+project.description = 'Execute zx scripts as part of Kestra data workflows.'
+
+jar {
+    manifest {
+        attributes(
+            "X-Kestra-Name": project.name,
+            "X-Kestra-Title": "zx",
+            "X-Kestra-Group": project.group + ".scripts.zx",
+            "X-Kestra-Description": project.description,
+            "X-Kestra-Version": project.version
+        )
+    }
+}
+
+dependencies {
+    implementation project(':plugin-script')
+
+    testImplementation project(path: ':plugin-script', configuration: 'testOutput')
+
+    testImplementation group: "io.kestra", name: "scheduler", version: kestraVersion
+    testImplementation group: "io.kestra", name: "worker", version: kestraVersion
+}

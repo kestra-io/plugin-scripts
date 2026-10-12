@@ -1,0 +1,7 @@
+group: io.kestra.plugin.scripts.zx
+name: "plugin-zx"
+title: "zx"
+description: "Tasks that run zx scripts."
+body: "Run JavaScript shell automation inline or from existing files using zx, capturing logs and output files for downstream tasks. The default container includes Node.js, zx, and Bash."
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"
