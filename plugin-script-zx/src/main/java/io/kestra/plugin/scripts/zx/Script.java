@@ -28,7 +28,10 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Schema(
     title = "Run inline zx script",
-    description = "Runs JavaScript shell automation with zx. The default image includes zx; custom images and Process runners require Node.js, zx and a supported shell."
+    description = """
+        Runs JavaScript shell automation with zx. The default image includes zx; custom images and Process
+        runners require Node.js, zx and a supported shell.
+        """
 )
 @Plugin(
     examples = {
@@ -55,7 +58,10 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
 
     @Schema(
         title = "Container image for zx runtime",
-        description = "Docker image used to run the script; defaults to 'ghcr.io/google/zx:8.5.0'. Custom images must provide Node.js, zx and a supported shell."
+        description = """
+            Docker image used to run the script; defaults to 'ghcr.io/google/zx:8.5.0'. Custom images must
+            provide Node.js, zx and a supported shell.
+            """
     )
     @Builder.Default
     @PluginProperty(group = "execution")
@@ -63,7 +69,10 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
 
     @Schema(
         title = "Inline zx script",
-        description = "JavaScript source as a multi-line string; saved to a temporary .mjs file and executed with the configured zx command. For existing files, use the Commands task."
+        description = """
+            JavaScript source as a multi-line string; saved to a temporary .mjs file and executed with the
+            configured zx command. For existing files, use the Commands task.
+            """
     )
     @NotNull
     @PluginProperty(language = MonacoLanguages.JAVASCRIPT, group = "main")
@@ -71,7 +80,10 @@ public class Script extends AbstractExecScript implements RunnableTask<ScriptOut
 
     @Schema(
         title = "Command used to launch zx",
-        description = "Defaults to `node /zx/build/cli.js` for the bundled CLI in the default image. Set to `zx` when using a custom image or Process runner with zx installed on PATH."
+        description = """
+            Defaults to `node /zx/build/cli.js` for the bundled CLI in the default image. Set to `zx` when using
+            a custom image or Process runner with zx installed on PATH.
+            """
     )
     @Builder.Default
     @NotNull

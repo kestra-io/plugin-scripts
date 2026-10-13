@@ -26,7 +26,10 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Schema(
     title = "Execute zx files and commands",
-    description = "Runs JavaScript shell automation with zx. The default image includes zx at /zx/build/cli.js; custom images and Process runners require Node.js, zx and a supported shell."
+    description = """
+        Runs JavaScript shell automation with zx. The default image includes zx at /zx/build/cli.js; custom
+        images and Process runners require Node.js, zx and a supported shell.
+        """
 )
 @Plugin(
     examples = {
@@ -54,7 +57,10 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
 
     @Schema(
         title = "Container image for zx runtime",
-        description = "Docker image used to run the commands; defaults to 'ghcr.io/google/zx:8.5.0'. Custom images must provide Node.js, zx and a supported shell."
+        description = """
+            Docker image used to run the commands; defaults to 'ghcr.io/google/zx:8.5.0'. Custom images must
+            provide Node.js, zx and a supported shell.
+            """
     )
     @Builder.Default
     @PluginProperty(group = "execution")
@@ -62,7 +68,11 @@ public class Commands extends AbstractExecScript implements RunnableTask<ScriptO
 
     @Schema(
         title = "Commands to execute",
-        description = "List of shell commands, such as `node /zx/build/cli.js main.mjs` in the default image, executed in order inside the container; combine with beforeCommands for npm install and inputFiles/namespaceFiles to stage code."
+        description = """
+            List of shell commands, such as `node /zx/build/cli.js main.mjs` in the default image, executed in
+            order inside the container; combine with beforeCommands for npm install and
+            inputFiles/namespaceFiles to stage code.
+            """
     )
     @NotNull
     @PluginProperty(group = "main")

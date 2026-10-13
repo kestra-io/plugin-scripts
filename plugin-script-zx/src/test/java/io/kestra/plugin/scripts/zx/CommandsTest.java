@@ -1,5 +1,6 @@
 package io.kestra.plugin.scripts.zx;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -12,10 +13,13 @@ import com.google.common.collect.ImmutableMap;
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.LogEntry;
 import io.kestra.core.models.property.Property;
+import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
+import io.kestra.core.storages.StorageInterface;
+import io.kestra.core.tenant.TenantService;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
 
@@ -25,6 +29,7 @@ import reactor.core.publisher.Flux;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @KestraTest
 class CommandsTest {
@@ -32,8 +37,51 @@ class CommandsTest {
     RunContextFactory runContextFactory;
 
     @Inject
+    StorageInterface storageInterface;
+
+    @Inject
     @Named(QueueFactoryInterface.WORKERTASKLOG_NAMED)
     private QueueInterface<LogEntry> logQueue;
+
+    @Test
+    void failedShellCommandFailsTask() {
+        Commands task = Commands.builder()
+            .id("zx-commands-failure-" + UUID.randomUUID())
+            .type(Commands.class.getName())
+            .inputFiles(Map.of("main.mjs", "await $`exit 7`;"))
+            .commands(Property.ofValue(List.of("node /zx/build/cli.js main.mjs")))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());
+        RunnableTaskException failure = assertThrows(RunnableTaskException.class, () -> task.run(runContext));
+        // zx reports the child exit code in its error, but the CLI itself exits with 1.
+        assertThat(((ScriptOutput) failure.getOutput()).getExitCode(), is(1));
+    }
+
+    @Test
+    void preservesPreparationOutputFilesAndEnvironment() throws Exception {
+        Commands task = Commands.builder()
+            .id("zx-commands-files-" + UUID.randomUUID())
+            .type(Commands.class.getName())
+            .inputFiles(Map.of("main.mjs", """
+                import { readFile, writeFile } from 'node:fs/promises';
+                const input = await readFile('result/input.txt', 'utf8');
+                await writeFile('result/output.txt', `${input} ${process.env.ZX_TEST_SUFFIX}`);
+                """))
+            .env(Property.ofValue(Map.of("ZX_TEST_SUFFIX", "world")))
+            .beforeCommands(Property.ofValue(List.of("mkdir -p result", "printf hello > result/input.txt")))
+            .outputFiles(Property.ofValue(List.of("result/output.txt")))
+            .commands(Property.ofValue(List.of("node /zx/build/cli.js main.mjs")))
+            .build();
+
+        RunContext runContext = TestsUtils.mockRunContext(runContextFactory, task, ImmutableMap.of());
+        ScriptOutput output = task.run(runContext);
+
+        assertThat(output.getExitCode(), is(0));
+        try (var stream = storageInterface.get(TenantService.MAIN_TENANT, null, output.getOutputFiles().get("result/output.txt"))) {
+            assertThat(new String(stream.readAllBytes(), StandardCharsets.UTF_8), is("hello world"));
+        }
+    }
 
     @Test
     void executesStagedScript() throws Exception {
