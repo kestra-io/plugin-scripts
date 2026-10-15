@@ -1,0 +1,18 @@
+id: all_zx
+namespace: io.kestra.tests
+
+tasks:
+  - id: inline
+    type: io.kestra.plugin.scripts.zx.Script
+    script: |
+      $.verbose = false;
+      console.log((await $`echo inline-zx`).stdout.trim());
+
+  - id: existing
+    type: io.kestra.plugin.scripts.zx.Commands
+    inputFiles:
+      main.mjs: |
+        $.verbose = false;
+        console.log((await $`echo existing-zx`).stdout.trim());
+    commands:
+      - node /zx/build/cli.js main.mjs

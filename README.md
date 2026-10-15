@@ -70,6 +70,7 @@
     * [for R](https://kestra.io/plugins/plugin-script-r/)
     * [for Ruby](https://kestra.io/plugins/plugin-script-ruby/)
     * [for Shell](https://kestra.io/plugins/plugin-script-shell/).
+    * [for zx](https://kestra.io/plugins/plugin-script-zx/).
 
 
 ## License
