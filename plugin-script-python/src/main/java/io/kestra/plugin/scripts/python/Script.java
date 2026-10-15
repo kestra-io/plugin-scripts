@@ -280,6 +280,51 @@ import lombok.experimental.SuperBuilder;
         @Example(
             full = true,
             title = """
+                Aggregate a CSV file with Polars and write the result as a Parquet file. Polars is a
+                drop-in alternative to pandas, so it only needs to be declared in `dependencies`:
+                no dedicated image or plugin is required.
+                """,
+            code = """
+                id: python_polars_csv_to_parquet
+                namespace: company.team
+
+                tasks:
+                  - id: download
+                    type: io.kestra.plugin.core.http.Download
+                    uri: https://huggingface.co/datasets/kestra/datasets/raw/main/csv/orders.csv
+
+                  - id: total_per_customer
+                    type: io.kestra.plugin.scripts.python.Script
+                    containerImage: python:3.12-slim
+                    dependencies:
+                      - polars
+                    inputFiles:
+                      orders.csv: "{{ outputs.download.uri }}"
+                    outputFiles:
+                      - "orders_by_customer.parquet"
+                    script: |
+                      import polars as pl
+
+                      # `scan_csv` builds a lazy plan, so only the aggregated rows are materialized
+                      orders_by_customer = (
+                          pl.scan_csv("orders.csv")
+                          .group_by("customer_email")
+                          .agg(
+                              pl.col("total").sum().alias("total_spent"),
+                              pl.len().alias("orders_count")
+                          )
+                          .sort("total_spent", descending=True)
+                          .collect()
+                      )
+                      print(orders_by_customer.head(10))
+
+                      # `outputFiles` stores the file in Kestra's internal storage for the next tasks
+                      orders_by_customer.write_parquet("orders_by_customer.parquet")
+                """
+        ),
+        @Example(
+            full = true,
+            title = """
                 Run a simple Python script to generate outputs and log them
                 """,
             code = """

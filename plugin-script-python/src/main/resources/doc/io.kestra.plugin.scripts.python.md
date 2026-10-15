@@ -15,3 +15,53 @@ When using the `UV` package manager (the default) with the `Process` task runner
 `Script` runs inline Python code defined in the `script` property — best for short, flow-specific logic. `Commands` runs shell commands (e.g., `python main.py`) against script files; use it when your code lives in [namespace files](https://kestra.io/docs/concepts/namespace-files) shared across flows, or is cloned from a Git repository with a preceding `Clone` task.
 
 Install dependencies with `beforeCommands` (e.g., `["pip install pandas requests"]`) or bake them into a custom `containerImage`. For larger dependency sets, store a `requirements.txt` as a namespace file and run `pip install -r requirements.txt` in `beforeCommands`. The same `Commands`/`Script` pattern applies to all other language submodules in this plugin (Shell, Node, R, Go, and others).
+
+## DataFrame libraries
+
+Both tasks run any pip-installable library, so a DataFrame engine needs no dedicated plugin — just declare it in `dependencies` and Kestra installs it in the task image before the script runs:
+
+- **pandas**: the most common DataFrame library, and a good default when your team already knows it.
+- **Polars**: a faster, more memory-efficient alternative with a similar API, useful for large CSV, Ion, or Parquet transforms.
+
+```yaml
+dependencies:
+  - polars
+```
+
+A full flow that aggregates a CSV file per customer and stores the result as a Parquet file in Kestra's internal storage:
+
+```yaml
+id: aggregate_customer_orders
+namespace: company.team
+
+tasks:
+  - id: download
+    type: io.kestra.plugin.core.http.Download
+    uri: https://huggingface.co/datasets/kestra/datasets/raw/main/csv/orders.csv
+
+  - id: total_per_customer
+    type: io.kestra.plugin.scripts.python.Script
+    containerImage: python:3.12-slim
+    dependencies:
+      - polars
+    inputFiles:
+      orders.csv: "{{ outputs.download.uri }}"
+    outputFiles:
+      - "orders_by_customer.parquet"
+    script: |
+      import polars as pl
+
+      orders_by_customer = (
+          pl.scan_csv("orders.csv")
+          .group_by("customer_email")
+          .agg(
+              pl.col("total").sum().alias("total_spent"),
+              pl.len().alias("orders_count")
+          )
+          .sort("total_spent", descending=True)
+          .collect()
+      )
+      orders_by_customer.write_parquet("orders_by_customer.parquet")
+```
+
+`scan_csv` builds a lazy plan, so large files are not fully loaded in memory. `outputFiles` then stores the result so downstream tasks can pick it up with `{{ outputs.total_per_customer.outputFiles['orders_by_customer.parquet'] }}`.

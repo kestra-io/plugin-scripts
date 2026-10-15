@@ -130,6 +130,60 @@ tasks:
     commands:
       - python main.py
 
+  - id: download_orders
+    type: io.kestra.plugin.core.http.Download
+    uri: "{{ inputs.dataset_uri }}"
+
+  - id: python_script_polars
+    type: io.kestra.plugin.scripts.python.Script
+    containerImage: python:3.12-slim
+    dependencies:
+      - polars
+      - kestra
+    inputFiles:
+      orders.csv: "{{ outputs.download_orders.uri }}"
+    outputFiles:
+      - orders_by_customer.parquet
+    script: |
+      import polars as pl
+      from kestra import Kestra
+
+      orders_by_customer = (
+          pl.scan_csv("orders.csv")
+          .group_by("customer_email")
+          .agg(
+              pl.col("total").sum().alias("total_spent"),
+              pl.len().alias("orders_count")
+          )
+          .sort("total_spent", descending=True)
+          .collect()
+      )
+      print(orders_by_customer.head(10))
+
+      Kestra.outputs({"customers": orders_by_customer.height})
+
+      orders_by_customer.write_parquet("orders_by_customer.parquet")
+
+  - id: python_commands_polars
+    type: io.kestra.plugin.scripts.python.Commands
+    containerImage: python:3.12-slim
+    dependencies:
+      - polars
+      - kestra
+    inputFiles:
+      orders_by_customer.parquet: "{{ outputs.python_script_polars.outputFiles['orders_by_customer.parquet'] }}"
+      stats.py: |
+        import polars as pl
+        from kestra import Kestra
+
+        orders_by_customer = pl.read_parquet("orders_by_customer.parquet")
+        print(orders_by_customer.head(10))
+
+        Kestra.counter("customers", orders_by_customer.height)
+        Kestra.outputs({"columns": len(orders_by_customer.columns)})
+    commands:
+      - python stats.py
+
   - id: assert
     type: io.kestra.plugin.core.execution.Assert
     conditions:
@@ -140,3 +194,6 @@ tasks:
     - "{{ outputs.python_script_logs.exitCode == 0 }}"
     - "{{ outputs.python_script_metrics.exitCode == 0 }}"
     - "{{ outputs.python_commands_etl_outputs.outputFiles['processed_orders.csv'] != null }}"
+    - "{{ outputs.python_script_polars.outputFiles['orders_by_customer.parquet'] != null }}"
+    - "{{ outputs.python_script_polars.vars.customers > 0 }}"
+    - "{{ outputs.python_commands_polars.vars.columns == 3 }}"

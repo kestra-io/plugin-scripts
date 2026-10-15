@@ -294,6 +294,68 @@ import lombok.experimental.SuperBuilder;
                     commands:
                       - python main.py
                 """
+        ),
+        @Example(
+            full = true,
+            title = """
+                Run a Python script file that converts a CSV file to Parquet with Polars, then read that
+                Parquet file back and report metrics to Kestra. `dependencies` installs Polars (and the
+                Kestra SDK) in the task image, so the script file stays free of any environment setup.
+
+                Polars is a drop-in alternative to pandas, so no dedicated image or plugin is required.
+                """,
+            code = """
+                id: python_polars_commands
+                namespace: company.team
+
+                tasks:
+                  - id: download
+                    type: io.kestra.plugin.core.http.Download
+                    uri: https://huggingface.co/datasets/kestra/datasets/raw/main/csv/orders.csv
+
+                  - id: to_parquet
+                    type: io.kestra.plugin.scripts.python.Commands
+                    containerImage: python:3.12-slim
+                    dependencies:
+                      - polars
+                    inputFiles:
+                      orders.csv: "{{ outputs.download.uri }}"
+                      to_parquet.py: |
+                        import polars as pl
+
+                        orders_by_customer = (
+                            pl.read_csv("orders.csv")
+                            .group_by("customer_email")
+                            .agg(
+                                pl.col("total").sum().alias("total_spent"),
+                                pl.len().alias("orders_count")
+                            )
+                            .sort("total_spent", descending=True)
+                        )
+                        orders_by_customer.write_parquet("orders_by_customer.parquet")
+                    outputFiles:
+                      - "orders_by_customer.parquet"
+                    commands:
+                      - python to_parquet.py
+
+                  - id: stats
+                    type: io.kestra.plugin.scripts.python.Script
+                    containerImage: python:3.12-slim
+                    dependencies:
+                      - polars
+                      - kestra
+                    inputFiles:
+                      orders_by_customer.parquet: "{{ outputs.to_parquet.outputFiles['orders_by_customer.parquet'] }}"
+                    script: |
+                      import polars as pl
+                      from kestra import Kestra
+
+                      orders_by_customer = pl.read_parquet("orders_by_customer.parquet")
+                      print(orders_by_customer.head(10))
+
+                      Kestra.counter("customers", orders_by_customer.height)
+                      Kestra.outputs({"columns": orders_by_customer.columns})
+                """
         )
     },
     metrics = {
