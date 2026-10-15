@@ -31,7 +31,14 @@ dependencies:
 A full flow that aggregates a CSV file per customer and stores the result as a Parquet file in Kestra's internal storage:
 
 ```yaml
+id: aggregate_customer_orders
+namespace: company.team
+
 tasks:
+  - id: download
+    type: io.kestra.plugin.core.http.Download
+    uri: https://huggingface.co/datasets/kestra/datasets/raw/main/csv/orders.csv
+
   - id: total_per_customer
     type: io.kestra.plugin.scripts.python.Script
     containerImage: python:3.12-slim
@@ -57,4 +64,4 @@ tasks:
       orders_by_customer.write_parquet("orders_by_customer.parquet")
 ```
 
-`scan_csv` builds a lazy plan, so large files are not fully loaded in memory. `outputFiles` then stores the result so downstream tasks can pick it up with `{{ outputs.totalPerCustomer.outputFiles['orders_by_customer.parquet'] }}`.
+`scan_csv` builds a lazy plan, so large files are not fully loaded in memory. `outputFiles` then stores the result so downstream tasks can pick it up with `{{ outputs.total_per_customer.outputFiles['orders_by_customer.parquet'] }}`.
