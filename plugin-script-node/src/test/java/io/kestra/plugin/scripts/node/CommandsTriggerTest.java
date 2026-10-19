@@ -10,6 +10,7 @@ import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContextFactory;
+import io.kestra.core.utils.IdUtils;
 import io.kestra.core.utils.TestsUtils;
 
 import jakarta.inject.Inject;
@@ -26,7 +27,7 @@ class CommandsTriggerTest {
     @Test
     void commandsTrigger_shouldTriggerOnImplicitFailureExit1() throws Exception {
         CommandsTrigger trigger = CommandsTrigger.builder()
-            .id("commands-trigger")
+            .id("commands-trigger-" + IdUtils.create())
             .type(CommandsTrigger.class.getName())
             .exitCondition(Property.ofValue("exit 1"))
             .edge(Property.ofValue(true))
@@ -49,7 +50,7 @@ class CommandsTriggerTest {
     @Test
     void commandsTrigger_shouldTriggerOnStdoutMatchUsingStructuredOutputs() throws Exception {
         CommandsTrigger trigger = CommandsTrigger.builder()
-            .id("commands-stdout-match-trigger")
+            .id("commands-stdout-match-trigger-" + IdUtils.create())
             .type(CommandsTrigger.class.getName())
             .exitCondition(Property.ofValue("toto"))
             .edge(Property.ofValue(true))
