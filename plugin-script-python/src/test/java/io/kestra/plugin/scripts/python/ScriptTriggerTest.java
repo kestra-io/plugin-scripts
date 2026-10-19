@@ -9,6 +9,7 @@ import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContextFactory;
+import io.kestra.core.utils.IdUtils;
 import io.kestra.core.utils.TestsUtils;
 
 import jakarta.inject.Inject;
@@ -25,7 +26,7 @@ class ScriptTriggerTest {
     @Test
     void scriptTrigger_shouldTriggerOnImplicitFailureExit1() throws Exception {
         ScriptTrigger trigger = ScriptTrigger.builder()
-            .id("script-trigger")
+            .id("script-trigger-" + IdUtils.create())
             .type(ScriptTrigger.class.getName())
             .exitCondition(Property.ofValue("exit 1"))
             .edge(Property.ofValue(true))
@@ -48,7 +49,7 @@ class ScriptTriggerTest {
     @Test
     void scriptTrigger_shouldTriggerOnStdoutMatchViaOutputsConvention() throws Exception {
         ScriptTrigger trigger = ScriptTrigger.builder()
-            .id("script-stdout-match-trigger")
+            .id("script-stdout-match-trigger-" + IdUtils.create())
             .type(ScriptTrigger.class.getName())
             .exitCondition(Property.ofValue("toto"))
             .edge(Property.ofValue(true))
