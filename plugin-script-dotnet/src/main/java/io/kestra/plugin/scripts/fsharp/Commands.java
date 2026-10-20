@@ -27,7 +27,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Run commands inside a .NET SDK container",
+    title = "Run F# and .NET shell commands inside a .NET SDK container",
     description = """
         Executes arbitrary shell commands sequentially inside a .NET SDK container
         (`mcr.microsoft.com/dotnet/sdk:10.0` by default).

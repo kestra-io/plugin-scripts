@@ -23,7 +23,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Run shell commands inside a .NET SDK container",
+    title = "Run C# and .NET shell commands inside a .NET SDK container",
     description = """
         Executes arbitrary shell commands sequentially inside a .NET SDK container (`mcr.microsoft.com/dotnet/sdk:10.0` by default).
         Use this task when you have existing `.csx` script files stored in namespace files or cloned from a Git repository,
