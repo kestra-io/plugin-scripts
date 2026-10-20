@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Trigger on C# script condition",
+    title = "Trigger a flow when a C# script matches a condition",
     description = """
         Polls by running an inline C# script in a .NET SDK container
         and emits when exitCondition matches.

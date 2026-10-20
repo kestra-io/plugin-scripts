@@ -28,7 +28,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Trigger on F# script condition",
+    title = "Trigger a flow when an F# script matches a condition",
     description = """
         Polls by running an inline F# script in a .NET SDK container
         and emits when the configured exit condition matches.
