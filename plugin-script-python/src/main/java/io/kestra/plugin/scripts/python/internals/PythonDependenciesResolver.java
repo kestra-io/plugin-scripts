@@ -336,10 +336,11 @@ public class PythonDependenciesResolver {
         Process process = builder.start();
 
         List<String> outs = new ArrayList<>();
-        Thread stdoutLogger = Thread.ofVirtual().name("python-dep-resolver-log-out")
+        // A blocking read on a process pipe pins a virtual thread's carrier for the whole install
+        Thread stdoutLogger = Thread.ofPlatform().daemon().name("python-dep-resolver-log-out")
             .start(() -> logStream(process.getInputStream(), false, outs::add));
 
-        Thread stderrLogger = Thread.ofVirtual().name("python-dep-resolver-log-err")
+        Thread stderrLogger = Thread.ofPlatform().daemon().name("python-dep-resolver-log-err")
             .start(() -> logStream(process.getErrorStream(), true));
 
         int exitCode = process.waitFor();
