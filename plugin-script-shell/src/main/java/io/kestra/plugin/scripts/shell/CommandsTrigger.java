@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,6 +17,8 @@ import io.kestra.core.models.tasks.RunnableTaskException;
 import io.kestra.core.models.tasks.runners.TaskException;
 import io.kestra.core.models.triggers.*;
 import io.kestra.core.runners.RunContext;
+import io.kestra.core.storages.kv.KVStore;
+import io.kestra.core.storages.kv.KVValueAndMetadata;
 import io.kestra.plugin.scripts.exec.ExitConditionRegex;
 import io.kestra.plugin.scripts.exec.TriggerRunContext;
 import io.kestra.plugin.scripts.exec.scripts.models.ScriptOutput;
@@ -115,17 +116,14 @@ public class CommandsTrigger extends AbstractTrigger
     @Schema(
         title = "Edge trigger mode",
         description = """
-            If true, the trigger emits only on a transition from 'not matching' to 'matching' (anti-spam).
+            If true (default), the trigger emits only on a transition from 'not matching' to 'matching' \
+            (anti-spam). The previous result is kept in the namespace KV store, keyed by flow and trigger id. \
             If false, the trigger emits on every poll where the condition matches.
             """
     )
     @Builder.Default
     @PluginProperty(group = "advanced")
     protected Property<Boolean> edge = Property.ofValue(true);
-
-    @Builder.Default
-    @Getter(AccessLevel.NONE)
-    private final AtomicBoolean lastMatched = new AtomicBoolean(false);
 
     @Override
     public Optional<Execution> evaluate(ConditionContext conditionContext, TriggerContext context) throws Exception {
@@ -142,15 +140,43 @@ public class CommandsTrigger extends AbstractTrigger
 
         boolean matched = matchesCondition(out);
 
-        boolean emit = rEdge
-            ? (!lastMatched.getAndSet(matched) && matched)
-            : matched;
+        boolean emit = shouldEmit(runContext, context, rEdge, matched);
 
         if (!emit) {
             return Optional.empty();
         }
 
         return Optional.of(TriggerService.generateExecution(this, conditionContext, context, out));
+    }
+
+    boolean shouldEmit(RunContext runContext, TriggerContext context, boolean edge, boolean matched) throws Exception {
+        if (!edge) {
+            return matched;
+        }
+
+        // A polling trigger is rebuilt from the flow definition (and serialized to a worker) on
+        // every poll, so the previous result cannot live in a field. It is kept in the namespace
+        // KV store instead.
+        KVStore kvStore = runContext.namespaceKv(context.getNamespace());
+        String key = edgeStateKey(context);
+
+        boolean previouslyMatched = kvStore.getValue(key)
+            .map(value -> Boolean.parseBoolean(String.valueOf(value.value())))
+            .orElse(false);
+
+        // Skip the write on a poll that repeats the same result, so a condition that stays true
+        // for hours does not rewrite the same value every interval.
+        if (matched != previouslyMatched) {
+            kvStore.put(key, new KVValueAndMetadata(null, matched));
+        }
+
+        return matched && !previouslyMatched;
+    }
+
+    // Length prefixed so that the pairs ("a-b", "c") and ("a", "b-c") can never share a key.
+    // Flow and trigger ids only use characters that are valid in a KV key.
+    static String edgeStateKey(TriggerContext context) {
+        return "trigger-edge-" + context.getFlowId().length() + "-" + context.getFlowId() + "-" + context.getTriggerId();
     }
 
     private Output runOnce(RunContext runContext) throws Exception {
