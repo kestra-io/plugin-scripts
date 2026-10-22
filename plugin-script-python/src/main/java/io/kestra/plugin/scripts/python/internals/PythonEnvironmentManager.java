@@ -14,7 +14,6 @@ import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.executions.metrics.Timer;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.runners.TaskRunner;
-import io.kestra.core.runners.DefaultRunContext;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.core.runner.Process;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
@@ -188,8 +187,16 @@ public class PythonEnvironmentManager {
      * that the parser extracted because the image name contained "python".
      */
     static boolean looksLikePythonVersion(String version) {
-        int major = Integer.parseInt(version.split("\\.")[0]);
-        return major >= 2;
+        if (version == null || version.isEmpty()) {
+            return false;
+        }
+
+        try {
+            int major = Integer.parseInt(version.split("\\.")[0]);
+            return major >= 2 && major <= 9;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     /**
