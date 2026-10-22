@@ -6,18 +6,22 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.MessageDigest;
+import java.time.Duration;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
+import io.kestra.core.utils.Await;
 import io.kestra.plugin.scripts.python.Script;
 
 import jakarta.inject.Inject;
@@ -203,6 +207,64 @@ class PythonDependenciesResolverTest {
             () -> PythonDependenciesResolver.readAtMost(in, 5, "https://astral.sh/uv/1.2.3/install.sh")
         );
         assertThat(exception.getMessage(), containsString("exceeded"));
+    }
+
+    @Test
+    @Timeout(60)
+    void shouldCaptureAllStdoutWhenBothStreamsExceedThePipeBuffer() throws Exception {
+        var resolver = buildResolver();
+
+        var status = resolver.execCommandAndGetStdOut(List.of("sh", "-c", "seq 1 20000 >&2 & seq 1 20000; wait"));
+
+        assertThat(status.isSuccess(), is(true));
+        assertThat(status.stdOuts(), hasSize(20000));
+        assertThat(status.stdOuts().getLast(), is("20000"));
+    }
+
+    // Virtual threads are not listed by Thread.getAllStackTraces(), so this fails if the readers go back to virtual threads.
+    @Test
+    @Timeout(60)
+    void shouldDrainCommandOutputOnPlatformDaemonThreads() throws Exception {
+        var resolver = buildResolver();
+        var status = new AtomicReference<PythonDependenciesResolver.ExecExitStatus>();
+        var thrown = new AtomicReference<Exception>();
+        var runner = new Thread(() -> {
+            try {
+                status.set(resolver.execCommandAndGetStdOut(List.of("sh", "-c", "echo started; sleep 3")));
+            } catch (Exception e) {
+                thrown.set(e);
+            }
+        }, "python-dep-resolver-platform-readers-test");
+        runner.start();
+
+        try {
+            Await.until(
+                () -> {
+                    var readers = Thread.getAllStackTraces().keySet().stream()
+                        .filter(t -> t.isDaemon() && !t.isVirtual())
+                        .map(Thread::getName)
+                        .toList();
+                    return readers.contains("python-dep-resolver-log-out") && readers.contains("python-dep-resolver-log-err");
+                },
+                Duration.ofMillis(50),
+                Duration.ofSeconds(20)
+            );
+        } finally {
+            runner.join(Duration.ofSeconds(15).toMillis());
+        }
+
+        assertThat(thrown.get(), is(nullValue()));
+        assertThat(status.get().stdOuts(), contains("started"));
+    }
+
+    private PythonDependenciesResolver buildResolver() throws Exception {
+        var runContext = buildRunContext();
+        return new PythonDependenciesResolver(
+            runContext.logger(),
+            runContext.workingDir(),
+            runContext.workingDir().path().getParent(),
+            PackageManagerType.UV
+        );
     }
 
     private RunContext buildRunContext() throws Exception {
