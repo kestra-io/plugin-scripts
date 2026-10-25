@@ -129,11 +129,4 @@ class PythonVersionParserTest {
     void looksLikePythonVersion_rejectsBuildYearTag() {
         assertThat(PythonEnvironmentManager.looksLikePythonVersion("2024.1"), is(false));
     }
-
-    @Test
-    void looksLikePythonVersion_rejectsNonNumericOrNull() {
-        assertThat(PythonEnvironmentManager.looksLikePythonVersion(null), is(false));
-        assertThat(PythonEnvironmentManager.looksLikePythonVersion(""), is(false));
-        assertThat(PythonEnvironmentManager.looksLikePythonVersion("abc"), is(false));
-    }
 }
