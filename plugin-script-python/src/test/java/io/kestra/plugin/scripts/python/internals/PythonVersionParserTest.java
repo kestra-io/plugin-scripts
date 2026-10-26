@@ -1,10 +1,10 @@
 package io.kestra.plugin.scripts.python.internals;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -57,17 +57,19 @@ class PythonVersionParserTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {
-        "python:3.6",
-        "python:3.7",
-        "python:3.8",
-        "python:3.9",
-        "python:3.10",
-        "python:3.11",
-        "python:3.12",
-        "python:3.13",
-        "python:3.14"
-    })
+    @ValueSource(
+        strings = {
+            "python:3.6",
+            "python:3.7",
+            "python:3.8",
+            "python:3.9",
+            "python:3.10",
+            "python:3.11",
+            "python:3.12",
+            "python:3.13",
+            "python:3.14"
+        }
+    )
     void shouldParseValidPythonVersions(String image) {
         var result = PythonVersionParser.parsePyVersionFromDockerImage(image);
         assertThat(result.isPresent(), is(true));
@@ -111,5 +113,20 @@ class PythonVersionParserTest {
     @Test
     void looksLikePythonVersion_rejectsVersion1() {
         assertThat(PythonEnvironmentManager.looksLikePythonVersion("1.5.2"), is(false));
+    }
+
+    @Test
+    void looksLikePythonVersion_rejectsNumericTimestampTag() {
+        assertThat(PythonEnvironmentManager.looksLikePythonVersion("20261021113000"), is(false));
+    }
+
+    @Test
+    void looksLikePythonVersion_rejectsBuildDateTag() {
+        assertThat(PythonEnvironmentManager.looksLikePythonVersion("20241021"), is(false));
+    }
+
+    @Test
+    void looksLikePythonVersion_rejectsBuildYearTag() {
+        assertThat(PythonEnvironmentManager.looksLikePythonVersion("2024.1"), is(false));
     }
 }

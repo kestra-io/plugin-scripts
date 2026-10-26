@@ -14,7 +14,6 @@ import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.executions.metrics.Timer;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.runners.TaskRunner;
-import io.kestra.core.runners.DefaultRunContext;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.core.runner.Process;
 import io.kestra.plugin.scripts.exec.scripts.models.RunnerType;
@@ -183,13 +182,18 @@ public class PythonEnvironmentManager {
     }
 
     /**
-     * Returns true if the version looks like a real Python version (major >= 2).
+     * Returns true if the version looks like a real Python version (single-digit major from 2, so future majors keep working).
      * This filters out non-Python version tags (e.g. "0.0.10" from a custom image)
      * that the parser extracted because the image name contained "python".
      */
     static boolean looksLikePythonVersion(String version) {
-        int major = Integer.parseInt(version.split("\\.")[0]);
-        return major >= 2;
+        try {
+            var major = Integer.parseInt(version.split("\\.")[0]);
+            return major >= 2 && major <= 9;
+        } catch (NumberFormatException e) {
+            // Timestamp tags overflow an int, they are not Python versions
+            return false;
+        }
     }
 
     /**
