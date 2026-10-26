@@ -47,7 +47,8 @@ import lombok.experimental.SuperBuilder;
                     type: io.kestra.plugin.scripts.zx.Script
                     script: |
                       const name = 'Kestra';
-                      await $`echo Hello ${name}`;
+                      const result = await $`echo Hello ${name}`;
+                      console.log(result.stdout.trim());
                 """
         )
     }
