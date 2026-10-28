@@ -45,7 +45,8 @@ import lombok.experimental.SuperBuilder;
                     type: io.kestra.plugin.scripts.zx.Commands
                     inputFiles:
                       main.mjs: |
-                        await $`echo Hello Kestra`;
+                        const result = await $`echo Hello Kestra`;
+                        console.log(result.stdout.trim());
                     commands:
                       - node /zx/build/cli.js main.mjs
                 """
