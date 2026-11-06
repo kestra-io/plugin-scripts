@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import io.kestra.core.exceptions.KestraRuntimeException;
 
@@ -99,6 +100,10 @@ public enum PackageManagerType {
         public String getPythonPath(PythonDependenciesResolver resolver, String version) {
             String normalized = null, major = null;
             if (version != null && !version.isBlank()) {
+                // The version becomes part of the executable name, so it must not carry a path
+                if (!PYTHON_VERSION_PATTERN.matcher(version).matches()) {
+                    throw new KestraRuntimeException("Invalid Python version '" + version + "': expected digits separated by dots, e.g. '3.12'");
+                }
                 String[] parts = version.split("\\.");
                 major = parts[0];
                 normalized = parts.length >= 2 ? parts[0] + "." + parts[1] : parts[0];
@@ -110,6 +115,7 @@ public enum PackageManagerType {
 
             for (String candidate : candidates) {
                 try {
+                    // nosemgrep: java.lang.security.audit.command-injection-process-builder.command-injection-process-builder -- no shell, version validated above
                     Process process = new ProcessBuilder(candidate, "--version").start();
                     int exitCode = process.waitFor();
                     if (exitCode == 0) {
@@ -153,6 +159,8 @@ public enum PackageManagerType {
             return true;
         }
     };
+
+    private static final Pattern PYTHON_VERSION_PATTERN = Pattern.compile("\\d+(\\.\\d+)*");
 
     private final String displayName;
 
