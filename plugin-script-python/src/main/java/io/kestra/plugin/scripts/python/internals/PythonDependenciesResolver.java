@@ -326,6 +326,7 @@ public class PythonDependenciesResolver {
 
     private ExecExitStatus execCommandAndGetStdOut(List<String> command, Function<ProcessBuilder, ProcessBuilder> modifier) throws IOException, InterruptedException {
         logger.debug("Executing command: {}", String.join(" ", command));
+        // nosemgrep: java.lang.security.audit.command-injection-process-builder.command-injection-process-builder -- argument list, no shell
         ProcessBuilder builder = new ProcessBuilder(command)
             .redirectErrorStream(false); // keep stderr separate for error handling
 
