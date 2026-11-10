@@ -2,7 +2,6 @@
     title = "C#",
     description = "This subgroup of plugins contains tasks for running C# scripts.",
     categories = {
-        PluginSubGroup.PluginCategory.DATA,
         PluginSubGroup.PluginCategory.CORE
     }
 )

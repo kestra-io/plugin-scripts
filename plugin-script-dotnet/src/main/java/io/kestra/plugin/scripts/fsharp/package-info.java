@@ -2,7 +2,6 @@
     title = "F#",
     description = "This subgroup of plugins contains tasks for running F# scripts.",
     categories = {
-        PluginSubGroup.PluginCategory.DATA,
         PluginSubGroup.PluginCategory.CORE
     }
 )
