@@ -7,6 +7,7 @@ tasks:
     env:
       GRAPE_ROOT: /tmp/grapes
     script: |
+      @GrabResolver(name = 'central-mirror', root = 'https://maven-central.storage-download.googleapis.com/maven2/')
       @Grab('info.picocli:picocli:4.7.5')
       import picocli.CommandLine
 
@@ -27,6 +28,7 @@ tasks:
     commands:
       - |
         groovy -e '
+          @GrabResolver(name = "central-mirror", root = "https://maven-central.storage-download.googleapis.com/maven2/")
           @Grab("info.picocli:picocli:4.7.5")
           import picocli.CommandLine
           @CommandLine.Command(name = "hello")

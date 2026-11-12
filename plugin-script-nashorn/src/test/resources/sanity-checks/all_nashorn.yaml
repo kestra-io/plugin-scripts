@@ -4,12 +4,10 @@ namespace: sanitychecks.plugin-scripts
 tasks:
   - id: write_rows
     type: io.kestra.plugin.core.storage.Write
-    extension: .json
+    extension: .ion
     content: |
-      [
-        {"id": 1, "name": "jane"},
-        {"id": 2, "name": "richard"}
-      ]
+      {id: 1, name: "jane"}
+      {id: 2, name: "richard"}
 
   - id: eval
     type: io.kestra.plugin.scripts.nashorn.Eval
@@ -43,7 +41,7 @@ tasks:
       - "{{ outputs.eval.outputs.map.status == 'ok' }}"
       - "{{ read(outputs.eval.outputs.out) contains 'hello nashorn' }}"
       - "{{ fromIon(read(outputs.transform.uri), allRows=true) | length == 1 }}"
-      - "{{ read(outputs.transform.uri) contains 'jane' }}"
+      - "{{ (fromIon(read(outputs.transform.uri), allRows=true) | first).email == 'jane@kestra.io' }}"
 
 finally:
   - id: purge
