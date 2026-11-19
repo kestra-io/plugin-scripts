@@ -97,6 +97,35 @@ import lombok.experimental.SuperBuilder;
                     script: |
                       echo "Input's absolute path: '{{ workingDir }}/generated.txt'"
                 """
+        ),
+        @Example(
+            full = true,
+            title = """
+                Use `durable: true` to keep progress across retries (Kestra 2.1 and later). \
+                The script saves a checkpoint with the `::{"checkpoints": {"key": "value"}}::` log syntax, \
+                and on a retry the task exposes the saved values as `CHECKPOINTS_<KEY>` environment variables \
+                (and `{{ checkpoints.key }}`), so the script can resume where it stopped.
+                """,
+            code = """
+                id: shell_script_durable_example
+                namespace: company.team
+
+                tasks:
+                  - id: resumable_loop
+                    type: io.kestra.plugin.scripts.shell.Script
+                    durable: true
+                    retry:
+                      type: constant
+                      interval: PT1S
+                      maxAttempts: 5
+                    script: |
+                      start=${CHECKPOINTS_LOOP:-0}
+                      for i in $(seq $start 9); do
+                        echo $i
+                        sleep 5
+                        echo "::{\\\"checkpoints\\\": {\\\"loop\\\": \\\"$i\\\"}}::"
+                      done
+                """
         )
     }
 )
