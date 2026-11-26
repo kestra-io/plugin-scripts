@@ -18,17 +18,12 @@ Install dependencies with `beforeCommands` (e.g., `["pip install pandas requests
 
 ## DataFrame libraries
 
-Both tasks run any pip-installable library, so a DataFrame engine needs no dedicated plugin — just declare it in `dependencies` and Kestra installs it in the task image before the script runs:
+Both tasks run any pip-installable library, so a DataFrame engine needs no dedicated plugin. List it under the `dependencies` property and Kestra installs it in the task image before the script runs:
 
 - **pandas**: the most common DataFrame library, and a good default when your team already knows it.
 - **Polars**: a faster, more memory-efficient alternative with a similar API, useful for large CSV, Ion, or Parquet transforms.
 
-```yaml
-dependencies:
-  - polars
-```
-
-A full flow that aggregates a CSV file per customer and stores the result as a Parquet file in Kestra's internal storage:
+The flow below installs Polars with `dependencies`, aggregates a CSV file per customer, and stores the result as a Parquet file in Kestra's internal storage:
 
 ```yaml
 id: aggregate_customer_orders
